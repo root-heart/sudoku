@@ -1,0 +1,9 @@
+task copyFrontendResources(type: Copy) {
+//    dependsOn ":sudoku-frontend:npm_run_install"
+    from "sudoku-frontend/dist"
+    into "sudoku-backend/build/resources/main/static"
+}
+
+//task("sudoku-backend:assemble") {
+//    dependsOn copyFrontendResources
+//}
