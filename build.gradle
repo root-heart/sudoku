@@ -1,9 +1,15 @@
-task copyFrontendResources(type: Copy) {
-//    dependsOn ":sudoku-frontend:npm_run_install"
+task copyFrontendResourcesToBackend(type: Copy) {
+    dependsOn ":sudoku-frontend:npm_run_build", ":sudoku-backend:build"
     from "sudoku-frontend/dist"
     into "sudoku-backend/build/resources/main/static"
 }
 
-//task("sudoku-backend:assemble") {
-//    dependsOn copyFrontendResources
-//}
+task runPackage {
+    dependsOn "copyFrontendResourcesToBackend", ":sudoku-backend:bootRun"
+    group "package"
+}
+
+task createPackage {
+    dependsOn "copyFrontendResourcesToBackend", ":sudoku-backend:bootJar"
+    group "package"
+}

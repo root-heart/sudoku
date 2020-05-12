@@ -42,3 +42,9 @@ dependencies {
 test {
     useJUnitPlatform()
 }
+
+bootJar {
+    from('../sudoku-frontend/dist') {
+        into 'static'
+    }
+}
