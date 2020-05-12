@@ -10,7 +10,6 @@ import spock.lang.Specification
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-@Ignore
 class GameSpec extends Specification {
 
     @LocalServerPort
