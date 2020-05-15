@@ -3,14 +3,14 @@
         <table class="board"
                @keypress="enterDigit"
                tabindex="-1">
-            <tr v-for="row in 9" :class="'row' + row" :key="row">
-                <td v-for="column in 9"
-                    :key="column"
-                    :class="['column' + column,
+            <tr v-for="(rowNumber, row) in 9" :class="'row' + rowNumber" :key="'row' + rowNumber">
+                <td v-for="(columnNumber, column) in 9"
+                    :key="'column' + columnNumber"
+                    :class="['column' + columnNumber,
                                 selected.row === row && selected.column === column ? 'selected' : '']"
                     @click="selectField(column, row)">
-                    <span v-if="board[row * 9 + column - 10] > 0">
-                        {{board[row * 9 + column - 10]}}
+                    <span v-if="board[column][row] > 0">
+                        {{board[column][row]}}
                     </span>
                 </td>
             </tr>
@@ -27,14 +27,16 @@
     export default {
         name: "Board",
         data() {
-            let board = [];
-            for (let i = 0; i < 81; i++) {
-                board.push(0);
+            let board = new Array(9);
+            for (let column = 0; column < 9; column++) {
+                board[column] = new Array(9);
+                for (let row = 0; row < 9; row++) {
+                    board[column][row] = 0;
+                }
             }
-            board[21] = 3;
             return {
                 board: board,
-                selected: {row: 0, column: 0}
+                selected: {row: -1, column: -1}
             }
         },
         methods: {
@@ -50,8 +52,7 @@
             },
             enterDigit(event) {
                 if (event.key >= 1 && event.key <= 9) {
-                    console.log(event);
-                    this.board[this.selected.column + this.selected.row * 9 - 10] = event.key;
+                    this.board[this.selected.column][this.selected.row] = event.key;
                     this.$forceUpdate();
                 }
             }
