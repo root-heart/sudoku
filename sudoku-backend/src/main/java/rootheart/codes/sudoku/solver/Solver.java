@@ -1,5 +1,13 @@
 package rootheart.codes.sudoku.solver;
 
+import org.eclipse.collections.api.factory.Sets;
+import org.eclipse.collections.api.map.primitive.MutableObjectIntMap;
+import org.eclipse.collections.api.map.primitive.ObjectIntMap;
+import org.eclipse.collections.api.set.MutableSet;
+import org.eclipse.collections.api.set.primitive.IntSet;
+import org.eclipse.collections.api.set.primitive.MutableIntSet;
+import org.eclipse.collections.impl.factory.primitive.IntSets;
+import org.eclipse.collections.impl.factory.primitive.ObjectIntMaps;
 import rootheart.codes.sudoku.game.Board;
 import rootheart.codes.sudoku.game.Cell;
 import rootheart.codes.sudoku.game.Group;
@@ -7,7 +15,6 @@ import rootheart.codes.sudoku.game.Group;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -18,60 +25,59 @@ import java.util.stream.IntStream;
 public class Solver {
     public void solve(Board board) {
         while (board.hasEmptyCells()) {
-            Map<Cell, Integer> singleCandidates = calculateSingleCandidates(board);
+            ObjectIntMap<Cell> singleCandidates = calculateSingleCandidates(board);
             if (singleCandidates.isEmpty()) {
                 throw new IllegalArgumentException("not solvable " + board);
             }
-            singleCandidates.forEach(Cell::setNumber);
+            singleCandidates.forEachKeyValue(Cell::setNumber);
         }
     }
 
-    private Map<Cell, Integer> calculateSingleCandidates(Board board) {
-        Map<Cell, Set<Integer>> cellsCandidates = createCandidates(board);
+    private ObjectIntMap<Cell> calculateSingleCandidates(Board board) {
+        Map<Cell, MutableIntSet> cellsCandidates = createCandidates(board);
         eliminateNumbersPresentInBuddyCells(cellsCandidates);
 
-        Map<Cell, Integer> cellsNumbers = new HashMap<>();
-        cellsNumbers.putAll(findNakedSingles(cellsCandidates));
-        cellsNumbers.putAll(findHiddenSingles(cellsCandidates));
-        return cellsNumbers;
+        MutableObjectIntMap<Cell> singleCandidates = ObjectIntMaps.mutable.empty();
+        singleCandidates.putAll(findNakedSingles(cellsCandidates));
+        singleCandidates.putAll(findHiddenSingles(cellsCandidates));
+        return singleCandidates;
     }
 
-    private Map<Cell, Set<Integer>> createCandidates(Board board) {
-        Set<Integer> allValues = IntStream
-                .rangeClosed(1, board.getMaxValue())
-                .boxed()
-                .collect(Collectors.toSet());
+    private Map<Cell, MutableIntSet> createCandidates(Board board) {
+        IntSet allValues = IntSets.immutable.ofAll(IntStream.rangeClosed(1, board.getMaxValue()));
         return Arrays.stream(board.getCells())
                 .filter(Cell::isEmpty)
-                .collect(Collectors.toMap(Function.identity(), c -> new HashSet<>(allValues)));
+                .collect(Collectors.toMap(Function.identity(), c -> IntSets.mutable.ofAll(allValues)));
     }
 
-    private void eliminateNumbersPresentInBuddyCells(Map<Cell, Set<Integer>> result) {
-        result.forEach((cell, candidates) -> {
-            Set<Integer> buddyValues = getBuddyCells(cell).stream().map(Cell::getNumber).collect(Collectors.toSet());
+    private void eliminateNumbersPresentInBuddyCells(Map<Cell, MutableIntSet> cellsCandidates) {
+        cellsCandidates.forEach((cell, candidates) -> {
+            IntStream intStream = getBuddyCells(cell).stream().mapToInt(Cell::getNumber);
+            IntSet buddyValues = IntSets.mutable.ofAll(intStream);
             candidates.removeAll(buddyValues);
         });
     }
 
     private Set<Cell> getBuddyCells(Cell cell) {
-        Set<Cell> buddyCells = new HashSet<>();
-        buddyCells.addAll(cell.getColumn().getCells());
+        MutableSet<Cell> buddyCells = Sets.mutable.ofAll(cell.getColumn().getCells());
         buddyCells.addAll(cell.getRow().getCells());
         buddyCells.addAll(cell.getBlock().getCells());
         buddyCells.remove(cell);
         return buddyCells;
     }
 
-    private Map<Cell, Integer> findNakedSingles(Map<Cell, Set<Integer>> cellsCandidates) {
-        return cellsCandidates.entrySet()
+    private ObjectIntMap<Cell> findNakedSingles(Map<Cell, MutableIntSet> cellsCandidates) {
+        MutableObjectIntMap<Cell> nakedSingles = ObjectIntMaps.mutable.empty();
+        cellsCandidates.entrySet()
                 .stream()
                 .filter(entry -> entry.getValue().size() == 1)
-                .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().iterator().next()));
+                .forEach(entry -> nakedSingles.put(entry.getKey(), entry.getValue().intIterator().next()));
+        return nakedSingles;
     }
 
-    private Map<Cell, Integer> findHiddenSingles(Map<Cell, Set<Integer>> cellsCandidates) {
-        Map<Cell, Integer> hiddenSingles = new HashMap<>();
-        for (Map.Entry<Cell, Set<Integer>> entry : cellsCandidates.entrySet()) {
+    private ObjectIntMap<Cell> findHiddenSingles(Map<Cell, MutableIntSet> cellsCandidates) {
+        MutableObjectIntMap<Cell> hiddenSingles = ObjectIntMaps.mutable.empty();
+        for (Map.Entry<Cell, MutableIntSet> entry : cellsCandidates.entrySet()) {
             hiddenSingles.putAll(findHiddenSinglesInGroup(cellsCandidates, entry.getKey().getColumn()));
             hiddenSingles.putAll(findHiddenSinglesInGroup(cellsCandidates, entry.getKey().getRow()));
             hiddenSingles.putAll(findHiddenSinglesInGroup(cellsCandidates, entry.getKey().getBlock()));
@@ -79,16 +85,16 @@ public class Solver {
         return hiddenSingles;
     }
 
-    private Map<Cell, Integer> findHiddenSinglesInGroup(Map<Cell, Set<Integer>> cellsCandidates, Group group) {
-        Map<Cell, Integer> hiddenSingles = new HashMap<>();
+    private MutableObjectIntMap<Cell> findHiddenSinglesInGroup(Map<Cell, MutableIntSet> cellsCandidates, Group group) {
+        MutableObjectIntMap<Cell> hiddenSingles = ObjectIntMaps.mutable.empty();
         Map<Integer, List<Cell>> candidateCellsForNumber = new HashMap<>();
         group.getCells()
                 .stream()
                 .filter(Cell::isEmpty)
                 .forEach(cell -> {
-                    for (Integer candidate : cellsCandidates.get(cell)) {
+                    cellsCandidates.get(cell).forEach(candidate -> {
                         candidateCellsForNumber.computeIfAbsent(candidate, k -> new ArrayList<>()).add(cell);
-                    }
+                    });
                 });
         candidateCellsForNumber.entrySet()
                 .stream()
