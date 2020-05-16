@@ -1,6 +1,7 @@
 package codes.rootheart.sudoku.game;
 
 import codes.rootheart.sudoku.user.SudokuUser;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -24,5 +25,9 @@ public class GameService {
         game.set(x, y, number);
         gameRepository.save(game); // TODO why is this necessary?
         return game;
+    }
+
+    public GameStatus evaluate(@NonNull String board) {
+        return GameStatus.OK;
     }
 }

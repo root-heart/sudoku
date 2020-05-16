@@ -44,4 +44,9 @@ public class GameController {
         Game game = gameService.makeMove(player, gameId, column, row, number);
         return gameDtoConverter.toDto(game);
     }
+
+    @GetMapping("/validate/{board}")
+    public GameStatus validate(@PathVariable String board) {
+        return gameService.evaluate(board);
+    }
 }
