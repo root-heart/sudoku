@@ -1,26 +1,9 @@
 package rootheart.codes.sudoku
 
-
 import rootheart.codes.sudoku.game.Board
-import rootheart.codes.sudoku.game.Cell
-import rootheart.codes.sudoku.game.Group
 import spock.lang.Specification
 
 class BoardSpec extends Specification {
-//    def 'Test board of size 2'() {
-//        given:
-//        def board = new Board(String.format("%016d", 0))
-//
-//        expect:
-//        board.cell(0, 0).possibleValues as List == [1, 2, 3, 4]
-//
-//        when:
-//        board.cell(1, 1).setNumber(2)
-//
-//        then:
-//        board.cell(0, 0).possibleValues as List == [1, 3, 4]
-//    }
-
     def 'Test almost complete board of size 2'() {
         given:
         def board = new Board("1234" + "3412" + "2143" + "4320")
@@ -42,7 +25,6 @@ class BoardSpec extends Specification {
         board.cell(1, 3).number == 3
         board.cell(2, 3).number == 2
         board.cell(3, 3).number == 0
-//        board.cell(3, 3).possibleValues as List == [1]
     }
 
     def 'Test cell creation'() {
@@ -110,62 +92,16 @@ class BoardSpec extends Specification {
         given:
         def board = new Board(String.format("%081d", 0))
 
-        expect:
-//        board.rows*.cells*.every { it.possibleValues as List == [1, 2, 3, 4, 5, 6, 7, 8, 9] }
-
         when:
         board.cell(1, 0).number = 1
 
         then:
         board.cell(1, 0).number == 1
-//        [board.rows[0], board.columns[1], board.blocks[0]].every {
-//            allCellsHavePossibleValues(it, [2, 3, 4, 5, 6, 7, 8, 9])
-//        }
 
         when:
         board.cell(1, 1).number = 2
 
         then:
         board.cell(1, 1).number == 2
-//        [0, 2].each {
-//            assert board.rows[1].cells[it].possibleValues == [3, 4, 5, 6, 7, 8, 9] as Set
-//        }
-//        (3..8).each {
-//            assert board.rows[1].cells[it].possibleValues == [1, 3, 4, 5, 6, 7, 8, 9] as Set
-//        }
-//        board.columns[1].cells.every { cellsPossibleValuesAre(it, [3, 4, 5, 6, 7, 8, 9]) }
-//        board.blocks[0].cells.every { cellsPossibleValuesAre(it, [3, 4, 5, 6, 7, 8, 9]) }
-
-//        when:
-//        board.cell(7, 0).number = 5
-//
-//        then:
-//        board.cell(0, 0).possibleValues as List == [3, 4, 6, 7, 8, 9]
-
-//        when:
-//        board.cell(8, 8).number = 7
-//
-//        then:
-//        board.cell(0, 0).possibleValues as List == [3, 4, 6, 7, 8, 9]
     }
-
-//    static allCellsHavePossibleValues(Group group, List<Integer> possibleValues) {
-//        return group.cells.every { it.number != 0 || it.possibleValues == possibleValues as Set }
-//    }
-//
-//    static cellsPossibleValuesAre(Cell cell, List<Integer> possibleValues) {
-//        cell.number != 0 || cell.possibleValues == possibleValues as Set
-//    }
-
-//    def 'Test a real world example'() {
-//        given:
-//        def board = new Board(
-//                "000000000" * 6 +
-//                        "740200069" +
-//                        "000000000" +
-//                        "000000084")
-//
-//        expect:
-//        board.cell(8, 6).possibleValues.empty
-//    }
 }
