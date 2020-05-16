@@ -6,21 +6,22 @@ import spock.lang.Ignore
 import spock.lang.Specification
 
 class SolverSpec extends Specification {
-    def 'Test'() {
+    private String mediumSudoku = "975002130" +
+            "000600000" +
+            "030500000" +
+            "000006090" +
+            "009000010" +
+            "000005078" +
+            "740200069" +
+            "000003000" +
+            "020760084"
+
+    def 'Test medium Sudoku'() {
         given:
         def solver = new Solver()
 
         when:
-        def board = new Board(
-                "975002130" +
-                        "000600000" +
-                        "030500000" +
-                        "000006090" +
-                        "009000010" +
-                        "000005078" +
-                        "740200069" +
-                        "000003000" +
-                        "020760084")
+        def board = new Board(mediumSudoku)
         solver.solve(board)
 
         then:
@@ -56,5 +57,25 @@ class SolverSpec extends Specification {
 
         then:
         noExceptionThrown()
+    }
+
+    def 'Test performance with medium Sudoku'() {
+        given:
+        def solver = new Solver()
+        def warmUpCount = 1_000_000
+        def benchmarkCount = 1_000_000
+
+        when:
+        def board = new Board(mediumSudoku)
+        warmUpCount.times { solver.solve(board) }
+
+        and:
+        long s = System.nanoTime()
+        benchmarkCount.times { solver.solve(board) }
+        long e = System.nanoTime()
+
+        then:
+        println "${(e - s) / 1000} microseconds"
+        true
     }
 }

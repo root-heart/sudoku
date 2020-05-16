@@ -11,8 +11,8 @@ public class Group {
     private final List<Cell> cells;
 
     public Group(Board board) {
-        this.cells = new ArrayList<>(board.getUnit());
-        for (int i = 0; i < board.getUnit(); i++) {
+        this.cells = new ArrayList<>(board.getMaxValue());
+        for (int i = 0; i < board.getMaxValue(); i++) {
             cells.add(null);
         }
     }
