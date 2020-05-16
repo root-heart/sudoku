@@ -28,10 +28,6 @@ public class Cell {
         }
     }
 
-    public Set<Integer> getPossibleNumbers() {
-        return possibleValues;
-    }
-
     public void setNumber(int newNumber) {
         column.forAllCells(cell -> updatePossibleValues(cell, newNumber));
         row.forAllCells(cell -> updatePossibleValues(cell, newNumber));

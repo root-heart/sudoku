@@ -47,9 +47,9 @@ public class Board {
     }
 
     private void initCells(String board) {
-        for (int columnIndex = 0; columnIndex < unit; columnIndex++) {
-            for (int rowIndex = 0; rowIndex < unit; rowIndex++) {
-                int number = Character.getNumericValue(board.charAt(columnIndex + rowIndex * unit));
+        for (int rowIndex = 0; rowIndex < unit; rowIndex++) {
+            for (int columnIndex = 0; columnIndex < unit; columnIndex++) {
+                int number = Character.getNumericValue(board.charAt(columnIndex * unit + rowIndex));
                 columns[columnIndex].getCell(rowIndex).setNumber(number);
             }
         }
@@ -71,8 +71,26 @@ public class Board {
         return columns[column].getCell(row);
     }
 
+    public boolean hasEmptyCells() {
+        for (int columnIndex = 0; columnIndex < unit; columnIndex++) {
+            for (int rowIndex = 0; rowIndex < unit; rowIndex++) {
+                if (cell(columnIndex, rowIndex).getNumber() == 0) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     @Override
     public String toString() {
-        return super.toString();
+        StringBuilder sb = new StringBuilder();
+        for (int columnIndex = 0; columnIndex < unit; columnIndex++) {
+            for (int rowIndex = 0; rowIndex < unit; rowIndex++) {
+                sb.append(cell(columnIndex, rowIndex).getNumber());
+            }
+            sb.append("\n");
+        }
+        return sb.toString();
     }
 }

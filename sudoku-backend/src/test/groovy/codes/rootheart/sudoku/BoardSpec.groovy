@@ -1,7 +1,6 @@
 package codes.rootheart.sudoku
 
 import codes.rootheart.sudoku.game.Board
-import codes.rootheart.sudoku.game.Cell
 import spock.lang.Specification
 
 class BoardSpec extends Specification {
@@ -11,6 +10,12 @@ class BoardSpec extends Specification {
 
         expect:
         board.cell(0, 0).possibleNumbers as List == [1, 2, 3, 4]
+
+        when:
+        board.cell(1, 1).setNumber(2)
+
+        then:
+        board.cell(0, 0).possibleNumbers as List == [1, 3, 4]
     }
 
     def 'Test almost complete board of size 2'() {
@@ -89,37 +94,37 @@ class BoardSpec extends Specification {
         expect:
         board.getBlock(0).getCell(0) == board.getColumn(0).getCell(0)
 
-        board.cell(0, 0).possibleNumbers as List == [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        board.cell(0, 0).possibleValues as List == [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
         when:
         board.cell(1, 0).number = 1
 
         then:
         board.cell(1, 0).number == 1
-        board.rows[0].cells.every(cell -> cell.possibleNumbers as List == [2, 3, 4, 5, 6, 7, 8, 9])
+        board.rows[0].cells.every(cell -> cell.possibleValues as List == [2, 3, 4, 5, 6, 7, 8, 9])
         board.columns[1].forAllCells(cell -> {
-            assert cell.possibleNumbers as List == [2, 3, 4, 5, 6, 7, 8, 9]
+            assert cell.possibleValues as List == [2, 3, 4, 5, 6, 7, 8, 9]
         })
         board.blocks[0].forAllCells(cell -> {
-            assert cell.possibleNumbers as List == [2, 3, 4, 5, 6, 7, 8, 9]
+            assert cell.possibleValues as List == [2, 3, 4, 5, 6, 7, 8, 9]
         })
 
         when:
         board.cell(1, 1).number = 2
 
         then:
-        board.cell(0, 0).possibleNumbers as List == [3, 4, 5, 6, 7, 8, 9]
+        board.cell(0, 0).possibleValues as List == [3, 4, 5, 6, 7, 8, 9]
 
         when:
         board.cell(7, 0).number = 5
 
         then:
-        board.cell(0, 0).possibleNumbers as List == [3, 4, 6, 7, 8, 9]
+        board.cell(0, 0).possibleValues as List == [3, 4, 6, 7, 8, 9]
 
         when:
         board.cell(8, 8).number = 7
 
         then:
-        board.cell(0, 0).possibleNumbers as List == [3, 4, 6, 7, 8, 9]
+        board.cell(0, 0).possibleValues as List == [3, 4, 6, 7, 8, 9]
     }
 }
