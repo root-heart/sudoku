@@ -58,6 +58,6 @@ public class Cell {
     }
 
     public IntIntPair getCoordinates() {
-        return PrimitiveTuples.pair(column.getCells().indexOf(this), row.getCells().indexOf(this));
+        return PrimitiveTuples.pair(row.getCells().indexOf(this), column.getCells().indexOf(this));
     }
 }
