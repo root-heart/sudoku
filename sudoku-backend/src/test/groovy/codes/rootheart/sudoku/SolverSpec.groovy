@@ -10,22 +10,7 @@ class SolverSpec extends Specification {
         def solver = new Solver()
 
         when:
-        solver.solve(new Board(
-                "036000507" +
-                        "000007080" +
-                        "201000069" +
-                        "000000000" +
-                        "042695000" +
-                        "000080902" +
-                        "000039040" +
-                        "054870031" +
-                        "060012800"))
-
-        then:
-        noExceptionThrown()
-
-        when:
-        solver.solve(new Board(
+        def board = new Board(
                 "975002130" +
                         "000600000" +
                         "030500000" +
@@ -34,10 +19,19 @@ class SolverSpec extends Specification {
                         "000005078" +
                         "740200069" +
                         "000003000" +
-                        "020760084"))
-
+                        "020760084")
+        solver.solve(board)
 
         then:
         noExceptionThrown()
+        board.toString() == "975842136\n" +
+                "482631957\n" +
+                "136597842\n" +
+                "257186493\n" +
+                "869374215\n" +
+                "314925678\n" +
+                "743218569\n" +
+                "698453721\n" +
+                "521769384\n"
     }
 }

@@ -49,22 +49,22 @@ public class Board {
     private void initCells(String board) {
         for (int rowIndex = 0; rowIndex < unit; rowIndex++) {
             for (int columnIndex = 0; columnIndex < unit; columnIndex++) {
-                int number = Character.getNumericValue(board.charAt(columnIndex * unit + rowIndex));
+                int number = Character.getNumericValue(board.charAt(columnIndex + rowIndex * unit));
                 columns[columnIndex].getCell(rowIndex).setNumber(number);
             }
         }
     }
 
-    public Group getColumn(int column) {
-        return columns[column];
+    public Group getColumn(int columnIndex) {
+        return columns[columnIndex];
     }
 
-    public Group getRow(int column) {
-        return rows[column];
+    public Group getRow(int rowIndex) {
+        return rows[rowIndex];
     }
 
-    public Group getBlock(int column) {
-        return blocks[column];
+    public Group getBlock(int blockIndex) {
+        return blocks[blockIndex];
     }
 
     public Cell cell(int column, int row) {
@@ -85,8 +85,8 @@ public class Board {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        for (int columnIndex = 0; columnIndex < unit; columnIndex++) {
-            for (int rowIndex = 0; rowIndex < unit; rowIndex++) {
+        for (int rowIndex = 0; rowIndex < unit; rowIndex++) {
+            for (int columnIndex = 0; columnIndex < unit; columnIndex++) {
                 sb.append(cell(columnIndex, rowIndex).getNumber());
             }
             sb.append("\n");

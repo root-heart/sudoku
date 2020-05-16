@@ -9,13 +9,13 @@ class BoardSpec extends Specification {
         def board = new Board(String.format("%016d", 0))
 
         expect:
-        board.cell(0, 0).possibleNumbers as List == [1, 2, 3, 4]
+        board.cell(0, 0).possibleValues as List == [1, 2, 3, 4]
 
         when:
         board.cell(1, 1).setNumber(2)
 
         then:
-        board.cell(0, 0).possibleNumbers as List == [1, 3, 4]
+        board.cell(0, 0).possibleValues as List == [1, 3, 4]
     }
 
     def 'Test almost complete board of size 2'() {
@@ -23,7 +23,7 @@ class BoardSpec extends Specification {
         def board = new Board("1234" + "3412" + "2143" + "4320")
 
         expect:
-        board.cell(3, 3).possibleNumbers as List == [1]
+        board.cell(3, 3).possibleValues as List == [1]
     }
 
     def 'Test cell creation'() {
@@ -126,5 +126,17 @@ class BoardSpec extends Specification {
 
         then:
         board.cell(0, 0).possibleValues as List == [3, 4, 6, 7, 8, 9]
+    }
+
+    def 'Test a real world example'() {
+        given:
+        def board = new Board(
+                "000000000" * 6 +
+                        "740200069" +
+                        "000000000" +
+                        "000000084")
+
+        expect:
+        board.cell(8, 6).possibleValues.empty
     }
 }

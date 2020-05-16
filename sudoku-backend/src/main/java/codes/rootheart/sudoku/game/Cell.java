@@ -2,6 +2,8 @@ package codes.rootheart.sudoku.game;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.eclipse.collections.api.tuple.primitive.IntIntPair;
+import org.eclipse.collections.impl.tuple.primitive.PrimitiveTuples;
 
 import java.util.BitSet;
 import java.util.HashSet;
@@ -33,12 +35,24 @@ public class Cell {
         row.forAllCells(cell -> updatePossibleValues(cell, newNumber));
         block.forAllCells(cell -> updatePossibleValues(cell, newNumber));
         this.number = newNumber;
+        if (newNumber != 0) {
+            this.possibleValues.clear();
+        }
     }
 
     private void updatePossibleValues(Cell cell, int newNumber) {
-        if (number != 0) {
+        if (number != 0 && cell.number == 0) {
             cell.possibleValues.add(number);
         }
         cell.possibleValues.remove(newNumber);
+    }
+
+    @Override
+    public String toString() {
+        return number + "(" + possibleValues.toString() + ")";
+    }
+
+    public IntIntPair getCoordinates() {
+        return PrimitiveTuples.pair(column.getCells().indexOf(this), row.getCells().indexOf(this));
     }
 }

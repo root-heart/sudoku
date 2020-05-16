@@ -28,4 +28,11 @@ public class Group {
     public void setCell(int index, Cell cell) {
         cells.set(index, cell);
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        forAllCells(cell -> sb.append(cell.getNumber()));
+        return sb.toString();
+    }
 }
