@@ -2,6 +2,7 @@ package rootheart.codes.sudoku
 
 import rootheart.codes.sudoku.game.Board
 import rootheart.codes.sudoku.solver.Solver
+import spock.lang.Ignore
 import spock.lang.Specification
 
 class SolverSpec extends Specification {
@@ -33,5 +34,27 @@ class SolverSpec extends Specification {
                 "743218569\n" +
                 "698453721\n" +
                 "521769384\n"
+    }
+
+    @Ignore("The solver is not able to solve this yet")
+    def 'Test hard Sudoku'() {
+        given:
+        def solver = new Solver()
+
+        when:
+        def board = new Board(
+                "001000000" +
+                        "003602008" +
+                        "000087400" +
+                        "240700080" +
+                        "609408000" +
+                        "030091000" +
+                        "000000000" +
+                        "000000602" +
+                        "090050730")
+        solver.solve(board)
+
+        then:
+        noExceptionThrown()
     }
 }
