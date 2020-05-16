@@ -1,6 +1,7 @@
 package rootheart.codes.sudoku
 
 import rootheart.codes.sudoku.game.Board
+import rootheart.codes.sudoku.solver.EclipseCollectionsSolver
 import rootheart.codes.sudoku.solver.Solver
 import spock.lang.Ignore
 import spock.lang.Specification
@@ -61,21 +62,32 @@ class SolverSpec extends Specification {
 
     def 'Test performance with medium Sudoku'() {
         given:
-        def solver = new Solver()
+        def jdkSolver = new Solver()
+        def eclipseCollectionsSolver = new EclipseCollectionsSolver()
+
         def warmUpCount = 1_000_000
         def benchmarkCount = 1_000_000
 
         when:
         def board = new Board(mediumSudoku)
-        warmUpCount.times { solver.solve(board) }
+        warmUpCount.times { jdkSolver.solve(board) }
+        warmUpCount.times { eclipseCollectionsSolver.solve(board) }
 
         and:
-        long s = System.nanoTime()
-        benchmarkCount.times { solver.solve(board) }
-        long e = System.nanoTime()
+        5.times {
+            long s = System.nanoTime()
+            benchmarkCount.times { jdkSolver.solve(board) }
+            long e = System.nanoTime()
+
+            long s2 = System.nanoTime()
+            benchmarkCount.times { eclipseCollectionsSolver.solve(board) }
+            long e2 = System.nanoTime()
+
+            println "default JDK implementation ${(e - s) / 1000} microseconds"
+            println "eclipse collections implementation ${(e2 - s2) / 1000} microseconds"
+        }
 
         then:
-        println "${(e - s) / 1000} microseconds"
         true
     }
 }
