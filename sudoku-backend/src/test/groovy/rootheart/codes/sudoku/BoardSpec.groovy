@@ -26,6 +26,22 @@ class BoardSpec extends Specification {
         def board = new Board("1234" + "3412" + "2143" + "4320")
 
         expect:
+        board.cell(0, 0).number == 1
+        board.cell(1, 0).number == 2
+        board.cell(2, 0).number == 3
+        board.cell(3, 0).number == 4
+        board.cell(0, 1).number == 3
+        board.cell(1, 1).number == 4
+        board.cell(2, 1).number == 1
+        board.cell(3, 1).number == 2
+        board.cell(0, 2).number == 2
+        board.cell(1, 2).number == 1
+        board.cell(2, 2).number == 4
+        board.cell(3, 2).number == 3
+        board.cell(0, 3).number == 4
+        board.cell(1, 3).number == 3
+        board.cell(2, 3).number == 2
+        board.cell(3, 3).number == 0
         board.cell(3, 3).possibleValues as List == [1]
     }
 
