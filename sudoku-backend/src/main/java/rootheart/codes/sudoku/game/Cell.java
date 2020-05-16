@@ -48,7 +48,13 @@ public class Cell {
 
     @Override
     public String toString() {
-        return number + "(" + possibleValues.toString() + ")";
+        StringBuilder sb = new StringBuilder();
+        sb.append(number).append("(");
+        for (int value : possibleValues) {
+            sb.append(value);
+        }
+        sb.append(")");
+        return sb.toString();
     }
 
     public IntIntPair getCoordinates() {

@@ -1,6 +1,5 @@
 package rootheart.codes.sudoku
 
-import org.openjdk.jmh.annotations.Benchmark
 import rootheart.codes.sudoku.game.Board
 import rootheart.codes.sudoku.solver.Solver
 import spock.lang.Specification
