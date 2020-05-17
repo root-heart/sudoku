@@ -14,6 +14,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Solver {
     public void solve(Board board) {
@@ -28,7 +29,7 @@ public class Solver {
 
     private Map<Cell, Integer> calculateSingleCandidates(Board board) {
         Map<Cell, Set<Integer>> cellsCandidates = createCandidates(board);
-        eliminateNumbersPresentInBuddyCells(cellsCandidates);
+        eliminateCandidatesAreSetInBuddyCells(cellsCandidates);
         eliminateLockedCandidates(cellsCandidates);
 
         Map<Cell, Integer> cellsNumbers = new HashMap<>();
@@ -43,11 +44,59 @@ public class Solver {
                 .collect(Collectors.toMap(Function.identity(), c -> new HashSet<>(board.getPossibleValues())));
     }
 
-    private void eliminateNumbersPresentInBuddyCells(Map<Cell, Set<Integer>> cellsCandidates) {
+    private void eliminateCandidatesAreSetInBuddyCells(Map<Cell, Set<Integer>> cellsCandidates) {
         cellsCandidates.forEach((cell, candidates) -> forAllBuddyCells(cell, candidates::remove));
     }
 
     private void eliminateLockedCandidates(Map<Cell, Set<Integer>> cellsCandidates) {
+        cellsCandidates.forEach(((cell, candidates) -> {
+            // Für jeden Kandidaten schauen, ob er in einer Zelle einer anderen Zeile/Spalte in diesem Block existiert.
+            // Falls nein, den Kandidaten für alle Zellen dieser Zeile/Spalte in anderen Blöcken löschen
+            for (Integer candidate : candidates) {
+                if (getEmptyCellsInSameBlockInOtherRows(cell)
+                        .noneMatch(otherCell -> cellsCandidates.get(otherCell).contains(candidate))) {
+                    getEmptyCellsInSameRowInOtherBlocks(cell)
+                            .forEach(otherCell -> cellsCandidates.get(otherCell).remove(candidate));
+                }
+                if (getEmptyCellsInSameBlockInOtherColumns(cell)
+                        .noneMatch(otherCell -> cellsCandidates.get(otherCell).contains(candidate))) {
+                    getEmptyCellsInSameColumnInOtherBlocks(cell)
+                            .forEach(otherCell -> cellsCandidates.get(otherCell).remove(candidate));
+                }
+            }
+        }));
+    }
+
+    private Stream<Cell> getEmptyCellsInSameBlockInOtherRows(Cell cell) {
+        return cell.getBlock()
+                .getCells()
+                .stream()
+                .filter(Cell::isEmpty)
+                .filter(otherCell -> otherCell.getRow() != cell.getRow());
+    }
+
+    private Stream<Cell> getEmptyCellsInSameRowInOtherBlocks(Cell cell) {
+        return cell.getRow()
+                .getCells()
+                .stream()
+                .filter(Cell::isEmpty)
+                .filter(otherCell -> otherCell.getBlock() != cell.getBlock());
+    }
+
+    private Stream<Cell> getEmptyCellsInSameBlockInOtherColumns(Cell cell) {
+        return cell.getBlock()
+                .getCells()
+                .stream()
+                .filter(Cell::isEmpty)
+                .filter(otherCell -> otherCell.getColumn() != cell.getColumn());
+    }
+
+    private Stream<Cell> getEmptyCellsInSameColumnInOtherBlocks(Cell cell) {
+        return cell.getColumn()
+                .getCells()
+                .stream()
+                .filter(Cell::isEmpty)
+                .filter(otherCell -> otherCell.getBlock() != cell.getBlock());
     }
 
     private void forAllBuddyCells(Cell cell, Consumer<Integer> consumer) {

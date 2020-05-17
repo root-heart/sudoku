@@ -6,6 +6,8 @@ import rootheart.codes.sudoku.solver.Solver
 import spock.lang.Ignore
 import spock.lang.Specification
 
+import java.util.stream.Collectors
+
 class SolverSpec extends Specification {
     private String mediumSudoku = "975002130" +
             "000600000" +
@@ -36,6 +38,72 @@ class SolverSpec extends Specification {
                 "743218569\n" +
                 "698453721\n" +
                 "521769384\n"
+    }
+
+    def 'Test that getting cells in same block in other rows works'() {
+        given:
+        def solver = new Solver()
+        def board = new Board("0" * 81)
+
+        when:
+        def cells = solver.getEmptyCellsInSameBlockInOtherRows(board.cells[cellIndex])
+
+        then:
+        cells.collect(Collectors.toSet()) == otherCellsIndices.collect { board.cells[it] } as Set
+
+        where:
+        cellIndex || otherCellsIndices
+        0         || [9, 10, 11, 18, 19, 20]
+        10        || [0, 1, 2, 18, 19, 20]
+        20        || [0, 1, 2, 9, 10, 11]
+        6         || [15, 16, 17, 24, 25, 26]
+    }
+
+    def 'Test that getting cells in same row in other blocks works'() {
+        given:
+        def solver = new Solver()
+        def board = new Board("0" * 81)
+
+        when:
+        def cells = solver.getEmptyCellsInSameRowInOtherBlocks(board.cells[cellIndex])
+
+        then:
+        cells.collect(Collectors.toSet()) == otherCellsIndices.collect { board.cells[it] } as Set
+
+        where:
+        cellIndex || otherCellsIndices
+        0         || [3, 4, 5, 6, 7, 8]
+        10        || [12, 13, 14, 15, 16, 17]
+        21        || [18, 19, 20, 24, 25, 26]
+        6         || [0, 1, 2, 3, 4, 5]
+    }
+
+    def 'Test that locked candidates are eliminated'() {
+        given:
+        def solver = new Solver()
+        def board = new Board("000000000" + "000789000" + "123000000" + "000000000" * 6)
+
+        when:
+        def candidates = solver.createCandidates(board)
+        solver.eliminateCandidatesAreSetInBuddyCells(candidates)
+        solver.eliminateLockedCandidates(candidates)
+
+        then:
+        candidates[board.cells[6]] == [4, 5, 6] as Set
+        candidates[board.cells[7]] == [4, 5, 6] as Set
+        candidates[board.cells[8]] == [4, 5, 6] as Set
+
+        when:
+        board = new Board("100000000" + "200000000" + "300000000" + "070000000" + "080000000" + "090000000" + "000000000" * 3)
+        candidates = solver.createCandidates(board)
+        solver.eliminateCandidatesAreSetInBuddyCells(candidates)
+        solver.eliminateLockedCandidates(candidates)
+
+        then:
+        candidates[board.cells[56]] == [4, 5, 6] as Set
+        candidates[board.cells[65]] == [4, 5, 6] as Set
+        candidates[board.cells[74]] == [4, 5, 6] as Set
+
     }
 
     @Ignore("The solver is not able to solve this yet")
