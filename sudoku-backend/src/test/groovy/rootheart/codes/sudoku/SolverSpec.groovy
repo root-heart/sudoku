@@ -119,7 +119,28 @@ class SolverSpec extends Specification {
         !candidates[board.cells[11]].contains(3)
     }
 
-    @Ignore("The solver is not able to solve this yet")
+    def 'Test that naked twins are eliminated'() {
+        given:
+        def solver = new Solver()
+        def board = new Board("100000000" + "046000000" + "057000000" + "065000000" + "074000000" + "089000000" + "098000000" + "000000000" * 2)
+
+        when:
+        def candidates = solver.createCandidates(board)
+        solver.eliminateCandidatesAreSetInBuddyCells(candidates)
+        solver.eliminateNakedTwins(candidates)
+
+        then:
+        candidates[board.cells[1]] == [2, 3] as Set
+        candidates[board.cells[2]] == [2, 3] as Set
+        candidates[board.cells[3]] == [4, 5, 6, 7, 8, 9] as Set
+        candidates[board.cells[4]] == [4, 5, 6, 7, 8, 9] as Set
+        candidates[board.cells[5]] == [4, 5, 6, 7, 8, 9] as Set
+        candidates[board.cells[6]] == [4, 5, 6, 7, 8, 9] as Set
+        candidates[board.cells[7]] == [4, 5, 6, 7, 8, 9] as Set
+        candidates[board.cells[8]] == [4, 5, 6, 7, 8, 9] as Set
+
+    }
+
     def 'Test hard Sudoku'() {
         given:
         def solver = new Solver()
@@ -139,6 +160,27 @@ class SolverSpec extends Specification {
 
         then:
         noExceptionThrown()
+        println board
+    }
+
+    def 'Test extreme difficult Sudoku'() {
+        given:
+        def board = new Board("002400000" +
+                "000000000" +
+                "900000056" +
+                "000300000" +
+                "000056000" +
+                "009000870" +
+                "500000000" +
+                "000200100" +
+                "300009200")
+
+        when:
+        new Solver().solve(board)
+
+        then:
+        noExceptionThrown()
+        println board
     }
 
     def 'Test performance with medium Sudoku'() {
