@@ -2,6 +2,10 @@ package rootheart.codes.sudoku.game;
 
 import lombok.Getter;
 
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
 @Getter
 public class Board {
     private final int size;
@@ -10,6 +14,7 @@ public class Board {
     private final Group[] rows;
     private final Group[] blocks;
     private final Cell[] cells;
+    private final Set<Integer> possibleValues;
 
     public Board(String board) {
         if (board.length() == 16) {
@@ -29,6 +34,8 @@ public class Board {
             rows[i] = new Group(this);
             blocks[i] = new Group(this);
         }
+
+        possibleValues = IntStream.rangeClosed(1, maxValue).boxed().collect(Collectors.toSet());
 
         createCells();
         initCells(board);

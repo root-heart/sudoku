@@ -1,6 +1,5 @@
 package rootheart.codes.sudoku.solver;
 
-import lombok.RequiredArgsConstructor;
 import rootheart.codes.sudoku.game.Board;
 import rootheart.codes.sudoku.game.Cell;
 import rootheart.codes.sudoku.game.Group;
@@ -12,17 +11,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class Solver {
-    @RequiredArgsConstructor
-    static class CellWithCandidates {
-        final Cell cell;
-        final Set<Integer> candidates;
-    }
-
     public void solve(Board board) {
         while (board.hasEmptyCells()) {
             Map<Cell, Integer> singleCandidates = calculateSingleCandidates(board);
@@ -36,6 +29,7 @@ public class Solver {
     private Map<Cell, Integer> calculateSingleCandidates(Board board) {
         Map<Cell, Set<Integer>> cellsCandidates = createCandidates(board);
         eliminateNumbersPresentInBuddyCells(cellsCandidates);
+        eliminateLockedCandidates(cellsCandidates);
 
         Map<Cell, Integer> cellsNumbers = new HashMap<>();
         cellsNumbers.putAll(findNakedSingles(cellsCandidates));
@@ -44,29 +38,30 @@ public class Solver {
     }
 
     private Map<Cell, Set<Integer>> createCandidates(Board board) {
-        Set<Integer> allValues = IntStream
-                .rangeClosed(1, board.getMaxValue())
-                .boxed()
-                .collect(Collectors.toSet());
         return Arrays.stream(board.getCells())
                 .filter(Cell::isEmpty)
-                .collect(Collectors.toMap(Function.identity(), c -> new HashSet<>(allValues)));
+                .collect(Collectors.toMap(Function.identity(), c -> new HashSet<>(board.getPossibleValues())));
     }
 
-    private void eliminateNumbersPresentInBuddyCells(Map<Cell, Set<Integer>> result) {
-        result.forEach((cell, candidates) -> {
-            Set<Integer> buddyValues = getBuddyCells(cell).stream().map(Cell::getNumber).collect(Collectors.toSet());
-            candidates.removeAll(buddyValues);
-        });
+    private void eliminateNumbersPresentInBuddyCells(Map<Cell, Set<Integer>> cellsCandidates) {
+        cellsCandidates.forEach((cell, candidates) -> forAllBuddyCells(cell, candidates::remove));
     }
 
-    private Set<Cell> getBuddyCells(Cell cell) {
-        Set<Cell> buddyCells = new HashSet<>();
-        buddyCells.addAll(cell.getColumn().getCells());
-        buddyCells.addAll(cell.getRow().getCells());
-        buddyCells.addAll(cell.getBlock().getCells());
-        buddyCells.remove(cell);
-        return buddyCells;
+    private void eliminateLockedCandidates(Map<Cell, Set<Integer>> cellsCandidates) {
+    }
+
+    private void forAllBuddyCells(Cell cell, Consumer<Integer> consumer) {
+        forAllCellsExcept(cell.getColumn(), cell, consumer);
+        forAllCellsExcept(cell.getRow(), cell, consumer);
+        forAllCellsExcept(cell.getBlock(), cell, consumer);
+    }
+
+    private void forAllCellsExcept(Group group, Cell exception, Consumer<Integer> consumer) {
+        group.getCells()
+                .stream()
+                .filter(cell -> cell != exception)
+                .map(Cell::getNumber)
+                .forEach(consumer);
     }
 
     private Map<Cell, Integer> findNakedSingles(Map<Cell, Set<Integer>> cellsCandidates) {
@@ -103,5 +98,4 @@ public class Solver {
                 .forEach(entry -> hiddenSingles.put(entry.getValue().get(0), entry.getKey()));
         return hiddenSingles;
     }
-
 }
