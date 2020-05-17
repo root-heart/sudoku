@@ -104,6 +104,19 @@ class SolverSpec extends Specification {
         candidates[board.cells[65]] == [4, 5, 6] as Set
         candidates[board.cells[74]] == [4, 5, 6] as Set
 
+        when:
+        board = new Board("000102000" + "000000000" + "000000300" + "000030000" + "000000000" * 5)
+        candidates = solver.createCandidates(board)
+        solver.eliminateCandidatesAreSetInBuddyCells(candidates)
+        solver.eliminateLockedCandidates(candidates)
+
+        then:
+        candidates[board.cells[0]].contains(3)
+        candidates[board.cells[1]].contains(3)
+        candidates[board.cells[2]].contains(3)
+        !candidates[board.cells[9]].contains(3)
+        !candidates[board.cells[10]].contains(3)
+        !candidates[board.cells[11]].contains(3)
     }
 
     @Ignore("The solver is not able to solve this yet")

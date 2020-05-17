@@ -63,6 +63,16 @@ public class Solver {
                     getEmptyCellsInSameColumnInOtherBlocks(cell)
                             .forEach(otherCell -> cellsCandidates.get(otherCell).remove(candidate));
                 }
+                if (getEmptyCellsInSameRowInOtherBlocks(cell)
+                        .noneMatch(otherCell -> cellsCandidates.get(otherCell).contains(candidate))) {
+                    getEmptyCellsInSameBlockInOtherRows(cell)
+                            .forEach(otherCell -> cellsCandidates.get(otherCell).remove(candidate));
+                }
+                if (getEmptyCellsInSameColumnInOtherBlocks(cell)
+                        .noneMatch(otherCell -> cellsCandidates.get(otherCell).contains(candidate))) {
+                    getEmptyCellsInSameBlockInOtherColumns(cell)
+                            .forEach(otherCell -> cellsCandidates.get(otherCell).remove(candidate));
+                }
             }
         }));
     }
