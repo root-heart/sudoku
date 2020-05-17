@@ -18,6 +18,50 @@ class SolverSpec extends Specification {
             "740200069" +
             "000003000" +
             "020760084"
+    private String extremeDifficultSudoku = "900000000" +
+            "000700016" +
+            "064000205" +
+            "240080507" +
+            "000076000" +
+            "000000000" +
+            "005130940" +
+            "002008070" +
+            "000007100"
+
+    def 'Test the very simplest Sudoku'() {
+        given:
+        def board = new Board("1234" + "3412" + "2143" + "4320")
+
+        when:
+        new Solver().solve(board)
+
+        then:
+        board.toString() == "1234\n" + "3412\n" + "2143\n" + "4321\n"
+    }
+
+    def 'Test one very simple Sudoku'() {
+        given:
+        def board = new Board("1234" + "3412" + "2143" + "0000")
+
+        when:
+        new Solver().solve(board)
+
+        then:
+        board.toString() == "1234\n" + "3412\n" + "2143\n" + "4321\n"
+    }
+
+    def 'Test one very simple but ambiguous Sudoku'() {
+        given:
+        def board = new Board("1234" + "3412" + "0001" + "0000")
+
+        when:
+        new Solver().solve(board)
+
+        then:
+        thrown(Solver.MultipleSolutionsException)
+    }
+
+
 
     def 'Test medium Sudoku'() {
         given:
@@ -183,7 +227,20 @@ class SolverSpec extends Specification {
         println board
     }
 
-    def 'Test performance with medium Sudoku'() {
+    def 'Test another extreme difficult Sudoku'() {
+
+        given:
+        def board = new Board(extremeDifficultSudoku)
+
+        when:
+        new Solver().solve(board)
+
+        then:
+        noExceptionThrown()
+        println board
+    }
+
+    def 'Test performance with extremely difficult Sudoku'() {
         given:
         def jdkSolver = new Solver()
         def eclipseCollectionsSolver = new EclipseCollectionsSolver()
@@ -192,7 +249,7 @@ class SolverSpec extends Specification {
         def benchmarkCount = 1_000_000
 
         when:
-        def board = new Board(mediumSudoku)
+        def board = new Board(extremeDifficultSudoku)
         warmUpCount.times { jdkSolver.solve(board) }
         warmUpCount.times { eclipseCollectionsSolver.solve(board) }
 
@@ -212,5 +269,27 @@ class SolverSpec extends Specification {
 
         then:
         true
+    }
+
+    def 'Recreate failing test'() {
+        given:
+        def board = new Board(
+                "001305900" +
+                "973602508" +
+                "000987400" +
+
+                "245700189" +
+                "619428300" +
+                "030591200" +
+
+                "000000800" +
+                "000000602" +
+                "090050730")
+
+        when:
+        new Solver().solve(board)
+
+        then:
+        noExceptionThrown()
     }
 }

@@ -8,15 +8,19 @@ import java.util.stream.IntStream;
 
 @Getter
 public class Board {
-    private final int size;
-    private final int maxValue;
-    private final Group[] columns;
-    private final Group[] rows;
-    private final Group[] blocks;
-    private final Cell[] cells;
-    private final Set<Integer> possibleValues;
+    private int size;
+    private int maxValue;
+    private Group[] columns;
+    private Group[] rows;
+    private Group[] blocks;
+    private Cell[] cells;
+    private Set<Integer> possibleValues;
 
     public Board(String board) {
+        set(board);
+    }
+
+    public void set(String board) {
         if (board.length() == 16) {
             size = 2;
         } else if (board.length() == 81) {
