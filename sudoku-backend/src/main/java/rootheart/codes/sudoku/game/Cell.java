@@ -13,11 +13,6 @@ public class Cell {
     private final Group block;
     private int number;
 
-    @Override
-    public String toString() {
-        return String.valueOf(number);
-    }
-
     public boolean isEmpty() {
         return number == 0;
     }
