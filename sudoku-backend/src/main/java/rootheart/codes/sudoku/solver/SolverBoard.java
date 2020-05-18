@@ -4,7 +4,7 @@ import lombok.Getter;
 import rootheart.codes.sudoku.game.Board;
 import rootheart.codes.sudoku.game.Cell;
 
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -38,11 +38,25 @@ public class SolverBoard {
     }
 
     public void calculate() {
-        eliminateCandidatesThatAreSetInBuddyCells();
-        revealHiddenSingles();
-        eliminateLockedCandidates();
-        eliminateNakedTwins();
-        findNakedSingles();
+        long countBefore = countCellsWithMultipleCandidates();
+        while (true) {
+            solverCellMap.values().forEach(SolverCell::eliminateImpossibilities);
+            long countAfter = countCellsWithMultipleCandidates();
+            if (countAfter == 0 || countBefore == countAfter) {
+                findNakedSingles();
+                return;
+            }
+            countBefore = countAfter;
+        }
+    }
+
+    private long countCellsWithMultipleCandidates() {
+        return solverCellMap.values()
+                .stream()
+                .map(SolverCell::getCandidates)
+                .mapToInt(Collection::size)
+                .filter(size -> size > 1)
+                .count();
     }
 
     public void eliminateCandidatesThatAreSetInBuddyCells() {

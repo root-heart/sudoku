@@ -27,6 +27,18 @@ public class SolverCell {
         }
     }
 
+    public void eliminateImpossibilities() {
+        eliminateCandidatesThatAreSetInBuddyCells();
+        revealHiddenSingle();
+        eliminateLockedCandidates();
+        eliminateNakedTwins();
+        if (hasOneCandidate()) {
+            otherCellsInColumn.forEach(otherCell -> otherCell.candidates.removeAll(candidates));
+            otherCellsInRow.forEach(otherCell -> otherCell.candidates.removeAll(candidates));
+            otherCellsInBlock.forEach(otherCell -> otherCell.candidates.removeAll(candidates));
+        }
+    }
+
     public void eliminateCandidatesThatAreSetInBuddyCells() {
         otherCellsInColumn.stream().map(SolverCell::getCell).map(Cell::getNumber).forEach(candidates::remove);
         otherCellsInRow.stream().map(SolverCell::getCell).map(Cell::getNumber).forEach(candidates::remove);
