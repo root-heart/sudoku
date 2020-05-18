@@ -1,9 +1,8 @@
 package rootheart.codes.sudoku
 
 import rootheart.codes.sudoku.game.Board
-import rootheart.codes.sudoku.solver.EclipseCollectionsSolver
+
 import rootheart.codes.sudoku.solver.Solver
-import spock.lang.Ignore
 import spock.lang.Specification
 
 import java.util.stream.Collectors
@@ -60,7 +59,6 @@ class SolverSpec extends Specification {
         then:
         thrown(Solver.MultipleSolutionsException)
     }
-
 
 
     def 'Test medium Sudoku'() {
@@ -243,7 +241,6 @@ class SolverSpec extends Specification {
     def 'Test performance with extremely difficult Sudoku'() {
         given:
         def jdkSolver = new Solver()
-        def eclipseCollectionsSolver = new EclipseCollectionsSolver()
 
         def warmUpCount = 1_000_000
         def benchmarkCount = 1_000_000
@@ -251,7 +248,6 @@ class SolverSpec extends Specification {
         when:
         def board = new Board(extremeDifficultSudoku)
         warmUpCount.times { jdkSolver.solve(board) }
-        warmUpCount.times { eclipseCollectionsSolver.solve(board) }
 
         and:
         5.times {
@@ -259,32 +255,26 @@ class SolverSpec extends Specification {
             benchmarkCount.times { jdkSolver.solve(board) }
             long e = System.nanoTime()
 
-            long s2 = System.nanoTime()
-            benchmarkCount.times { eclipseCollectionsSolver.solve(board) }
-            long e2 = System.nanoTime()
-
-            println "default JDK implementation ${(e - s) / 1000} microseconds"
-            println "eclipse collections implementation ${(e2 - s2) / 1000} microseconds"
+            println "solver took ${(e - s) / 1000} microseconds for $benchmarkCount iterations"
         }
 
         then:
         true
     }
 
-    def 'Recreate failing test'() {
+    def 'Test that a board without a solution is not solved by the solver'() {
         given:
-        def board = new Board(
-                "001305900" +
-                "973602508" +
-                "000987400" +
+        def board = new Board("001305900" +
+                        "973602508" +
+                        "000987400" +
 
-                "245700189" +
-                "619428300" +
-                "030591200" +
+                        "245700189" +
+                        "619428300" +
+                        "030591200" +
 
-                "000000800" +
-                "000000602" +
-                "090050730")
+                        "000000800" +
+                        "000000602" +
+                        "090050730")
 
         when:
         new Solver().solve(board)
