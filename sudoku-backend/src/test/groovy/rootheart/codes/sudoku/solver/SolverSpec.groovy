@@ -1,7 +1,6 @@
-package rootheart.codes.sudoku
+package rootheart.codes.sudoku.solver
 
 import rootheart.codes.sudoku.game.Board
-import rootheart.codes.sudoku.solver.Solver
 import spock.lang.Specification
 
 class SolverSpec extends Specification {
