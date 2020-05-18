@@ -138,17 +138,21 @@ class SolverSpec extends Specification {
         given:
         def jdkSolver = new Solver()
 
-        def warmUpCount = 1_000_000
-        def benchmarkCount = 1_000_000
+        def warmUpCount = 1_00
+        def benchmarkCount = 1_00
 
         when:
-        def board = new Board(extremeDifficultSudoku)
-        warmUpCount.times { jdkSolver.solve(board) }
-
-        and:
         5.times {
+            warmUpCount.times {
+                def board = new Board(extremeDifficultSudoku)
+                jdkSolver.solve(board)
+            }
+
             long s = System.nanoTime()
-            benchmarkCount.times { jdkSolver.solve(board) }
+            benchmarkCount.times {
+                def board = new Board(extremeDifficultSudoku)
+                jdkSolver.solve(board)
+            }
             long e = System.nanoTime()
 
             println "solver took ${(e - s) / 1000} microseconds for $benchmarkCount iterations"
@@ -161,16 +165,16 @@ class SolverSpec extends Specification {
     def 'Test that a board without a solution is not solved by the solver'() {
         given:
         def board = new Board("001305900" +
-                        "973602508" +
-                        "000987400" +
+                "973602508" +
+                "000987400" +
 
-                        "245700189" +
-                        "619428300" +
-                        "030591200" +
+                "245700189" +
+                "619428300" +
+                "030591200" +
 
-                        "000000800" +
-                        "000000602" +
-                        "090050730")
+                "000000800" +
+                "000000602" +
+                "090050730")
 
         when:
         new Solver().solve(board)
