@@ -7,16 +7,16 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Getter
-public class Board {
+public class Board extends CellList {
     private int size;
     private int maxValue;
     private Group[] columns;
     private Group[] rows;
     private Group[] blocks;
-    private Cell[] cells;
     private Set<Integer> possibleValues;
 
     public Board(String board) {
+        super(board.length());
         set(board);
     }
 
@@ -29,7 +29,6 @@ public class Board {
             throw new IllegalArgumentException(board);
         }
         maxValue = size * size;
-        cells = new Cell[board.length()];
         columns = new Group[maxValue];
         rows = new Group[maxValue];
         blocks = new Group[maxValue];
@@ -46,16 +45,16 @@ public class Board {
     }
 
     private void createCells() {
-        for (int i = 0; i < cells.length; i++) {
-            int columnIndex = i % maxValue;
-            int rowIndex = i / maxValue;
-            int blockIndex = (rowIndex / size) * size + (columnIndex / size);
-            int blockCellIndex = columnIndex % size + rowIndex % size * size;
-            Cell cell = new Cell(columns[columnIndex], rows[rowIndex], blocks[blockIndex]);
-            columns[columnIndex].setCell(rowIndex, cell);
-            rows[rowIndex].setCell(columnIndex, cell);
-            blocks[blockIndex].setCell(blockCellIndex, cell);
-            cells[i] = cell;
+        for (int rowIndex = 0; rowIndex < maxValue; rowIndex++) {
+            for (int columnIndex = 0; columnIndex < maxValue; columnIndex++) {
+                int blockIndex = (rowIndex / size) * size + (columnIndex / size);
+                int blockCellIndex = columnIndex % size + rowIndex % size * size;
+                Cell cell = new Cell(columns[columnIndex], rows[rowIndex], blocks[blockIndex]);
+                columns[columnIndex].setCell(rowIndex, cell);
+                rows[rowIndex].setCell(columnIndex, cell);
+                blocks[blockIndex].setCell(blockCellIndex, cell);
+                setCell(rowIndex * maxValue + columnIndex, cell);
+            }
         }
     }
 
@@ -84,17 +83,6 @@ public class Board {
         return columns[column].getCell(row);
     }
 
-    public boolean hasEmptyCells() {
-        for (int columnIndex = 0; columnIndex < maxValue; columnIndex++) {
-            for (int rowIndex = 0; rowIndex < maxValue; rowIndex++) {
-                if (cell(columnIndex, rowIndex).getNumber() == 0) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -105,5 +93,12 @@ public class Board {
             sb.append("\n");
         }
         return sb.toString();
+    }
+
+    public String getBoardString() {
+        return streamCells()
+                .map(Cell::getNumber)
+                .map(String::valueOf)
+                .collect(Collectors.joining());
     }
 }
