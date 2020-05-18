@@ -31,45 +31,43 @@ public class Solver {
         }
     }
 
+    public static class BoardInvalidException extends RuntimeException {
+    }
+
     public void solve(Board board) {
         while (board.hasEmptyCells()) {
             if (!isValid(board)) {
-                throw new RuntimeException("board invalid");
+                throw new BoardInvalidException();
             }
-            Board previousState = clone(board);
             Map<Cell, Set<Integer>> cellsCandidates = calculateCandidates(board);
             if (cellsCandidates.entrySet().stream()
-                    .noneMatch(entry -> entry.getKey().isEmpty() && entry.getValue().size() > 0)) {
-                // no solution
+                    .anyMatch(entry -> entry.getKey().isEmpty() && entry.getValue().size() == 0)) {
                 throw new NoSolutionException("found no solution");
             }
+            Board previousState = clone(board);
 
             Map<Cell, Integer> singleCandidates = findSingleCandidates(cellsCandidates);
             if (singleCandidates.isEmpty()) {
                 System.out.println("XXX");
                 Board boardToSetARandomNumberTo = clone(board);
                 List<Board> solutions = new ArrayList<>();
-                Arrays.stream(boardToSetARandomNumberTo.getCells())
-                        .filter(Cell::isEmpty)
+                boardToSetARandomNumberTo.streamEmptyCells()
                         .findFirst()
                         .ifPresent(cell ->
                                 boardToSetARandomNumberTo.getPossibleValues().forEach(numberToTry -> {
                                     cell.setNumber(numberToTry);
                                     if (isValid(boardToSetARandomNumberTo)) {
                                         if (System.currentTimeMillis() % 500 == 0) {
-                                            System.out.println(getBoardString(previousState));
-                                            int index = Arrays.asList(boardToSetARandomNumberTo.getCells()).indexOf(cell);
-                                            StringBuilder spaces = new StringBuilder();
-                                            for (int i = 0; i < index; i++) {
-                                                spaces.append(" ");
-                                            }
-                                            System.out.println(spaces.toString() + numberToTry);
+                                            System.out.println(previousState.getBoardString());
+                                            int index = boardToSetARandomNumberTo.indexOf(cell);
+                                            System.out.println(" ".repeat(Math.max(0, index)) + numberToTry);
                                         }
                                         Board boardToTryToSolve = clone(boardToSetARandomNumberTo);
                                         try {
                                             solve(boardToTryToSolve);
                                             solutions.add(boardToTryToSolve);
                                         } catch (NoSolutionException e) {
+                                            // if trying this number did not end up with a solution, try the next one
                                         }
                                     }
                                 }));
@@ -79,34 +77,23 @@ public class Solver {
                 if (solutions.size() > 1) {
                     throw new MultipleSolutionsException("found multiple solutions");
                 }
-                board.set(getBoardString(solutions.get(0)));
+                board.set(solutions.get(0).getBoardString());
             } else {
                 Map.Entry<Cell, Integer> next = singleCandidates.entrySet().iterator().next();
                 next.getKey().setNumber(next.getValue());
-                System.out.println(getBoardString(previousState));
-                int index = Arrays.asList(board.getCells()).indexOf(next.getKey());
-                StringBuilder spaces = new StringBuilder();
-                for (int i = 0; i < index; i++) {
-                    spaces.append(" ");
-                }
-                System.out.println(spaces.toString() + next.getValue());
+                System.out.println(previousState.getBoardString());
+                int index = board.indexOf(next.getKey());
+                System.out.println(" ".repeat(Math.max(0, index)) + next.getValue());
                 if (!isValid(board)) {
-                    throw new RuntimeException("board invalid");
+                    throw new BoardInvalidException();
                 }
             }
         }
     }
 
     private Board clone(Board board) {
-        String boardString = getBoardString(board);
+        String boardString = board.getBoardString();
         return new Board(boardString);
-    }
-
-    private String getBoardString(Board board) {
-        return Arrays.stream(board.getCells())
-                .map(Cell::getNumber)
-                .map(String::valueOf)
-                .collect(Collectors.joining());
     }
 
     private boolean isValid(Board board) {
@@ -116,7 +103,7 @@ public class Solver {
     }
 
     private boolean isValid(Group group) {
-        return group.getCells().stream()
+        return group.streamCells()
                 .filter(c -> !c.isEmpty())
                 .collect(Collectors.groupingBy(Cell::getNumber, Collectors.counting()))
                 .entrySet().stream()
@@ -141,36 +128,35 @@ public class Solver {
         return singleCandidates;
     }
 
-    private String statusString(Board board, Map<Cell, Set<Integer>> cellsCandidates) {
-        List<String> states = new ArrayList<>();
-        for (Cell cell : board.getCells()) {
-            states.add(cell.getNumber() + "(" + candidatesString(cellsCandidates.get(cell)) + ")");
-        }
-        StringBuilder sb = new StringBuilder();
-        for (int row = 0; row < board.getMaxValue(); row++) {
-            for (int column = 0; column < board.getMaxValue(); column++) {
-                sb.append(states.get(row * board.getMaxValue() + column));
-            }
-            sb.append("\n");
-        }
-        return sb.toString();
-    }
-
-    private String candidatesString(Set<Integer> candidates) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 1; i <= 9; i++) {
-            if (candidates != null && candidates.contains(i)) {
-                sb.append(i);
-            } else {
-                sb.append(" ");
-            }
-        }
-        return sb.toString();
-    }
+//    private String statusString(Board board, Map<Cell, Set<Integer>> cellsCandidates) {
+//        List<String> states = new ArrayList<>();
+//        for (Cell cell : board.getCells()) {
+//            states.add(cell.getNumber() + "(" + candidatesString(cellsCandidates.get(cell)) + ")");
+//        }
+//        StringBuilder sb = new StringBuilder();
+//        for (int row = 0; row < board.getMaxValue(); row++) {
+//            for (int column = 0; column < board.getMaxValue(); column++) {
+//                sb.append(states.get(row * board.getMaxValue() + column));
+//            }
+//            sb.append("\n");
+//        }
+//        return sb.toString();
+//    }
+//
+//    private String candidatesString(Set<Integer> candidates) {
+//        StringBuilder sb = new StringBuilder();
+//        for (int i = 1; i <= 9; i++) {
+//            if (candidates != null && candidates.contains(i)) {
+//                sb.append(i);
+//            } else {
+//                sb.append(" ");
+//            }
+//        }
+//        return sb.toString();
+//    }
 
     private Map<Cell, Set<Integer>> createCandidates(Board board) {
-        return Arrays.stream(board.getCells())
-                .filter(Cell::isEmpty)
+        return board.streamEmptyCells()
                 .collect(Collectors.toMap(Function.identity(), c -> new HashSet<>(board.getPossibleValues())));
     }
 
@@ -224,8 +210,7 @@ public class Solver {
 
     private List<Cell> getOtherCellsInGroup(Cell cell, Group group) {
         return group
-                .getCells()
-                .stream()
+                .streamEmptyCells()
                 .filter(otherCell -> cell != otherCell)
                 .collect(Collectors.toList());
     }
@@ -233,13 +218,11 @@ public class Solver {
     private void eliminateNakedTwinsInGroup(Map<Cell, Set<Integer>> cellsCandidates, List<Cell> otherCellsInGroup, Set<Integer> candidates) {
         otherCellsInGroup
                 .stream()
-                .filter(Cell::isEmpty)
                 .filter(otherCell -> cellsCandidates.get(otherCell).equals(candidates))
                 .findAny()
                 .ifPresent(otherCell -> {
                     otherCellsInGroup
                             .stream()
-                            .filter(Cell::isEmpty)
                             .filter(x -> otherCell != x)
                             .forEach(x -> cellsCandidates.get(x).removeAll(candidates));
                 });
@@ -248,33 +231,25 @@ public class Solver {
 
     private Stream<Cell> getEmptyCellsInSameBlockInOtherRows(Cell cell) {
         return cell.getBlock()
-                .getCells()
-                .stream()
-                .filter(Cell::isEmpty)
+                .streamEmptyCells()
                 .filter(otherCell -> otherCell.getRow() != cell.getRow());
     }
 
     private Stream<Cell> getEmptyCellsInSameRowInOtherBlocks(Cell cell) {
         return cell.getRow()
-                .getCells()
-                .stream()
-                .filter(Cell::isEmpty)
+                .streamEmptyCells()
                 .filter(otherCell -> otherCell.getBlock() != cell.getBlock());
     }
 
     private Stream<Cell> getEmptyCellsInSameBlockInOtherColumns(Cell cell) {
         return cell.getBlock()
-                .getCells()
-                .stream()
-                .filter(Cell::isEmpty)
+                .streamEmptyCells()
                 .filter(otherCell -> otherCell.getColumn() != cell.getColumn());
     }
 
     private Stream<Cell> getEmptyCellsInSameColumnInOtherBlocks(Cell cell) {
         return cell.getColumn()
-                .getCells()
-                .stream()
-                .filter(Cell::isEmpty)
+                .streamEmptyCells()
                 .filter(otherCell -> otherCell.getBlock() != cell.getBlock());
     }
 
@@ -285,8 +260,7 @@ public class Solver {
     }
 
     private void forAllCellsExcept(Group group, Cell exception, Consumer<Integer> consumer) {
-        group.getCells()
-                .stream()
+        group.streamCells()
                 .filter(cell -> cell != exception)
                 .map(Cell::getNumber)
                 .forEach(consumer);
@@ -311,9 +285,7 @@ public class Solver {
 
     private Map<Cell, Integer> findHiddenSinglesInGroup(Map<Cell, Set<Integer>> cellsCandidates, Group group) {
         Map<Integer, List<Cell>> candidateCellsForNumber = new HashMap<>();
-        group.getCells()
-                .stream()
-                .filter(Cell::isEmpty)
+        group.streamEmptyCells()
                 .forEach(cell -> {
                     for (Integer candidate : cellsCandidates.get(cell)) {
                         candidateCellsForNumber.computeIfAbsent(candidate, k -> new ArrayList<>()).add(cell);

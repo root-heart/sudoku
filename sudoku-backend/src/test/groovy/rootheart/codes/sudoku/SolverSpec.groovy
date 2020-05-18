@@ -90,10 +90,10 @@ class SolverSpec extends Specification {
         def board = new Board("0" * 81)
 
         when:
-        def cells = solver.getEmptyCellsInSameBlockInOtherRows(board.cells[cellIndex])
+        def cells = solver.getEmptyCellsInSameBlockInOtherRows(board.getCell(cellIndex))
 
         then:
-        cells.collect(Collectors.toSet()) == otherCellsIndices.collect { board.cells[it] } as Set
+        cells.collect(Collectors.toSet()) == otherCellsIndices.collect { board.getCell(it) } as Set
 
         where:
         cellIndex || otherCellsIndices
@@ -109,10 +109,10 @@ class SolverSpec extends Specification {
         def board = new Board("0" * 81)
 
         when:
-        def cells = solver.getEmptyCellsInSameRowInOtherBlocks(board.cells[cellIndex])
+        def cells = solver.getEmptyCellsInSameRowInOtherBlocks(board.getCell(cellIndex))
 
         then:
-        cells.collect(Collectors.toSet()) == otherCellsIndices.collect { board.cells[it] } as Set
+        cells.collect(Collectors.toSet()) == otherCellsIndices.collect { board.getCell(it) } as Set
 
         where:
         cellIndex || otherCellsIndices
@@ -133,9 +133,9 @@ class SolverSpec extends Specification {
         solver.eliminateLockedCandidates(candidates)
 
         then:
-        candidates[board.cells[6]] == [4, 5, 6] as Set
-        candidates[board.cells[7]] == [4, 5, 6] as Set
-        candidates[board.cells[8]] == [4, 5, 6] as Set
+        candidates[board.getCell(6)] == [4, 5, 6] as Set
+        candidates[board.getCell(7)] == [4, 5, 6] as Set
+        candidates[board.getCell(8)] == [4, 5, 6] as Set
 
         when:
         board = new Board("100000000" + "200000000" + "300000000" + "070000000" + "080000000" + "090000000" + "000000000" * 3)
@@ -144,9 +144,9 @@ class SolverSpec extends Specification {
         solver.eliminateLockedCandidates(candidates)
 
         then:
-        candidates[board.cells[56]] == [4, 5, 6] as Set
-        candidates[board.cells[65]] == [4, 5, 6] as Set
-        candidates[board.cells[74]] == [4, 5, 6] as Set
+        candidates[board.getCell(56)] == [4, 5, 6] as Set
+        candidates[board.getCell(65)] == [4, 5, 6] as Set
+        candidates[board.getCell(74)] == [4, 5, 6] as Set
 
         when:
         board = new Board("000102000" + "000000000" + "000000300" + "000030000" + "000000000" * 5)
@@ -155,12 +155,12 @@ class SolverSpec extends Specification {
         solver.eliminateLockedCandidates(candidates)
 
         then:
-        candidates[board.cells[0]].contains(3)
-        candidates[board.cells[1]].contains(3)
-        candidates[board.cells[2]].contains(3)
-        !candidates[board.cells[9]].contains(3)
-        !candidates[board.cells[10]].contains(3)
-        !candidates[board.cells[11]].contains(3)
+        candidates[board.getCell(0)].contains(3)
+        candidates[board.getCell(1)].contains(3)
+        candidates[board.getCell(2)].contains(3)
+        !candidates[board.getCell(9)].contains(3)
+        !candidates[board.getCell(10)].contains(3)
+        !candidates[board.getCell(11)].contains(3)
     }
 
     def 'Test that naked twins are eliminated'() {
@@ -174,14 +174,14 @@ class SolverSpec extends Specification {
         solver.eliminateNakedTwins(candidates)
 
         then:
-        candidates[board.cells[1]] == [2, 3] as Set
-        candidates[board.cells[2]] == [2, 3] as Set
-        candidates[board.cells[3]] == [4, 5, 6, 7, 8, 9] as Set
-        candidates[board.cells[4]] == [4, 5, 6, 7, 8, 9] as Set
-        candidates[board.cells[5]] == [4, 5, 6, 7, 8, 9] as Set
-        candidates[board.cells[6]] == [4, 5, 6, 7, 8, 9] as Set
-        candidates[board.cells[7]] == [4, 5, 6, 7, 8, 9] as Set
-        candidates[board.cells[8]] == [4, 5, 6, 7, 8, 9] as Set
+        candidates[board.getCell(1)] == [2, 3] as Set
+        candidates[board.getCell(2)] == [2, 3] as Set
+        candidates[board.getCell(3)] == [4, 5, 6, 7, 8, 9] as Set
+        candidates[board.getCell(4)] == [4, 5, 6, 7, 8, 9] as Set
+        candidates[board.getCell(5)] == [4, 5, 6, 7, 8, 9] as Set
+        candidates[board.getCell(6)] == [4, 5, 6, 7, 8, 9] as Set
+        candidates[board.getCell(7)] == [4, 5, 6, 7, 8, 9] as Set
+        candidates[board.getCell(8)] == [4, 5, 6, 7, 8, 9] as Set
 
     }
 
@@ -290,6 +290,6 @@ class SolverSpec extends Specification {
         new Solver().solve(board)
 
         then:
-        noExceptionThrown()
+        thrown Solver.NoSolutionException
     }
 }
