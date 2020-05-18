@@ -16,9 +16,9 @@ import java.util.stream.Stream;
 public class SolverCell {
     private final Cell cell;
     private final Set<Integer> candidates = new HashSet<>();
-    private final Set<SolverCell> otherCellsInColumn = new HashSet<>();
-    private final Set<SolverCell> otherCellsInRow = new HashSet<>();
-    private final Set<SolverCell> otherCellsInBlock = new HashSet<>();
+    private final SolverCellCollection otherCellsInColumn = new SolverCellCollection();
+    private final SolverCellCollection otherCellsInRow = new SolverCellCollection();
+    private final SolverCellCollection otherCellsInBlock = new SolverCellCollection();
 
     public SolverCell(Cell cell, Board board) {
         this.cell = cell;
@@ -33,16 +33,16 @@ public class SolverCell {
         eliminateLockedCandidates();
         eliminateNakedTwins();
         if (hasOneCandidate()) {
-            otherCellsInColumn.forEach(otherCell -> otherCell.candidates.removeAll(candidates));
-            otherCellsInRow.forEach(otherCell -> otherCell.candidates.removeAll(candidates));
-            otherCellsInBlock.forEach(otherCell -> otherCell.candidates.removeAll(candidates));
+            otherCellsInColumn.removeCandidates(candidates);
+            otherCellsInRow.removeCandidates(candidates);
+            otherCellsInBlock.removeCandidates(candidates);
         }
     }
 
     public void eliminateCandidatesThatAreSetInBuddyCells() {
-        otherCellsInColumn.stream().map(SolverCell::getCell).map(Cell::getNumber).forEach(candidates::remove);
-        otherCellsInRow.stream().map(SolverCell::getCell).map(Cell::getNumber).forEach(candidates::remove);
-        otherCellsInBlock.stream().map(SolverCell::getCell).map(Cell::getNumber).forEach(candidates::remove);
+        otherCellsInColumn.streamSetNumbers().forEach(candidates::remove);
+        otherCellsInRow.streamSetNumbers().forEach(candidates::remove);
+        otherCellsInBlock.streamSetNumbers().forEach(candidates::remove);
     }
 
     public void eliminateLockedCandidates() {
@@ -87,9 +87,9 @@ public class SolverCell {
     private void revealHiddenSingle() {
         List<Integer> hiddenSingles = new ArrayList<>();
         for (Integer candidate : candidates) {
-            if (!isPresentInOtherCells(candidate, otherCellsInColumn)
-                    || !isPresentInOtherCells(candidate, otherCellsInRow)
-                    || !isPresentInOtherCells(candidate, otherCellsInBlock)) {
+            if (!otherCellsInColumn.anyCellContainsCandidate(candidate)
+                    || !otherCellsInRow.anyCellContainsCandidate(candidate)
+                    || !otherCellsInBlock.anyCellContainsCandidate(candidate)) {
                 hiddenSingles.add(candidate);
             }
         }
@@ -110,22 +110,14 @@ public class SolverCell {
         }
     }
 
-    private boolean isPresentInOtherCells(Integer candidate, Set<SolverCell> otherCells) {
-        return otherCells
-                .stream()
-                .anyMatch(otherCell -> otherCell.getCandidates().contains(candidate));
+    private void eliminateNakedTwinsInGroup(SolverCellCollection otherCellsInGroup) {
+        findNakedTwinInGroup(otherCellsInGroup).ifPresent(otherCell ->
+                otherCellsInGroup
+                        .streamEmptyCellsWhere(it -> it != otherCell)
+                        .forEach(it -> it.getCandidates().removeAll(candidates)));
     }
 
-    private void eliminateNakedTwinsInGroup(Set<SolverCell> otherCellsInGroup) {
-        findNakedTwinInGroup(otherCellsInGroup)
-                .ifPresent(otherCell -> otherCellsInGroup.forEach(it -> {
-                    if (it != otherCell) {
-                        it.getCandidates().removeAll(candidates);
-                    }
-                }));
-    }
-
-    private Optional<SolverCell> findNakedTwinInGroup(Set<SolverCell> otherCellsInGroup) {
+    private Optional<SolverCell> findNakedTwinInGroup(SolverCellCollection otherCellsInGroup) {
         List<SolverCell> nakedTwins = findOtherCellsWithSameCandidates(otherCellsInGroup);
         if (nakedTwins.size() > 1) {
             throw new NoSolutionException("more than two cells only allow the same two numbers, this is not possible");
@@ -133,34 +125,26 @@ public class SolverCell {
         return nakedTwins.size() == 0 ? Optional.empty() : Optional.of(nakedTwins.get(0));
     }
 
-    private List<SolverCell> findOtherCellsWithSameCandidates(Set<SolverCell> otherCellsInGroup) {
-        return otherCellsInGroup.stream()
-                .filter(otherCell -> otherCell.getCandidates().equals(candidates))
+    private List<SolverCell> findOtherCellsWithSameCandidates(SolverCellCollection otherCellsInGroup) {
+        return otherCellsInGroup
+                .streamEmptyCellsWhere(this::hasSameCandidates)
                 .collect(Collectors.toList());
     }
 
     private Stream<SolverCell> getEmptyCellsInSameBlockInOtherRows() {
-        return otherCellsInBlock.stream()
-                .filter(SolverCell::isEmpty)
-                .filter(this::rowDiffers);
+        return otherCellsInBlock.streamEmptyCellsWhere(this::rowDiffers);
     }
 
     private Stream<SolverCell> getEmptyCellsInSameRowInOtherBlocks() {
-        return otherCellsInRow.stream()
-                .filter(SolverCell::isEmpty)
-                .filter(this::blockDiffers);
+        return otherCellsInRow.streamEmptyCellsWhere(this::blockDiffers);
     }
 
     private Stream<SolverCell> getEmptyCellsInSameBlockInOtherColumns() {
-        return otherCellsInBlock.stream()
-                .filter(SolverCell::isEmpty)
-                .filter(this::columnDiffers);
+        return otherCellsInBlock.streamEmptyCellsWhere(this::columnDiffers);
     }
 
     private Stream<SolverCell> getEmptyCellsInSameColumnInOtherBlocks() {
-        return otherCellsInColumn.stream()
-                .filter(SolverCell::isEmpty)
-                .filter(this::blockDiffers);
+        return otherCellsInColumn.streamEmptyCellsWhere(this::blockDiffers);
     }
 
     private boolean columnDiffers(SolverCell otherCell) {
@@ -173,5 +157,9 @@ public class SolverCell {
 
     private boolean blockDiffers(SolverCell otherCell) {
         return cell.getBlock() != otherCell.cell.getBlock();
+    }
+
+    private boolean hasSameCandidates(SolverCell otherCell) {
+        return candidates.equals(otherCell.candidates);
     }
 }
