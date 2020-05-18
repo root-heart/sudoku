@@ -27,7 +27,7 @@ public class SolverCell {
         }
     }
 
-    public void eliminateImpossibilities() {
+    public void eliminateImpossibleCandidates() {
         eliminateCandidatesThatAreSetInBuddyCells();
         revealHiddenSingle();
         eliminateLockedCandidates();

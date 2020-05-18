@@ -11,8 +11,8 @@ class SolverCellSpec extends Specification {
         def solverBoard = new SolverBoard(board)
 
         when:
-        solverBoard.eliminateCandidatesThatAreSetInBuddyCells()
-        solverBoard.eliminateLockedCandidates()
+        eliminateCandidatesThatAreSetInBuddyCells(solverBoard);
+        eliminateLockedCandidates(solverBoard)
 
         then:
         solverBoard.solverCellMap[board.getCell(6)].candidates == [4, 5, 6] as Set
@@ -23,8 +23,8 @@ class SolverCellSpec extends Specification {
         board = new Board("100000000" + "200000000" + "300000000" + "070000000" + "080000000" + "090000000" + "000000000" * 3)
         solverBoard = new SolverBoard(board)
 
-        solverBoard.eliminateCandidatesThatAreSetInBuddyCells()
-        solverBoard.eliminateLockedCandidates()
+        eliminateCandidatesThatAreSetInBuddyCells(solverBoard);
+        eliminateLockedCandidates(solverBoard)
 
         then:
         solverBoard.solverCellMap[board.getCell(56)].candidates == [4, 5, 6] as Set
@@ -35,8 +35,8 @@ class SolverCellSpec extends Specification {
         board = new Board("000102000" + "000000000" + "000000300" + "000030000" + "000000000" * 5)
         solverBoard = new SolverBoard(board)
 
-        solverBoard.eliminateCandidatesThatAreSetInBuddyCells()
-        solverBoard.eliminateLockedCandidates()
+        eliminateCandidatesThatAreSetInBuddyCells(solverBoard);
+        eliminateLockedCandidates(solverBoard)
 
         then:
         solverBoard.solverCellMap[board.getCell(0)].candidates.contains(3)
@@ -54,13 +54,26 @@ class SolverCellSpec extends Specification {
         def solverBoard = new SolverBoard(board)
 
         when:
-        solverBoard.eliminateCandidatesThatAreSetInBuddyCells()
-        solverBoard.eliminateNakedTwins()
+        solverBoard.solverCellMap.values().forEach(SolverCell::eliminateCandidatesThatAreSetInBuddyCells);
+        eliminateNakedTwins(solverBoard)
 
         then:
         solverBoard.solverCellMap[board.getCell(47)].candidates == [2, 3] as Set
         solverBoard.solverCellMap[board.getCell(74)].candidates == [2, 3] as Set
         solverBoard.solverCellMap[board.getCell(38)].candidates == [7, 9] as Set
         solverBoard.solverCellMap[board.getCell(29)].candidates == [7, 9] as Set
+    }
+
+    private static eliminateCandidatesThatAreSetInBuddyCells(SolverBoard solverBoard) {
+        solverBoard.solverCellMap.values().forEach(SolverCell::eliminateCandidatesThatAreSetInBuddyCells)
+    }
+
+
+    private static eliminateLockedCandidates(SolverBoard solverBoard) {
+        solverBoard.solverCellMap.values().forEach(SolverCell::eliminateLockedCandidates);
+    }
+
+    private static eliminateNakedTwins(SolverBoard solverBoard) {
+        solverBoard.solverCellMap.values().forEach(SolverCell::eliminateNakedTwins);
     }
 }

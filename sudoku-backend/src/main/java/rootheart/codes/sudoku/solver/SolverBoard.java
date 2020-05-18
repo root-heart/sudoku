@@ -4,7 +4,6 @@ import lombok.Getter;
 import rootheart.codes.sudoku.game.Board;
 import rootheart.codes.sudoku.game.Cell;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -37,11 +36,11 @@ public class SolverBoard {
         });
     }
 
-    public void calculate() {
-        long countBefore = countCellsWithMultipleCandidates();
+    public void eliminateImpossibleCandidates() {
+        long countBefore = countCellsWithSingleCandidate();
         while (true) {
-            solverCellMap.values().forEach(SolverCell::eliminateImpossibilities);
-            long countAfter = countCellsWithMultipleCandidates();
+            solverCellMap.values().forEach(SolverCell::eliminateImpossibleCandidates);
+            long countAfter = countCellsWithSingleCandidate();
             if (countAfter == 0 || countBefore == countAfter) {
                 findNakedSingles();
                 return;
@@ -50,34 +49,16 @@ public class SolverBoard {
         }
     }
 
-    private long countCellsWithMultipleCandidates() {
+    private long countCellsWithSingleCandidate() {
         return solverCellMap.values()
                 .stream()
-                .map(SolverCell::getCandidates)
-                .mapToInt(Collection::size)
-                .filter(size -> size > 1)
+                .filter(SolverCell::hasOneCandidate)
                 .count();
     }
 
-    public void eliminateCandidatesThatAreSetInBuddyCells() {
-        solverCellMap.values().forEach(SolverCell::eliminateCandidatesThatAreSetInBuddyCells);
-    }
-
-    public void eliminateLockedCandidates() {
-        solverCellMap.values().forEach(SolverCell::eliminateLockedCandidates);
-    }
-
-    public void eliminateNakedTwins() {
-        solverCellMap.values().forEach(SolverCell::eliminateNakedTwins);
-    }
-
-    public void revealHiddenSingles() {
-        solverCellMap.values().forEach(SolverCell::revealHiddenSingle);
-    }
-
-    public boolean hasSolution() {
+    public boolean isNotSolvable() {
         return solverCellMap.values().stream()
-                .noneMatch(entry -> entry.isEmpty() && entry.getCandidates().size() == 0);
+                .anyMatch(entry -> entry.isEmpty() && entry.getCandidates().size() == 0);
     }
 
     public void findNakedSingles() {
