@@ -53,7 +53,7 @@ class SolverSpec extends Specification {
         new Solver().solve(board)
 
         then:
-        thrown(Solver.MultipleSolutionsException)
+        thrown(MultipleSolutionsException)
     }
 
 
@@ -176,6 +176,6 @@ class SolverSpec extends Specification {
         new Solver().solve(board)
 
         then:
-        thrown Solver.NoSolutionException
+        thrown NoSolutionException
     }
 }

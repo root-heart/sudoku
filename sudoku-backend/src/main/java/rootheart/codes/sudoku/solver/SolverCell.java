@@ -5,11 +5,9 @@ import rootheart.codes.sudoku.game.Board;
 import rootheart.codes.sudoku.game.Cell;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Getter
@@ -79,7 +77,7 @@ public class SolverCell {
             }
         }
         if (hiddenSingles.size() > 1) {
-            throw new Solver.NoSolutionException("multiple values can only exist in this cell, this is not possible");
+            throw new NoSolutionException("multiple values can only exist in this cell, this is not possible");
         }
         return hiddenSingles.size() == 0 ? null : hiddenSingles.get(0);
     }

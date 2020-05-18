@@ -13,21 +13,6 @@ import java.util.stream.Collectors;
 
 public class Solver {
 
-    public static class NoSolutionException extends RuntimeException {
-        public NoSolutionException(String message) {
-            super(message);
-        }
-    }
-
-    public static class MultipleSolutionsException extends RuntimeException {
-        public MultipleSolutionsException(String message) {
-            super(message);
-        }
-    }
-
-    public static class BoardInvalidException extends RuntimeException {
-    }
-
     public void solve(Board board) {
         while (board.hasEmptyCells()) {
             if (!isValid(board)) {
