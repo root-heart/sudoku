@@ -1,5 +1,6 @@
 package rootheart.codes.sudoku.solver;
 
+import org.eclipse.collections.api.set.primitive.IntSet;
 import rootheart.codes.sudoku.game.Cell;
 
 import java.util.HashSet;
@@ -11,7 +12,7 @@ import java.util.stream.Stream;
 public class SolverCellCollection {
     private final Set<SolverCell> otherCells = new HashSet<>();
 
-    public void removeCandidates(Set<Integer> candidates) {
+    public void removeCandidates(IntSet candidates) {
         otherCells.forEach(otherCell -> otherCell.getCandidates().removeAll(candidates));
     }
 
@@ -34,7 +35,7 @@ public class SolverCellCollection {
                 .noneMatch(otherCell -> otherCell.getCandidates().contains(candidate));
     }
 
-    public Optional<SolverCell> findSingleCellWithCandidates(Set<Integer> candidates) {
+    public Optional<SolverCell> findSingleCellWithCandidates(IntSet candidates) {
         return streamEmptyCellsWhere(c -> c.getCandidates().equals(candidates))
                 .reduce((a, b) -> {
                     throw new NoSolutionException("more than two cells only allow the same two numbers, this is not possible");

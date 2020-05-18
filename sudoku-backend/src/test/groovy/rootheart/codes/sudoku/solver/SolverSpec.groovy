@@ -13,6 +13,7 @@ class SolverSpec extends Specification {
             "740200069" +
             "000003000" +
             "020760084"
+
     private String extremeDifficultSudoku = "900000000" +
             "000700016" +
             "064000205" +
@@ -134,33 +135,6 @@ class SolverSpec extends Specification {
         println board
     }
 
-    def 'Test performance with extremely difficult Sudoku'() {
-        given:
-        def jdkSolver = new Solver()
-
-        def warmUpCount = 1_00
-        def benchmarkCount = 1_00
-
-        when:
-        5.times {
-            warmUpCount.times {
-                def board = new Board(extremeDifficultSudoku)
-                jdkSolver.solve(board)
-            }
-
-            long s = System.nanoTime()
-            benchmarkCount.times {
-                def board = new Board(extremeDifficultSudoku)
-                jdkSolver.solve(board)
-            }
-            long e = System.nanoTime()
-
-            println "solver took ${(e - s) / 1000} microseconds for $benchmarkCount iterations"
-        }
-
-        then:
-        true
-    }
 
     def 'Test that a board without a solution is not solved by the solver'() {
         given:

@@ -1,18 +1,19 @@
 package rootheart.codes.sudoku.solver;
 
 import lombok.Getter;
+import org.eclipse.collections.api.iterator.MutableIntIterator;
+import org.eclipse.collections.api.set.primitive.MutableIntSet;
+import org.eclipse.collections.impl.factory.primitive.IntSets;
 import rootheart.codes.sudoku.game.Board;
 import rootheart.codes.sudoku.game.Cell;
 
-import java.util.HashSet;
-import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 @Getter
 public class SolverCell {
     private final Cell cell;
-    private final Set<Integer> candidates = new HashSet<>();
+    private final MutableIntSet candidates = IntSets.mutable.empty();
     private final SolverCellCollection otherCellsInColumn = new SolverCellCollection();
     private final SolverCellCollection otherCellsInRow = new SolverCellCollection();
     private final SolverCellCollection otherCellsInBlock = new SolverCellCollection();
@@ -47,7 +48,7 @@ public class SolverCell {
     private void eliminateLockedCandidates() {
         // Für jeden Kandidaten schauen, ob er in einer Zelle einer anderen Zeile/Spalte in diesem Block existiert.
         // Falls nein, den Kandidaten für alle Zellen dieser Zeile/Spalte in anderen Blöcken löschen
-        for (Integer candidate : getCandidates()) {
+        candidates.forEach(candidate -> {
             if (getEmptyCellsInSameBlockInOtherRows()
                     .noneMatch(otherCell -> otherCell.candidates.contains(candidate))) {
                 getEmptyCellsInSameRowInOtherBlocks()
@@ -68,15 +69,15 @@ public class SolverCell {
                 getEmptyCellsInSameBlockInOtherColumns()
                         .forEach(otherCell -> otherCell.candidates.remove(candidate));
             }
-        }
+        });
     }
 
     public boolean hasOneCandidate() {
         return candidates.size() == 1;
     }
 
-    public Integer getFirstCandidate() {
-        return candidates.iterator().next();
+    public int getFirstCandidate() {
+        return candidates.intIterator().next();
     }
 
     public boolean isEmpty() {
@@ -84,18 +85,21 @@ public class SolverCell {
     }
 
     private void revealHiddenSingle() {
-        Integer hiddenSingle = null;
-        for (Integer candidate : candidates) {
+        int hiddenSingle = 0;
+        MutableIntIterator mutableIntIterator = candidates.intIterator();
+        while (mutableIntIterator.hasNext()) {
+            int candidate = mutableIntIterator.next();
             if (otherCellsInColumn.noCellContainsCandidate(candidate)
                     || otherCellsInRow.noCellContainsCandidate(candidate)
                     || otherCellsInBlock.noCellContainsCandidate(candidate)) {
-                if (hiddenSingle != null) {
+                if (hiddenSingle != 0) {
                     throw new NoSolutionException("multiple values can only exist in this cell, this is not possible");
                 }
                 hiddenSingle = candidate;
             }
         }
-        if (hiddenSingle != null) {
+
+        if (hiddenSingle != 0) {
             candidates.clear();
             candidates.add(hiddenSingle);
         }

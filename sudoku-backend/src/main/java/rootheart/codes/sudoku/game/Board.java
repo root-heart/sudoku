@@ -1,6 +1,8 @@
 package rootheart.codes.sudoku.game;
 
 import lombok.Getter;
+import org.eclipse.collections.api.set.primitive.IntSet;
+import org.eclipse.collections.impl.factory.primitive.IntSets;
 
 import java.util.Arrays;
 import java.util.Set;
@@ -14,7 +16,7 @@ public class Board extends CellList {
     private Group[] columns;
     private Group[] rows;
     private Group[] blocks;
-    private Set<Integer> possibleValues;
+    private IntSet possibleValues;
 
     public Board(String board) {
         super(board.length());
@@ -39,7 +41,7 @@ public class Board extends CellList {
             blocks[i] = new Group(this);
         }
 
-        possibleValues = IntStream.rangeClosed(1, maxValue).boxed().collect(Collectors.toSet());
+        possibleValues = IntSets.immutable.ofAll(IntStream.rangeClosed(1, maxValue));
 
         createCells();
         initCells(board);
@@ -102,7 +104,7 @@ public class Board extends CellList {
                 .map(String::valueOf)
                 .collect(Collectors.joining());
     }
-    
+
     public boolean isValid() {
         return Arrays.stream(columns).allMatch(Group::isValid)
                 && Arrays.stream(rows).allMatch(Group::isValid)
