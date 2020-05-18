@@ -11,7 +11,6 @@ import java.util.stream.Stream;
 public class SolverCellCollection {
     private final Set<SolverCell> otherCells = new HashSet<>();
 
-
     public void removeCandidates(Set<Integer> candidates) {
         otherCells.forEach(otherCell -> otherCell.getCandidates().removeAll(candidates));
     }
@@ -30,10 +29,9 @@ public class SolverCellCollection {
         otherCells.add(solverCell);
     }
 
-    public boolean anyCellContainsCandidate(Integer candidate) {
-        return otherCells
-                .stream()
-                .anyMatch(otherCell -> otherCell.getCandidates().contains(candidate));
+    public boolean noCellContainsCandidate(Integer candidate) {
+        return otherCells.stream()
+                .noneMatch(otherCell -> otherCell.getCandidates().contains(candidate));
     }
 
     public Optional<SolverCell> findSingleCellWithCandidates(Set<Integer> candidates) {
@@ -43,7 +41,7 @@ public class SolverCellCollection {
                 });
     }
 
-    public Stream<SolverCell> streamEmptyCellsExcept(SolverCell except) {
+    public Stream<SolverCell> streamAllOtherEmptyCells(SolverCell except) {
         return streamEmptyCellsWhere(cell -> cell != except);
     }
 }

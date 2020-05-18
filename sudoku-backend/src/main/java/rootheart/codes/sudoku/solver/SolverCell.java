@@ -4,9 +4,7 @@ import lombok.Getter;
 import rootheart.codes.sudoku.game.Board;
 import rootheart.codes.sudoku.game.Cell;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -86,20 +84,20 @@ public class SolverCell {
     }
 
     private void revealHiddenSingle() {
-        List<Integer> hiddenSingles = new ArrayList<>();
+        Integer hiddenSingle = null;
         for (Integer candidate : candidates) {
-            if (!otherCellsInColumn.anyCellContainsCandidate(candidate)
-                    || !otherCellsInRow.anyCellContainsCandidate(candidate)
-                    || !otherCellsInBlock.anyCellContainsCandidate(candidate)) {
-                hiddenSingles.add(candidate);
+            if (otherCellsInColumn.noCellContainsCandidate(candidate)
+                    || otherCellsInRow.noCellContainsCandidate(candidate)
+                    || otherCellsInBlock.noCellContainsCandidate(candidate)) {
+                if (hiddenSingle != null) {
+                    throw new NoSolutionException("multiple values can only exist in this cell, this is not possible");
+                }
+                hiddenSingle = candidate;
             }
         }
-        if (hiddenSingles.size() > 1) {
-            throw new NoSolutionException("multiple values can only exist in this cell, this is not possible");
-        }
-        if (hiddenSingles.size() == 1) {
+        if (hiddenSingle != null) {
             candidates.clear();
-            candidates.add(hiddenSingles.get(0));
+            candidates.add(hiddenSingle);
         }
     }
 
@@ -107,7 +105,7 @@ public class SolverCell {
         if (candidates.size() == 2) {
             forAllOtherCells(otherCells -> otherCells
                     .findSingleCellWithCandidates(candidates)
-                    .map(otherCells::streamEmptyCellsExcept)
+                    .map(otherCells::streamAllOtherEmptyCells)
                     .orElse(Stream.empty())
                     .forEach(it -> it.getCandidates().removeAll(candidates)));
         }
