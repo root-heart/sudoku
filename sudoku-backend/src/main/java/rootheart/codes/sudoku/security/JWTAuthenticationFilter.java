@@ -1,6 +1,5 @@
 package rootheart.codes.sudoku.security;
 
-import rootheart.codes.sudoku.user.SudokuUser;
 import com.auth0.jwt.JWT;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +9,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import rootheart.codes.sudoku.user.SudokuUser;
 
 import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletRequest;

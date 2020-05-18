@@ -9,7 +9,6 @@ import rootheart.codes.sudoku.game.Cell;
 
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Getter
 public class SolverCell {

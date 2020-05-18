@@ -1,9 +1,9 @@
 package rootheart.codes.sudoku.game;
 
-import rootheart.codes.sudoku.user.SudokuUser;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.Validate;
+import rootheart.codes.sudoku.user.SudokuUser;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;

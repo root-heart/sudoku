@@ -1,9 +1,9 @@
 package rootheart.codes.sudoku.game;
 
-import rootheart.codes.sudoku.user.SudokuUser;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import rootheart.codes.sudoku.user.SudokuUser;
 
 @Service
 @RequiredArgsConstructor
