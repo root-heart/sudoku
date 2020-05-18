@@ -6,7 +6,6 @@ import rootheart.codes.sudoku.game.Group;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -18,15 +17,17 @@ public class Solver {
             if (!isValid(board)) {
                 throw new BoardInvalidException();
             }
-            SolverBoard solverBoard = calculateCandidates(board);
+            SolverBoard solverBoard = new SolverBoard(board);
             if (!solverBoard.hasSolution()) {
                 throw new NoSolutionException("found no solution");
             }
-            Board previousState = clone(board);
+//            Board previousState = clone(board);
 
-            Map<Cell, Integer> singleCandidates = findSingleCandidates(solverBoard);
+            // TODO performance optimization: Do not calculate every possible single candidate, but only the first one!
+            // we need only one in every iteration ;)
+            Map<Cell, Integer> singleCandidates = solverBoard.getSingleCandidates();
             if (singleCandidates.isEmpty()) {
-                System.out.println("XXX");
+//                System.out.println("XXX");
                 Board boardToSetARandomNumberTo = clone(board);
                 List<Board> solutions = new ArrayList<>();
                 boardToSetARandomNumberTo.streamEmptyCells()
@@ -35,11 +36,11 @@ public class Solver {
                                 boardToSetARandomNumberTo.getPossibleValues().forEach(numberToTry -> {
                                     cell.setNumber(numberToTry);
                                     if (isValid(boardToSetARandomNumberTo)) {
-                                        if (System.currentTimeMillis() % 500 == 0) {
-                                            System.out.println(previousState.getBoardString());
-                                            int index = boardToSetARandomNumberTo.indexOf(cell);
-                                            System.out.println(" ".repeat(Math.max(0, index)) + numberToTry);
-                                        }
+//                                        if (System.currentTimeMillis() % 500 == 0) {
+//                                            System.out.println(previousState.getBoardString());
+//                                            int index = boardToSetARandomNumberTo.indexOf(cell);
+//                                            System.out.println(" ".repeat(Math.max(0, index)) + numberToTry);
+//                                        }
                                         Board boardToTryToSolve = clone(boardToSetARandomNumberTo);
                                         try {
                                             solve(boardToTryToSolve);
@@ -59,9 +60,9 @@ public class Solver {
             } else {
                 Map.Entry<Cell, Integer> next = singleCandidates.entrySet().iterator().next();
                 next.getKey().setNumber(next.getValue());
-                System.out.println(previousState.getBoardString());
-                int index = board.indexOf(next.getKey());
-                System.out.println(" ".repeat(Math.max(0, index)) + next.getValue());
+//                System.out.println(previousState.getBoardString());
+//                int index = board.indexOf(next.getKey());
+//                System.out.println(" ".repeat(Math.max(0, index)) + next.getValue());
                 if (!isValid(board)) {
                     throw new BoardInvalidException();
                 }
@@ -86,24 +87,5 @@ public class Solver {
                 .collect(Collectors.groupingBy(Cell::getNumber, Collectors.counting()))
                 .entrySet().stream()
                 .allMatch(entry -> entry.getValue() == 1);
-    }
-
-    private SolverBoard calculateCandidates(Board board) {
-        SolverBoard solverBoard = createSolverCells(board);
-        solverBoard.eliminateCandidatesThatAreSetInBuddyCells();
-        solverBoard.eliminateLockedCandidates();
-        solverBoard.eliminateNakedTwins();
-        return solverBoard;
-    }
-
-    private Map<Cell, Integer> findSingleCandidates(SolverBoard solverBoard) {
-        Map<Cell, Integer> singleCandidates = new HashMap<>();
-        singleCandidates.putAll(solverBoard.findNakedSingles());
-        singleCandidates.putAll(solverBoard.findHiddenSingles());
-        return singleCandidates;
-    }
-
-    private SolverBoard createSolverCells(Board board) {
-        return new SolverBoard(board);
     }
 }

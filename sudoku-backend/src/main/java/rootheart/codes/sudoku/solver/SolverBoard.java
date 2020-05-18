@@ -1,5 +1,6 @@
 package rootheart.codes.sudoku.solver;
 
+import lombok.Getter;
 import rootheart.codes.sudoku.game.Board;
 import rootheart.codes.sudoku.game.Cell;
 
@@ -8,9 +9,11 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Getter
 public class SolverBoard {
 
     private final Map<Cell, SolverCell> solverCellMap;
+    private final Map<Cell, Integer> singleCandidates = new HashMap<>();
 
     public SolverBoard(Board board) {
         solverCellMap = board.streamCells()
@@ -30,6 +33,16 @@ public class SolverBoard {
                     .map(solverCellMap::get)
                     .forEach(c -> solverCell.getOtherCellsInBlock().add(c));
         });
+
+        eliminateCandidatesThatAreSetInBuddyCells();
+        eliminateLockedCandidates();
+        eliminateNakedTwins();
+        findSingleCandidates();
+    }
+
+    private void findSingleCandidates() {
+        findNakedSingles();
+        findHiddenSingles();
     }
 
     public void eliminateCandidatesThatAreSetInBuddyCells() {
@@ -49,21 +62,19 @@ public class SolverBoard {
                 .noneMatch(entry -> entry.getKey().isEmpty() && entry.getValue().getCandidates().size() == 0);
     }
 
-    public Map<Cell, Integer> findNakedSingles() {
-        return solverCellMap.values()
+    public void findNakedSingles() {
+        solverCellMap.values()
                 .stream()
                 .filter(SolverCell::hasOneCandidate)
-                .collect(Collectors.toMap(SolverCell::getCell, SolverCell::getFirstCandidate));
+                .forEach(solverCell -> singleCandidates.put(solverCell.getCell(), solverCell.getFirstCandidate()));
     }
 
-    public Map<Cell, Integer> findHiddenSingles() {
-        Map<Cell, Integer> hiddenSingles = new HashMap<>();
+    public void findHiddenSingles() {
         for (SolverCell solverCell : solverCellMap.values()) {
             Integer hiddenSingle = solverCell.findHiddenSingle();
             if (hiddenSingle != null) {
-                hiddenSingles.put(solverCell.getCell(), hiddenSingle);
+                singleCandidates.put(solverCell.getCell(), hiddenSingle);
             }
         }
-        return hiddenSingles;
     }
 }
