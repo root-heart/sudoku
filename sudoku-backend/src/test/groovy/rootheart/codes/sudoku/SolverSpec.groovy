@@ -1,11 +1,8 @@
 package rootheart.codes.sudoku
 
 import rootheart.codes.sudoku.game.Board
-
 import rootheart.codes.sudoku.solver.Solver
 import spock.lang.Specification
-
-import java.util.stream.Collectors
 
 class SolverSpec extends Specification {
     private String mediumSudoku = "975002130" +
@@ -82,106 +79,6 @@ class SolverSpec extends Specification {
                 "521769384\n"
     }
 
-    def 'Test that getting cells in same block in other rows works'() {
-        given:
-        def solver = new Solver()
-        def board = new Board("0" * 81)
-
-        when:
-        def cells = solver.getEmptyCellsInSameBlockInOtherRows(board.getCell(cellIndex))
-
-        then:
-        cells.collect(Collectors.toSet()) == otherCellsIndices.collect { board.getCell(it) } as Set
-
-        where:
-        cellIndex || otherCellsIndices
-        0         || [9, 10, 11, 18, 19, 20]
-        10        || [0, 1, 2, 18, 19, 20]
-        20        || [0, 1, 2, 9, 10, 11]
-        6         || [15, 16, 17, 24, 25, 26]
-    }
-
-    def 'Test that getting cells in same row in other blocks works'() {
-        given:
-        def solver = new Solver()
-        def board = new Board("0" * 81)
-
-        when:
-        def cells = solver.getEmptyCellsInSameRowInOtherBlocks(board.getCell(cellIndex))
-
-        then:
-        cells.collect(Collectors.toSet()) == otherCellsIndices.collect { board.getCell(it) } as Set
-
-        where:
-        cellIndex || otherCellsIndices
-        0         || [3, 4, 5, 6, 7, 8]
-        10        || [12, 13, 14, 15, 16, 17]
-        21        || [18, 19, 20, 24, 25, 26]
-        6         || [0, 1, 2, 3, 4, 5]
-    }
-
-    def 'Test that locked candidates are eliminated'() {
-        given:
-        def solver = new Solver()
-        def board = new Board("000000000" + "000789000" + "123000000" + "000000000" * 6)
-
-        when:
-        def candidates = solver.createCandidates(board)
-        solver.eliminateCandidatesAreSetInBuddyCells(candidates)
-        solver.eliminateLockedCandidates(candidates)
-
-        then:
-        candidates[board.getCell(6)] == [4, 5, 6] as Set
-        candidates[board.getCell(7)] == [4, 5, 6] as Set
-        candidates[board.getCell(8)] == [4, 5, 6] as Set
-
-        when:
-        board = new Board("100000000" + "200000000" + "300000000" + "070000000" + "080000000" + "090000000" + "000000000" * 3)
-        candidates = solver.createCandidates(board)
-        solver.eliminateCandidatesAreSetInBuddyCells(candidates)
-        solver.eliminateLockedCandidates(candidates)
-
-        then:
-        candidates[board.getCell(56)] == [4, 5, 6] as Set
-        candidates[board.getCell(65)] == [4, 5, 6] as Set
-        candidates[board.getCell(74)] == [4, 5, 6] as Set
-
-        when:
-        board = new Board("000102000" + "000000000" + "000000300" + "000030000" + "000000000" * 5)
-        candidates = solver.createCandidates(board)
-        solver.eliminateCandidatesAreSetInBuddyCells(candidates)
-        solver.eliminateLockedCandidates(candidates)
-
-        then:
-        candidates[board.getCell(0)].contains(3)
-        candidates[board.getCell(1)].contains(3)
-        candidates[board.getCell(2)].contains(3)
-        !candidates[board.getCell(9)].contains(3)
-        !candidates[board.getCell(10)].contains(3)
-        !candidates[board.getCell(11)].contains(3)
-    }
-
-    def 'Test that naked twins are eliminated'() {
-        given:
-        def solver = new Solver()
-        def board = new Board("100000000" + "046000000" + "057000000" + "065000000" + "074000000" + "089000000" + "098000000" + "000000000" * 2)
-
-        when:
-        def candidates = solver.createCandidates(board)
-        solver.eliminateCandidatesAreSetInBuddyCells(candidates)
-        solver.eliminateNakedTwins(candidates)
-
-        then:
-        candidates[board.getCell(1)] == [2, 3] as Set
-        candidates[board.getCell(2)] == [2, 3] as Set
-        candidates[board.getCell(3)] == [4, 5, 6, 7, 8, 9] as Set
-        candidates[board.getCell(4)] == [4, 5, 6, 7, 8, 9] as Set
-        candidates[board.getCell(5)] == [4, 5, 6, 7, 8, 9] as Set
-        candidates[board.getCell(6)] == [4, 5, 6, 7, 8, 9] as Set
-        candidates[board.getCell(7)] == [4, 5, 6, 7, 8, 9] as Set
-        candidates[board.getCell(8)] == [4, 5, 6, 7, 8, 9] as Set
-
-    }
 
     def 'Test hard Sudoku'() {
         given:
