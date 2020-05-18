@@ -24,10 +24,10 @@ class SolverPerformanceTest extends Specification {
             "002008070" +
             "000007100"
 
-    def 'Test performance with extremely difficult Sudoku'() {
+    def 'Test performance'() {
         given:
         def jdkSolver = new Solver()
-        def sudokuToSolve = mediumSudoku
+        def sudokuToSolve = extremeDifficultSudoku
 
         def warmUpCount = 1_500
         def benchmarkCount = 1_00
