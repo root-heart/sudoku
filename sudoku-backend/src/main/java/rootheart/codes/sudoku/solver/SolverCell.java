@@ -93,30 +93,19 @@ public class SolverCell {
         return candidates.iterator().next();
     }
 
-    public List<Integer> findHiddenSingles() {
-        List<Integer> candidatesNotPresentInOtherCellOfColumn = candidates
-                .stream()
-                .filter(candidate -> otherCellsInColumn
-                        .stream()
-                        .noneMatch(otherCell -> otherCell.getCandidates().contains(candidate)))
-                .collect(Collectors.toList());
-        List<Integer> candidatesNotPresentInOtherCellOfRow = candidates
-                .stream()
-                .filter(candidate -> otherCellsInRow
-                        .stream()
-                        .noneMatch(otherCell -> otherCell.getCandidates().contains(candidate)))
-                .collect(Collectors.toList());
-        List<Integer> candidatesNotPresentInOtherCellOfBlock = candidates
-                .stream()
-                .filter(candidate -> otherCellsInBlock
-                        .stream()
-                        .noneMatch(otherCell -> otherCell.getCandidates().contains(candidate)))
-                .collect(Collectors.toList());
+    public Integer findHiddenSingle() {
         List<Integer> hiddenSingles = new ArrayList<>();
-        hiddenSingles.addAll(candidatesNotPresentInOtherCellOfColumn);
-        hiddenSingles.addAll(candidatesNotPresentInOtherCellOfRow);
-        hiddenSingles.addAll(candidatesNotPresentInOtherCellOfBlock);
-        return hiddenSingles;
+        for (Integer candidate : candidates) {
+            if (!isPresentInOtherCells(candidate, otherCellsInColumn)
+                    || !isPresentInOtherCells(candidate, otherCellsInRow)
+                    || !isPresentInOtherCells(candidate, otherCellsInBlock)) {
+                hiddenSingles.add(candidate);
+            }
+        }
+        if (hiddenSingles.size() > 1) {
+            throw new Solver.NoSolutionException("multiple values can only exist in this cell, this is not possible");
+        }
+        return hiddenSingles.size() == 0 ? null : hiddenSingles.get(0);
     }
 
     public void eliminateNakedTwins() {
@@ -125,6 +114,12 @@ public class SolverCell {
             eliminateNakedTwinsInGroup(otherCellsInColumn);
             eliminateNakedTwinsInGroup(otherCellsInBlock);
         }
+    }
+
+    private boolean isPresentInOtherCells(Integer candidate, List<SolverCell> otherCells) {
+        return otherCells
+                .stream()
+                .anyMatch(otherCell -> otherCell.getCandidates().contains(candidate));
     }
 
     private void eliminateNakedTwinsInGroup(List<SolverCell> otherCellsInGroup) {

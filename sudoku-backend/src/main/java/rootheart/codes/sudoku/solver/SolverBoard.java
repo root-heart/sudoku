@@ -60,8 +60,10 @@ public class SolverBoard {
     public Map<Cell, Integer> findHiddenSingles() {
         Map<Cell, Integer> hiddenSingles = new HashMap<>();
         for (SolverCell solverCell : solverCellMap.values()) {
-            List<Integer> hiddenSingles1 = solverCell.findHiddenSingles();
-            hiddenSingles1.forEach(s -> hiddenSingles.put(solverCell.getCell(), s));
+            Integer hiddenSingle = solverCell.findHiddenSingle();
+            if (hiddenSingle != null) {
+                hiddenSingles.put(solverCell.getCell(), hiddenSingle);
+            }
         }
         return hiddenSingles;
     }
