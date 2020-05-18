@@ -8,6 +8,7 @@ import rootheart.codes.sudoku.game.Board;
 import rootheart.codes.sudoku.game.Cell;
 
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Getter
@@ -17,12 +18,32 @@ public class SolverCell {
     private final SolverCellCollection otherCellsInColumn = new SolverCellCollection();
     private final SolverCellCollection otherCellsInRow = new SolverCellCollection();
     private final SolverCellCollection otherCellsInBlock = new SolverCellCollection();
+    private SolverCellCollection emptyCellsInSameBlockInOtherRows;
+    private SolverCellCollection emptyCellsInSameRowInOtherBlocks;
+    private SolverCellCollection emptyCellsInSameBlockInOtherColumns;
+    private SolverCellCollection emptyCellsInSameColumnInOtherBlocks;
 
     public SolverCell(Cell cell, Board board) {
         this.cell = cell;
         if (cell.isEmpty()) {
             candidates.addAll(board.getPossibleValues());
         }
+    }
+
+    public void initializationComplete() {
+        forAllOtherCells(SolverCellCollection::initializationComplete);
+        emptyCellsInSameBlockInOtherRows = new SolverCellCollection(otherCellsInBlock
+                .streamEmptyCellsWhere(this::rowDiffers)
+                .collect(Collectors.toSet()));
+        emptyCellsInSameRowInOtherBlocks = new SolverCellCollection(otherCellsInRow
+                .streamEmptyCellsWhere(this::blockDiffers)
+                .collect(Collectors.toSet()));
+        emptyCellsInSameBlockInOtherColumns = new SolverCellCollection(otherCellsInBlock
+                .streamEmptyCellsWhere(this::columnDiffers)
+                .collect(Collectors.toSet()));
+        emptyCellsInSameColumnInOtherBlocks = new SolverCellCollection(otherCellsInColumn
+                .streamEmptyCellsWhere(this::blockDiffers)
+                .collect(Collectors.toSet()));
     }
 
     public void eliminateImpossibleCandidates() {
@@ -42,32 +63,24 @@ public class SolverCell {
     }
 
     private void eliminateCandidatesThatAreSetInBuddyCells() {
-        forAllOtherCells(g -> g.streamNumbers().forEach(candidates::remove));
+        forAllOtherCells(g -> g.getNumbers().forEach(candidates::remove));
     }
 
     private void eliminateLockedCandidates() {
         // Für jeden Kandidaten schauen, ob er in einer Zelle einer anderen Zeile/Spalte in diesem Block existiert.
         // Falls nein, den Kandidaten für alle Zellen dieser Zeile/Spalte in anderen Blöcken löschen
         candidates.forEach(candidate -> {
-            if (getEmptyCellsInSameBlockInOtherRows()
-                    .noneMatch(otherCell -> otherCell.candidates.contains(candidate))) {
-                getEmptyCellsInSameRowInOtherBlocks()
-                        .forEach(otherCell -> otherCell.candidates.remove(candidate));
+            if (emptyCellsInSameBlockInOtherRows.noCellContainsCandidate(candidate)) {
+                emptyCellsInSameRowInOtherBlocks.removeCandidate(candidate);
             }
-            if (getEmptyCellsInSameBlockInOtherColumns()
-                    .noneMatch(otherCell -> otherCell.candidates.contains(candidate))) {
-                getEmptyCellsInSameColumnInOtherBlocks()
-                        .forEach(otherCell -> otherCell.candidates.remove(candidate));
+            if (emptyCellsInSameRowInOtherBlocks.noCellContainsCandidate(candidate)) {
+                emptyCellsInSameBlockInOtherRows.removeCandidate(candidate);
             }
-            if (getEmptyCellsInSameRowInOtherBlocks()
-                    .noneMatch(otherCell -> otherCell.candidates.contains(candidate))) {
-                getEmptyCellsInSameBlockInOtherRows()
-                        .forEach(otherCell -> otherCell.candidates.remove(candidate));
+            if (emptyCellsInSameBlockInOtherColumns.noCellContainsCandidate(candidate)) {
+                emptyCellsInSameColumnInOtherBlocks.removeCandidate(candidate);
             }
-            if (getEmptyCellsInSameColumnInOtherBlocks()
-                    .noneMatch(otherCell -> otherCell.candidates.contains(candidate))) {
-                getEmptyCellsInSameBlockInOtherColumns()
-                        .forEach(otherCell -> otherCell.candidates.remove(candidate));
+            if (emptyCellsInSameColumnInOtherBlocks.noCellContainsCandidate(candidate)) {
+                emptyCellsInSameBlockInOtherColumns.removeCandidate(candidate);
             }
         });
     }
@@ -113,22 +126,6 @@ public class SolverCell {
                     .orElse(Stream.empty())
                     .forEach(it -> it.getCandidates().removeAll(candidates)));
         }
-    }
-
-    private Stream<SolverCell> getEmptyCellsInSameBlockInOtherRows() {
-        return otherCellsInBlock.streamEmptyCellsWhere(this::rowDiffers);
-    }
-
-    private Stream<SolverCell> getEmptyCellsInSameRowInOtherBlocks() {
-        return otherCellsInRow.streamEmptyCellsWhere(this::blockDiffers);
-    }
-
-    private Stream<SolverCell> getEmptyCellsInSameBlockInOtherColumns() {
-        return otherCellsInBlock.streamEmptyCellsWhere(this::columnDiffers);
-    }
-
-    private Stream<SolverCell> getEmptyCellsInSameColumnInOtherBlocks() {
-        return otherCellsInColumn.streamEmptyCellsWhere(this::blockDiffers);
     }
 
     private boolean columnDiffers(SolverCell otherCell) {

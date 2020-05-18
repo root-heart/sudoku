@@ -34,6 +34,7 @@ public class SolverBoard {
                     .map(solverCellMap::get)
                     .forEach(c -> solverCell.getOtherCellsInBlock().add(c));
         });
+        solverCellMap.values().forEach(SolverCell::initializationComplete);
     }
 
     public void eliminateImpossibleCandidates() {

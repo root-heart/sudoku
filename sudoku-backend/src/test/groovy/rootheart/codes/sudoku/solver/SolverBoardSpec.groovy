@@ -10,7 +10,7 @@ class SolverBoardSpec extends Specification {
         def solverBoard = new SolverBoard(board)
 
         when:
-        def cells = solverBoard.solverCellMap.get(board.getCell(cellIndex)).getEmptyCellsInSameBlockInOtherRows()
+        def cells = solverBoard.solverCellMap.get(board.getCell(cellIndex)).getEmptyCellsInSameBlockInOtherRows().cells
 
         then:
         cells.collect { it.cell } as Set == otherCellsIndices.collect { board.getCell(it) } as Set
@@ -29,7 +29,7 @@ class SolverBoardSpec extends Specification {
         def solverBoard = new SolverBoard(board)
 
         when:
-        def cells = solverBoard.solverCellMap.get(board.getCell(cellIndex)).getEmptyCellsInSameRowInOtherBlocks()
+        def cells = solverBoard.solverCellMap.get(board.getCell(cellIndex)).getEmptyCellsInSameRowInOtherBlocks().cells
 
         then:
         cells.collect { it.cell } as Set == otherCellsIndices.collect { board.getCell(it) } as Set

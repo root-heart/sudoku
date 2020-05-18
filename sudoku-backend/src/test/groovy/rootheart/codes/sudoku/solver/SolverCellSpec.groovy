@@ -1,5 +1,7 @@
 package rootheart.codes.sudoku.solver
 
+import org.eclipse.collections.api.set.primitive.IntSet
+import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet
 import rootheart.codes.sudoku.game.Board
 import spock.lang.Specification
 
@@ -15,9 +17,9 @@ class SolverCellSpec extends Specification {
         eliminateLockedCandidates(solverBoard)
 
         then:
-        solverBoard.solverCellMap[board.getCell(6)].candidates == [4, 5, 6] as Set
-        solverBoard.solverCellMap[board.getCell(7)].candidates == [4, 5, 6] as Set
-        solverBoard.solverCellMap[board.getCell(8)].candidates == [4, 5, 6] as Set
+        solverBoard.solverCellMap[board.getCell(6)].candidates == [4, 5, 6] as IntHashSet
+        solverBoard.solverCellMap[board.getCell(7)].candidates == [4, 5, 6] as IntHashSet
+        solverBoard.solverCellMap[board.getCell(8)].candidates == [4, 5, 6] as IntHashSet
 
         when:
         board = new Board("100000000" + "200000000" + "300000000" + "070000000" + "080000000" + "090000000" + "000000000" * 3)
@@ -27,9 +29,9 @@ class SolverCellSpec extends Specification {
         eliminateLockedCandidates(solverBoard)
 
         then:
-        solverBoard.solverCellMap[board.getCell(56)].candidates == [4, 5, 6] as Set
-        solverBoard.solverCellMap[board.getCell(65)].candidates == [4, 5, 6] as Set
-        solverBoard.solverCellMap[board.getCell(74)].candidates == [4, 5, 6] as Set
+        solverBoard.solverCellMap[board.getCell(56)].candidates == [4, 5, 6] as IntHashSet
+        solverBoard.solverCellMap[board.getCell(65)].candidates == [4, 5, 6] as IntHashSet
+        solverBoard.solverCellMap[board.getCell(74)].candidates == [4, 5, 6] as IntHashSet
 
         when:
         board = new Board("000102000" + "000000000" + "000000300" + "000030000" + "000000000" * 5)
@@ -58,10 +60,10 @@ class SolverCellSpec extends Specification {
         eliminateNakedTwins(solverBoard)
 
         then:
-        solverBoard.solverCellMap[board.getCell(47)].candidates == [2, 3] as Set
-        solverBoard.solverCellMap[board.getCell(74)].candidates == [2, 3] as Set
-        solverBoard.solverCellMap[board.getCell(38)].candidates == [7, 9] as Set
-        solverBoard.solverCellMap[board.getCell(29)].candidates == [7, 9] as Set
+        solverBoard.solverCellMap[board.getCell(47)].candidates == [2, 3] as IntHashSet
+        solverBoard.solverCellMap[board.getCell(74)].candidates == [2, 3] as IntHashSet
+        solverBoard.solverCellMap[board.getCell(38)].candidates == [7, 9] as IntHashSet
+        solverBoard.solverCellMap[board.getCell(29)].candidates == [7, 9] as IntHashSet
     }
 
     private static eliminateCandidatesThatAreSetInBuddyCells(SolverBoard solverBoard) {

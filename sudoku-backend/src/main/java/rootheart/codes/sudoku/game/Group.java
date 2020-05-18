@@ -2,7 +2,7 @@ package rootheart.codes.sudoku.game;
 
 import lombok.Getter;
 
-import java.util.stream.Collectors;
+import java.util.BitSet;
 
 @Getter
 public class Group extends CellList {
@@ -18,10 +18,15 @@ public class Group extends CellList {
     }
 
     public boolean isValid() {
+        BitSet b = new BitSet();
         return streamCells()
                 .filter(c -> !c.isEmpty())
-                .collect(Collectors.groupingBy(Cell::getNumber, Collectors.counting()))
-                .entrySet().stream()
-                .allMatch(numberCount -> numberCount.getValue() == 1);
+                .allMatch(c -> {
+                    if (b.get(c.getNumber())) {
+                        return false;
+                    }
+                    b.set(c.getNumber());
+                    return true;
+                });
     }
 }

@@ -29,16 +29,17 @@ class SolverPerformanceTest extends Specification {
         def jdkSolver = new Solver()
         def sudokuToSolve = mediumSudoku
 
-        def warmUpCount = 1_00
+        def warmUpCount = 1_500
         def benchmarkCount = 1_00
 
         when:
-        5.times {
-            warmUpCount.times {
-                def board = new Board(sudokuToSolve)
-                jdkSolver.solve(board)
-            }
+        println "Warming up..."
+        warmUpCount.times {
+            def board = new Board(sudokuToSolve)
+            jdkSolver.solve(board)
+        }
 
+        5.times {
             long s = System.nanoTime()
             benchmarkCount.times {
                 def board = new Board(sudokuToSolve)
