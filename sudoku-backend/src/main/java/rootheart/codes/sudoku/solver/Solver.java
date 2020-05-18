@@ -120,33 +120,6 @@ public class Solver {
         return singleCandidates;
     }
 
-//    private String statusString(Board board, Map<Cell, Set<Integer>> cellsCandidates) {
-//        List<String> states = new ArrayList<>();
-//        for (Cell cell : board.getCells()) {
-//            states.add(cell.getNumber() + "(" + candidatesString(cellsCandidates.get(cell)) + ")");
-//        }
-//        StringBuilder sb = new StringBuilder();
-//        for (int row = 0; row < board.getMaxValue(); row++) {
-//            for (int column = 0; column < board.getMaxValue(); column++) {
-//                sb.append(states.get(row * board.getMaxValue() + column));
-//            }
-//            sb.append("\n");
-//        }
-//        return sb.toString();
-//    }
-//
-//    private String candidatesString(Set<Integer> candidates) {
-//        StringBuilder sb = new StringBuilder();
-//        for (int i = 1; i <= 9; i++) {
-//            if (candidates != null && candidates.contains(i)) {
-//                sb.append(i);
-//            } else {
-//                sb.append(" ");
-//            }
-//        }
-//        return sb.toString();
-//    }
-
     private SolverBoard createSolverCells(Board board) {
         return new SolverBoard(board);
     }
