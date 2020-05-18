@@ -7,9 +7,8 @@ import rootheart.codes.sudoku.game.Cell;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 @Getter
@@ -33,19 +32,21 @@ public class SolverCell {
         eliminateLockedCandidates();
         eliminateNakedTwins();
         if (hasOneCandidate()) {
-            otherCellsInColumn.removeCandidates(candidates);
-            otherCellsInRow.removeCandidates(candidates);
-            otherCellsInBlock.removeCandidates(candidates);
+            forAllOtherCells(g -> g.removeCandidates(candidates));
         }
     }
 
-    public void eliminateCandidatesThatAreSetInBuddyCells() {
-        otherCellsInColumn.streamSetNumbers().forEach(candidates::remove);
-        otherCellsInRow.streamSetNumbers().forEach(candidates::remove);
-        otherCellsInBlock.streamSetNumbers().forEach(candidates::remove);
+    private void forAllOtherCells(Consumer<SolverCellCollection> consumer) {
+        consumer.accept(otherCellsInColumn);
+        consumer.accept(otherCellsInRow);
+        consumer.accept(otherCellsInBlock);
     }
 
-    public void eliminateLockedCandidates() {
+    private void eliminateCandidatesThatAreSetInBuddyCells() {
+        forAllOtherCells(g -> g.streamNumbers().forEach(candidates::remove));
+    }
+
+    private void eliminateLockedCandidates() {
         // Für jeden Kandidaten schauen, ob er in einer Zelle einer anderen Zeile/Spalte in diesem Block existiert.
         // Falls nein, den Kandidaten für alle Zellen dieser Zeile/Spalte in anderen Blöcken löschen
         for (Integer candidate : getCandidates()) {
@@ -104,31 +105,12 @@ public class SolverCell {
 
     private void eliminateNakedTwins() {
         if (candidates.size() == 2) {
-            eliminateNakedTwinsInGroup(otherCellsInRow);
-            eliminateNakedTwinsInGroup(otherCellsInColumn);
-            eliminateNakedTwinsInGroup(otherCellsInBlock);
+            forAllOtherCells(otherCells -> otherCells
+                    .findSingleCellWithCandidates(candidates)
+                    .map(otherCells::streamEmptyCellsExcept)
+                    .orElse(Stream.empty())
+                    .forEach(it -> it.getCandidates().removeAll(candidates)));
         }
-    }
-
-    private void eliminateNakedTwinsInGroup(SolverCellCollection otherCellsInGroup) {
-        findNakedTwinInGroup(otherCellsInGroup).ifPresent(otherCell ->
-                otherCellsInGroup
-                        .streamEmptyCellsWhere(it -> it != otherCell)
-                        .forEach(it -> it.getCandidates().removeAll(candidates)));
-    }
-
-    private Optional<SolverCell> findNakedTwinInGroup(SolverCellCollection otherCellsInGroup) {
-        List<SolverCell> nakedTwins = findOtherCellsWithSameCandidates(otherCellsInGroup);
-        if (nakedTwins.size() > 1) {
-            throw new NoSolutionException("more than two cells only allow the same two numbers, this is not possible");
-        }
-        return nakedTwins.size() == 0 ? Optional.empty() : Optional.of(nakedTwins.get(0));
-    }
-
-    private List<SolverCell> findOtherCellsWithSameCandidates(SolverCellCollection otherCellsInGroup) {
-        return otherCellsInGroup
-                .streamEmptyCellsWhere(this::hasSameCandidates)
-                .collect(Collectors.toList());
     }
 
     private Stream<SolverCell> getEmptyCellsInSameBlockInOtherRows() {
@@ -157,9 +139,5 @@ public class SolverCell {
 
     private boolean blockDiffers(SolverCell otherCell) {
         return cell.getBlock() != otherCell.cell.getBlock();
-    }
-
-    private boolean hasSameCandidates(SolverCell otherCell) {
-        return candidates.equals(otherCell.candidates);
     }
 }
