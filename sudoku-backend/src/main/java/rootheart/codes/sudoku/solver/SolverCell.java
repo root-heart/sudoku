@@ -61,30 +61,6 @@ public class SolverCell {
         }
     }
 
-    public Stream<SolverCell> getEmptyCellsInSameBlockInOtherRows() {
-        return otherCellsInBlock.stream()
-                .filter(otherCell -> otherCell.cell.isEmpty())
-                .filter(otherCell -> otherCell.cell.getRow() != cell.getRow());
-    }
-
-    public Stream<SolverCell> getEmptyCellsInSameRowInOtherBlocks() {
-        return otherCellsInRow.stream()
-                .filter(otherCell -> otherCell.cell.isEmpty())
-                .filter(otherCell -> otherCell.cell.getBlock() != cell.getBlock());
-    }
-
-    public Stream<SolverCell> getEmptyCellsInSameBlockInOtherColumns() {
-        return otherCellsInBlock.stream()
-                .filter(otherCell -> otherCell.cell.isEmpty())
-                .filter(otherCell -> otherCell.cell.getColumn() != cell.getColumn());
-    }
-
-    public Stream<SolverCell> getEmptyCellsInSameColumnInOtherBlocks() {
-        return otherCellsInColumn.stream()
-                .filter(otherCell -> otherCell.cell.isEmpty())
-                .filter(otherCell -> otherCell.cell.getBlock() != cell.getBlock());
-    }
-
     public boolean hasOneCandidate() {
         return candidates.size() == 1;
     }
@@ -133,5 +109,45 @@ public class SolverCell {
                             .filter(x -> otherCell != x)
                             .forEach(x -> x.getCandidates().removeAll(candidates));
                 });
+    }
+
+    private Stream<SolverCell> getEmptyCellsInSameBlockInOtherRows() {
+        return otherCellsInBlock.stream()
+                .filter(SolverCell::isEmpty)
+                .filter(this::rowDiffers);
+    }
+
+    private Stream<SolverCell> getEmptyCellsInSameRowInOtherBlocks() {
+        return otherCellsInRow.stream()
+                .filter(SolverCell::isEmpty)
+                .filter(this::blockDiffers);
+    }
+
+    private Stream<SolverCell> getEmptyCellsInSameBlockInOtherColumns() {
+        return otherCellsInBlock.stream()
+                .filter(SolverCell::isEmpty)
+                .filter(this::columnDiffers);
+    }
+
+    private Stream<SolverCell> getEmptyCellsInSameColumnInOtherBlocks() {
+        return otherCellsInColumn.stream()
+                .filter(SolverCell::isEmpty)
+                .filter(this::blockDiffers);
+    }
+
+    private boolean columnDiffers(SolverCell otherCell) {
+        return cell.getColumn() != otherCell.cell.getColumn();
+    }
+
+    private boolean rowDiffers(SolverCell otherCell) {
+        return cell.getRow() != otherCell.cell.getRow();
+    }
+
+    private boolean blockDiffers(SolverCell otherCell) {
+        return cell.getBlock() != otherCell.cell.getBlock();
+    }
+
+    private boolean isEmpty() {
+        return cell.isEmpty();
     }
 }
