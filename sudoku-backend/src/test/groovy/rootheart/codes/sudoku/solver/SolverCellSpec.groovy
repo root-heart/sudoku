@@ -1,6 +1,7 @@
 package rootheart.codes.sudoku.solver
 
-import org.eclipse.collections.api.set.primitive.IntSet
+
+import org.eclipse.collections.impl.factory.primitive.IntSets
 import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet
 import rootheart.codes.sudoku.game.Board
 import spock.lang.Specification
@@ -51,19 +52,19 @@ class SolverCellSpec extends Specification {
 
     def 'Test that naked twins are eliminated'() {
         given:
-        def board = new Board("104090068" + "956018034" + "008406951" + "510000086" + "800600012"
-                + "640080097" + "781923645" + "495060823" + "060854179")
+        def board = new Board("000789456" + "000000000" + "000000000" + "410000000" + "500000000" + "600000000" + "001000000" + "000000000" * 2)
         def solverBoard = new SolverBoard(board)
 
         when:
         solverBoard.solverCellMap.values().forEach(SolverCell::eliminateCandidatesThatAreSetInBuddyCells);
-        eliminateNakedTwins(solverBoard)
+        solverBoard.solverCellMap[board.getCell(0)].eliminateNakedTwins()
+        solverBoard.solverCellMap[board.getCell(1)].eliminateNakedTwins()
+        solverBoard.solverCellMap[board.getCell(2)].eliminateNakedTwins()
 
         then:
-        solverBoard.solverCellMap[board.getCell(47)].candidates == [2, 3] as IntHashSet
-        solverBoard.solverCellMap[board.getCell(74)].candidates == [2, 3] as IntHashSet
-        solverBoard.solverCellMap[board.getCell(38)].candidates == [7, 9] as IntHashSet
-        solverBoard.solverCellMap[board.getCell(29)].candidates == [7, 9] as IntHashSet
+        solverBoard.solverCellMap[board.getCell(0)].candidates == IntSets.mutable.of(1)
+        solverBoard.solverCellMap[board.getCell(1)].candidates == IntSets.mutable.of(2, 3)
+        solverBoard.solverCellMap[board.getCell(2)].candidates == IntSets.mutable.of(2, 3)
     }
 
     private static eliminateCandidatesThatAreSetInBuddyCells(SolverBoard solverBoard) {

@@ -23,12 +23,12 @@ public class Solver {
         int singleCandidateCount = solverBoard.getSingleCandidates().size();
         solverBoard.getSingleCandidates().forEach(solverCell -> {
             solverCell.getCell().setNumber(solverCell.getFirstCandidate());
-            if (!board.isValid()) {
-                throw new BoardInvalidException();
-            }
         });
+        if (!board.isValid()) {
+            throw new BoardInvalidException();
+        }
         long emptyCellCount = board.streamEmptyCells().count();
-        System.out.println("single candidates: " + singleCandidateCount + "  remaining empty cells: " + emptyCellCount);
+//        log.debug("single candidates: " + singleCandidateCount + "  remaining empty cells: " + emptyCellCount);
         if (emptyCellCount > 0) {
             solveBruteForce(board);
         }
@@ -45,12 +45,12 @@ public class Solver {
                             if (boardToSetARandomNumberTo.isValid()) {
                                 Board boardToTryToSolve = clone(boardToSetARandomNumberTo);
                                 try {
-                                    System.out.println("Try number " + numberToTry);
+//                                    log.debug("Try number " + numberToTry);
                                     solve(boardToTryToSolve);
                                     solutions.add(boardToTryToSolve);
                                 } catch (NoSolutionException e) {
                                     // if trying this number did not end up with a solution, try the next one
-                                    System.out.println("No solution for " + numberToTry + ": " + e.getMessage());
+//                                    log.debug("No solution for " + numberToTry + ": " + e.getMessage());
                                 }
                             }
                         }));

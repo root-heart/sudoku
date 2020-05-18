@@ -33,16 +33,24 @@ public class SolverCell {
     public void initializationComplete() {
         forAllOtherCells(SolverCellCollection::initializationComplete);
         emptyCellsInSameBlockInOtherRows = new SolverCellCollection(otherCellsInBlock
-                .streamEmptyCellsWhere(this::rowDiffers)
+                .getEmptyCells()
+                .stream()
+                .filter(this::rowDiffers)
                 .collect(Collectors.toSet()));
         emptyCellsInSameRowInOtherBlocks = new SolverCellCollection(otherCellsInRow
-                .streamEmptyCellsWhere(this::blockDiffers)
+                .getEmptyCells()
+                .stream()
+                .filter(this::blockDiffers)
                 .collect(Collectors.toSet()));
         emptyCellsInSameBlockInOtherColumns = new SolverCellCollection(otherCellsInBlock
-                .streamEmptyCellsWhere(this::columnDiffers)
+                .getEmptyCells()
+                .stream()
+                .filter(this::columnDiffers)
                 .collect(Collectors.toSet()));
         emptyCellsInSameColumnInOtherBlocks = new SolverCellCollection(otherCellsInColumn
-                .streamEmptyCellsWhere(this::blockDiffers)
+                .getEmptyCells()
+                .stream()
+                .filter(this::blockDiffers)
                 .collect(Collectors.toSet()));
     }
 
@@ -120,11 +128,24 @@ public class SolverCell {
 
     private void eliminateNakedTwins() {
         if (candidates.size() == 2) {
-            forAllOtherCells(otherCells -> otherCells
-                    .findSingleCellWithCandidates(candidates)
-                    .map(otherCells::streamAllOtherEmptyCells)
-                    .orElse(Stream.empty())
-                    .forEach(it -> it.getCandidates().removeAll(candidates)));
+            forAllOtherCells(otherCells -> {
+                SolverCell twin = null;
+                for (SolverCell otherCell : otherCells.getEmptyCells()) {
+                    if (otherCell.candidates.equals(candidates)) {
+                        if (twin != null) {
+                            throw new NoSolutionException("more than two cells only allow the same two numbers, this is not possible");
+                        }
+                        twin = otherCell;
+                    }
+                }
+                if (twin != null) {
+                    for (SolverCell otherCell : otherCells.getEmptyCells()) {
+                        if (otherCell != twin) {
+                            otherCell.getCandidates().removeAll(candidates);
+                        }
+                    }
+                }
+            });
         }
     }
 

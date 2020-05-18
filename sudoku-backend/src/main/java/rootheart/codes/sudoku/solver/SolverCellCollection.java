@@ -1,22 +1,20 @@
 package rootheart.codes.sudoku.solver;
 
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.eclipse.collections.api.set.primitive.IntSet;
 import org.eclipse.collections.impl.factory.primitive.IntSets;
 import rootheart.codes.sudoku.game.Cell;
 
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @NoArgsConstructor
+@Getter
 public class SolverCellCollection {
     private final Set<SolverCell> cells = new HashSet<>();
 
-    private boolean fixed = false;
     private Set<SolverCell> emptyCells;
     private IntSet numbers;
 
@@ -25,15 +23,10 @@ public class SolverCellCollection {
     }
 
     public void initializationComplete() {
-        if (fixed) {
-            return;
-        }
-
         emptyCells = cells.stream()
                 .filter(SolverCell::isEmpty)
                 .collect(Collectors.toSet());
         numbers = IntSets.immutable.ofAll(cells.stream().map(SolverCell::getCell).mapToInt(Cell::getNumber));
-        fixed = true;
     }
 
     public void removeCandidates(IntSet candidates) {
@@ -42,11 +35,6 @@ public class SolverCellCollection {
 
     public void removeCandidate(int candidate) {
         cells.forEach(otherCell -> otherCell.getCandidates().remove(candidate));
-    }
-
-    public Stream<SolverCell> streamEmptyCellsWhere(Predicate<SolverCell> filter) {
-        return emptyCells.stream()
-                .filter(filter);
     }
 
     public IntSet getNumbers() {
@@ -64,17 +52,6 @@ public class SolverCellCollection {
             }
         }
         return true;
-    }
-
-    public Optional<SolverCell> findSingleCellWithCandidates(IntSet candidates) {
-        return streamEmptyCellsWhere(c -> c.getCandidates().equals(candidates))
-                .reduce((a, b) -> {
-                    throw new NoSolutionException("more than two cells only allow the same two numbers, this is not possible");
-                });
-    }
-
-    public Stream<SolverCell> streamAllOtherEmptyCells(SolverCell except) {
-        return streamEmptyCellsWhere(cell -> cell != except);
     }
 }
 
