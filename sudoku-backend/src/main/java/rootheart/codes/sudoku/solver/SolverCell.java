@@ -80,7 +80,11 @@ public class SolverCell {
         return candidates.iterator().next();
     }
 
-    public void revealHiddenSingle() {
+    public boolean isEmpty() {
+        return cell.isEmpty();
+    }
+
+    private void revealHiddenSingle() {
         List<Integer> hiddenSingles = new ArrayList<>();
         for (Integer candidate : candidates) {
             if (!isPresentInOtherCells(candidate, otherCellsInColumn)
@@ -98,7 +102,7 @@ public class SolverCell {
         }
     }
 
-    public void eliminateNakedTwins() {
+    private void eliminateNakedTwins() {
         if (candidates.size() == 2) {
             eliminateNakedTwinsInGroup(otherCellsInRow);
             eliminateNakedTwinsInGroup(otherCellsInColumn);
@@ -169,9 +173,5 @@ public class SolverCell {
 
     private boolean blockDiffers(SolverCell otherCell) {
         return cell.getBlock() != otherCell.cell.getBlock();
-    }
-
-    public boolean isEmpty() {
-        return cell.isEmpty();
     }
 }

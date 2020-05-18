@@ -61,7 +61,7 @@ public class SolverBoard {
                 .anyMatch(entry -> entry.isEmpty() && entry.getCandidates().size() == 0);
     }
 
-    public void findNakedSingles() {
+    private void findNakedSingles() {
         solverCellMap.values()
                 .stream()
                 .filter(SolverCell::hasOneCandidate)
