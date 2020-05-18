@@ -123,7 +123,6 @@ class SolverSpec extends Specification {
     }
 
     def 'Test another extreme difficult Sudoku'() {
-
         given:
         def board = new Board(extremeDifficultSudoku)
 
@@ -155,5 +154,16 @@ class SolverSpec extends Specification {
 
         then:
         thrown NoSolutionException
+    }
+
+    def 'Test that trying to solve an empty board results in an exception'() {
+        given:
+        def board = new Board("0" * 81)
+
+        when:
+        new Solver().solve(board)
+
+        then:
+        thrown MultipleSolutionsException
     }
 }
