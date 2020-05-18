@@ -67,7 +67,7 @@ public class SolverCell {
         return candidates.iterator().next();
     }
 
-    public Integer findHiddenSingle() {
+    public void revealHiddenSingle() {
         List<Integer> hiddenSingles = new ArrayList<>();
         for (Integer candidate : candidates) {
             if (!isPresentInOtherCells(candidate, otherCellsInColumn)
@@ -79,7 +79,10 @@ public class SolverCell {
         if (hiddenSingles.size() > 1) {
             throw new NoSolutionException("multiple values can only exist in this cell, this is not possible");
         }
-        return hiddenSingles.size() == 0 ? null : hiddenSingles.get(0);
+        if (hiddenSingles.size() == 1) {
+            candidates.clear();
+            candidates.add(hiddenSingles.get(0));
+        }
     }
 
     public void eliminateNakedTwins() {

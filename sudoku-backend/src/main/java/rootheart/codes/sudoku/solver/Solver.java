@@ -1,14 +1,9 @@
 package rootheart.codes.sudoku.solver;
 
 import rootheart.codes.sudoku.game.Board;
-import rootheart.codes.sudoku.game.Cell;
-import rootheart.codes.sudoku.game.Group;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 public class Solver {
 
@@ -23,10 +18,7 @@ public class Solver {
             }
 //            Board previousState = clone(board);
 
-            // TODO performance optimization: Do not calculate every possible single candidate, but only the first one!
-            // we need only one in every iteration ;)
-            Map<Cell, Integer> singleCandidates = solverBoard.getSingleCandidates();
-            if (singleCandidates.isEmpty()) {
+            if (solverBoard.getSingleCandidates().size() == 0) {
 //                System.out.println("XXX");
                 Board boardToSetARandomNumberTo = clone(board);
                 List<Board> solutions = new ArrayList<>();
@@ -58,14 +50,15 @@ public class Solver {
                 }
                 board.set(solutions.get(0).getBoardString());
             } else {
-                Map.Entry<Cell, Integer> next = singleCandidates.entrySet().iterator().next();
-                next.getKey().setNumber(next.getValue());
+                solverBoard.getSingleCandidates().forEach(solverCell -> {
+                    solverCell.getCell().setNumber(solverCell.getFirstCandidate());
+                    if (!board.isValid()) {
+                        throw new BoardInvalidException();
+                    }
+                });
 //                System.out.println(previousState.getBoardString());
 //                int index = board.indexOf(next.getKey());
 //                System.out.println(" ".repeat(Math.max(0, index)) + next.getValue());
-                if (!board.isValid()) {
-                    throw new BoardInvalidException();
-                }
             }
         }
     }

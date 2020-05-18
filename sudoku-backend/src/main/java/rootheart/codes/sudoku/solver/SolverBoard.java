@@ -1,10 +1,12 @@
 package rootheart.codes.sudoku.solver;
 
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import rootheart.codes.sudoku.game.Board;
 import rootheart.codes.sudoku.game.Cell;
 
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -13,7 +15,7 @@ import java.util.stream.Collectors;
 public class SolverBoard {
 
     private final Map<Cell, SolverCell> solverCellMap;
-    private final Map<Cell, Integer> singleCandidates = new HashMap<>();
+    private final List<SolverCell> singleCandidates = new ArrayList<>();
 
     public SolverBoard(Board board) {
         solverCellMap = board.streamCells()
@@ -35,14 +37,10 @@ public class SolverBoard {
         });
 
         eliminateCandidatesThatAreSetInBuddyCells();
+        revealHiddenSingles();
         eliminateLockedCandidates();
         eliminateNakedTwins();
-        findSingleCandidates();
-    }
-
-    private void findSingleCandidates() {
         findNakedSingles();
-        findHiddenSingles();
     }
 
     public void eliminateCandidatesThatAreSetInBuddyCells() {
@@ -66,15 +64,10 @@ public class SolverBoard {
         solverCellMap.values()
                 .stream()
                 .filter(SolverCell::hasOneCandidate)
-                .forEach(solverCell -> singleCandidates.put(solverCell.getCell(), solverCell.getFirstCandidate()));
+                .forEach(singleCandidates::add);
     }
 
-    public void findHiddenSingles() {
-        for (SolverCell solverCell : solverCellMap.values()) {
-            Integer hiddenSingle = solverCell.findHiddenSingle();
-            if (hiddenSingle != null) {
-                singleCandidates.put(solverCell.getCell(), hiddenSingle);
-            }
-        }
+    public void revealHiddenSingles() {
+        solverCellMap.values().forEach(SolverCell::revealHiddenSingle);
     }
 }
