@@ -9,8 +9,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class Solver {
@@ -109,7 +107,7 @@ public class Solver {
         SolverBoard solverBoard = createSolverCells(board);
         solverBoard.eliminateCandidatesThatAreSetInBuddyCells();
         solverBoard.eliminateLockedCandidates();
-//        eliminateNakedTwins(cellsCandidates);
+        solverBoard.eliminateNakedTwins();
         return solverBoard;
     }
 
@@ -123,48 +121,4 @@ public class Solver {
     private SolverBoard createSolverCells(Board board) {
         return new SolverBoard(board);
     }
-
-    private void eliminateNakedTwins(Map<Cell, Set<Integer>> cellsCandidates) {
-        cellsCandidates.entrySet()
-                .stream()
-                .filter(entry -> entry.getValue().size() == 2)
-                .forEach(entry -> {
-                    Cell cell = entry.getKey();
-                    List<Cell> otherCellsInRow = getOtherCellsInGroup(cell, cell.getRow());
-                    List<Cell> otherCellsInColumn = getOtherCellsInGroup(cell, cell.getColumn());
-                    List<Cell> otherCellsInBlock = getOtherCellsInGroup(cell, cell.getBlock());
-                    eliminateNakedTwinsInGroup(cellsCandidates, otherCellsInRow, entry.getValue());
-                    eliminateNakedTwinsInGroup(cellsCandidates, otherCellsInColumn, entry.getValue());
-                    eliminateNakedTwinsInGroup(cellsCandidates, otherCellsInBlock, entry.getValue());
-                });
-    }
-
-    private List<Cell> getOtherCellsInGroup(Cell cell, Group group) {
-        return group
-                .streamEmptyCells()
-                .filter(otherCell -> cell != otherCell)
-                .collect(Collectors.toList());
-    }
-
-    private void eliminateNakedTwinsInGroup(Map<Cell, Set<Integer>> cellsCandidates, List<Cell> otherCellsInGroup, Set<Integer> candidates) {
-        otherCellsInGroup
-                .stream()
-                .filter(otherCell -> cellsCandidates.get(otherCell).equals(candidates))
-                .findAny()
-                .ifPresent(otherCell -> {
-                    otherCellsInGroup
-                            .stream()
-                            .filter(x -> otherCell != x)
-                            .forEach(x -> cellsCandidates.get(x).removeAll(candidates));
-                });
-    }
-
-    private void forAllCellsExcept(Group group, Cell exception, Consumer<Integer> consumer) {
-        group.streamCells()
-                .filter(cell -> cell != exception)
-                .map(Cell::getNumber)
-                .forEach(consumer);
-    }
-
-
 }

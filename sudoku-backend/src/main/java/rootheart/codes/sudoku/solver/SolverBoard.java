@@ -41,6 +41,10 @@ public class SolverBoard {
         solverCellMap.values().forEach(SolverCell::eliminateLockedCandidates);
     }
 
+    public void eliminateNakedTwins() {
+        solverCellMap.values().forEach(SolverCell::eliminateNakedTwins);
+    }
+
     public boolean hasSolution() {
         return solverCellMap.entrySet().stream()
                 .noneMatch(entry -> entry.getKey().isEmpty() && entry.getValue().getCandidates().size() == 0);

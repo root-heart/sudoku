@@ -118,4 +118,25 @@ public class SolverCell {
         hiddenSingles.addAll(candidatesNotPresentInOtherCellOfBlock);
         return hiddenSingles;
     }
+
+    public void eliminateNakedTwins() {
+        if (candidates.size() == 2) {
+            eliminateNakedTwinsInGroup(otherCellsInRow);
+            eliminateNakedTwinsInGroup(otherCellsInColumn);
+            eliminateNakedTwinsInGroup(otherCellsInBlock);
+        }
+    }
+
+    private void eliminateNakedTwinsInGroup(List<SolverCell> otherCellsInGroup) {
+        otherCellsInGroup
+                .stream()
+                .filter(otherCell -> otherCell.getCandidates().equals(candidates))
+                .findAny()
+                .ifPresent(otherCell -> {
+                    otherCellsInGroup
+                            .stream()
+                            .filter(x -> otherCell != x)
+                            .forEach(x -> x.getCandidates().removeAll(candidates));
+                });
+    }
 }
