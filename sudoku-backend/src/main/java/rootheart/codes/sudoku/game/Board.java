@@ -2,6 +2,7 @@ package rootheart.codes.sudoku.game;
 
 import lombok.Getter;
 
+import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -100,5 +101,11 @@ public class Board extends CellList {
                 .map(Cell::getNumber)
                 .map(String::valueOf)
                 .collect(Collectors.joining());
+    }
+    
+    public boolean isValid() {
+        return Arrays.stream(columns).allMatch(Group::isValid)
+                && Arrays.stream(rows).allMatch(Group::isValid)
+                && Arrays.stream(blocks).allMatch(Group::isValid);
     }
 }

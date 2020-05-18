@@ -14,7 +14,7 @@ public class Solver {
 
     public void solve(Board board) {
         while (board.hasEmptyCells()) {
-            if (!isValid(board)) {
+            if (!board.isValid()) {
                 throw new BoardInvalidException();
             }
             SolverBoard solverBoard = new SolverBoard(board);
@@ -35,7 +35,7 @@ public class Solver {
                         .ifPresent(cell ->
                                 boardToSetARandomNumberTo.getPossibleValues().forEach(numberToTry -> {
                                     cell.setNumber(numberToTry);
-                                    if (isValid(boardToSetARandomNumberTo)) {
+                                    if (boardToSetARandomNumberTo.isValid()) {
 //                                        if (System.currentTimeMillis() % 500 == 0) {
 //                                            System.out.println(previousState.getBoardString());
 //                                            int index = boardToSetARandomNumberTo.indexOf(cell);
@@ -63,7 +63,7 @@ public class Solver {
 //                System.out.println(previousState.getBoardString());
 //                int index = board.indexOf(next.getKey());
 //                System.out.println(" ".repeat(Math.max(0, index)) + next.getValue());
-                if (!isValid(board)) {
+                if (!board.isValid()) {
                     throw new BoardInvalidException();
                 }
             }
@@ -73,19 +73,5 @@ public class Solver {
     private Board clone(Board board) {
         String boardString = board.getBoardString();
         return new Board(boardString);
-    }
-
-    private boolean isValid(Board board) {
-        return Arrays.stream(board.getColumns()).allMatch(this::isValid)
-                && Arrays.stream(board.getRows()).allMatch(this::isValid)
-                && Arrays.stream(board.getBlocks()).allMatch(this::isValid);
-    }
-
-    private boolean isValid(Group group) {
-        return group.streamCells()
-                .filter(c -> !c.isEmpty())
-                .collect(Collectors.groupingBy(Cell::getNumber, Collectors.counting()))
-                .entrySet().stream()
-                .allMatch(entry -> entry.getValue() == 1);
     }
 }
