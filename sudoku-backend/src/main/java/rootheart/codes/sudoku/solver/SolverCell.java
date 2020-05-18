@@ -7,20 +7,21 @@ import rootheart.codes.sudoku.game.Cell;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Getter
 public class SolverCell {
     private final Cell cell;
-    private final Set<Integer> candidates;
-    private final List<SolverCell> otherCellsInColumn = new ArrayList<>();
-    private final List<SolverCell> otherCellsInRow = new ArrayList<>();
-    private final List<SolverCell> otherCellsInBlock = new ArrayList<>();
+    private final Set<Integer> candidates = new HashSet<>();
+    private final Set<SolverCell> otherCellsInColumn = new HashSet<>();
+    private final Set<SolverCell> otherCellsInRow = new HashSet<>();
+    private final Set<SolverCell> otherCellsInBlock = new HashSet<>();
 
     public SolverCell(Cell cell, Board board) {
         this.cell = cell;
-        candidates = new HashSet<>();
         if (cell.isEmpty()) {
             candidates.addAll(board.getPossibleValues());
         }
@@ -93,23 +94,33 @@ public class SolverCell {
         }
     }
 
-    private boolean isPresentInOtherCells(Integer candidate, List<SolverCell> otherCells) {
+    private boolean isPresentInOtherCells(Integer candidate, Set<SolverCell> otherCells) {
         return otherCells
                 .stream()
                 .anyMatch(otherCell -> otherCell.getCandidates().contains(candidate));
     }
 
-    private void eliminateNakedTwinsInGroup(List<SolverCell> otherCellsInGroup) {
-        otherCellsInGroup
-                .stream()
+    private void eliminateNakedTwinsInGroup(Set<SolverCell> otherCellsInGroup) {
+        findNakedTwinInGroup(otherCellsInGroup)
+                .ifPresent(otherCell -> otherCellsInGroup.forEach(it -> {
+                    if (it != otherCell) {
+                        it.getCandidates().removeAll(candidates);
+                    }
+                }));
+    }
+
+    private Optional<SolverCell> findNakedTwinInGroup(Set<SolverCell> otherCellsInGroup) {
+        List<SolverCell> nakedTwins = findOtherCellsWithSameCandidates(otherCellsInGroup);
+        if (nakedTwins.size() > 1) {
+            throw new NoSolutionException("more than two cells only allow the same two numbers, this is not possible");
+        }
+        return nakedTwins.size() == 0 ? Optional.empty() : Optional.of(nakedTwins.get(0));
+    }
+
+    private List<SolverCell> findOtherCellsWithSameCandidates(Set<SolverCell> otherCellsInGroup) {
+        return otherCellsInGroup.stream()
                 .filter(otherCell -> otherCell.getCandidates().equals(candidates))
-                .findAny()
-                .ifPresent(otherCell -> {
-                    otherCellsInGroup
-                            .stream()
-                            .filter(x -> otherCell != x)
-                            .forEach(x -> x.getCandidates().removeAll(candidates));
-                });
+                .collect(Collectors.toList());
     }
 
     private Stream<SolverCell> getEmptyCellsInSameBlockInOtherRows() {
@@ -148,7 +159,7 @@ public class SolverCell {
         return cell.getBlock() != otherCell.cell.getBlock();
     }
 
-    private boolean isEmpty() {
+    public boolean isEmpty() {
         return cell.isEmpty();
     }
 }

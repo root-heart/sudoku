@@ -13,6 +13,7 @@ public class Solver {
                 throw new BoardInvalidException();
             }
             SolverBoard solverBoard = new SolverBoard(board);
+            solverBoard.calculate();
             if (!solverBoard.hasSolution()) {
                 throw new NoSolutionException("found no solution");
             }

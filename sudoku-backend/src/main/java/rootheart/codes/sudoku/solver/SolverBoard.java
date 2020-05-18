@@ -1,13 +1,13 @@
 package rootheart.codes.sudoku.solver;
 
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import rootheart.codes.sudoku.game.Board;
 import rootheart.codes.sudoku.game.Cell;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 public class SolverBoard {
 
     private final Map<Cell, SolverCell> solverCellMap;
-    private final List<SolverCell> singleCandidates = new ArrayList<>();
+    private final Set<SolverCell> singleCandidates = new HashSet<>();
 
     public SolverBoard(Board board) {
         solverCellMap = board.streamCells()
@@ -35,7 +35,9 @@ public class SolverBoard {
                     .map(solverCellMap::get)
                     .forEach(c -> solverCell.getOtherCellsInBlock().add(c));
         });
+    }
 
+    public void calculate() {
         eliminateCandidatesThatAreSetInBuddyCells();
         revealHiddenSingles();
         eliminateLockedCandidates();
@@ -55,9 +57,13 @@ public class SolverBoard {
         solverCellMap.values().forEach(SolverCell::eliminateNakedTwins);
     }
 
+    public void revealHiddenSingles() {
+        solverCellMap.values().forEach(SolverCell::revealHiddenSingle);
+    }
+
     public boolean hasSolution() {
-        return solverCellMap.entrySet().stream()
-                .noneMatch(entry -> entry.getKey().isEmpty() && entry.getValue().getCandidates().size() == 0);
+        return solverCellMap.values().stream()
+                .noneMatch(entry -> entry.isEmpty() && entry.getCandidates().size() == 0);
     }
 
     public void findNakedSingles() {
@@ -65,9 +71,5 @@ public class SolverBoard {
                 .stream()
                 .filter(SolverCell::hasOneCandidate)
                 .forEach(singleCandidates::add);
-    }
-
-    public void revealHiddenSingles() {
-        solverCellMap.values().forEach(SolverCell::revealHiddenSingle);
     }
 }

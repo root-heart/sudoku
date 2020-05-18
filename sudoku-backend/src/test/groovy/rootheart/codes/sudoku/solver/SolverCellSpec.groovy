@@ -49,7 +49,8 @@ class SolverCellSpec extends Specification {
 
     def 'Test that naked twins are eliminated'() {
         given:
-        def board = new Board("100000000" + "046000000" + "057000000" + "065000000" + "074000000" + "089000000" + "098000000" + "000000000" * 2)
+        def board = new Board("104090068" + "956018034" + "008406951" + "510000086" + "800600012"
+                + "640080097" + "781923645" + "495060823" + "060854179")
         def solverBoard = new SolverBoard(board)
 
         when:
@@ -57,14 +58,9 @@ class SolverCellSpec extends Specification {
         solverBoard.eliminateNakedTwins()
 
         then:
-        solverBoard.solverCellMap[board.getCell(1)].candidates == [2, 3] as Set
-        solverBoard.solverCellMap[board.getCell(2)].candidates == [2, 3] as Set
-        solverBoard.solverCellMap[board.getCell(3)].candidates == [4, 5, 6, 7, 8, 9] as Set
-        solverBoard.solverCellMap[board.getCell(4)].candidates == [4, 5, 6, 7, 8, 9] as Set
-        solverBoard.solverCellMap[board.getCell(5)].candidates == [4, 5, 6, 7, 8, 9] as Set
-        solverBoard.solverCellMap[board.getCell(6)].candidates == [4, 5, 6, 7, 8, 9] as Set
-        solverBoard.solverCellMap[board.getCell(7)].candidates == [4, 5, 6, 7, 8, 9] as Set
-        solverBoard.solverCellMap[board.getCell(8)].candidates == [4, 5, 6, 7, 8, 9] as Set
-
+        solverBoard.solverCellMap[board.getCell(47)].candidates == [2, 3] as Set
+        solverBoard.solverCellMap[board.getCell(74)].candidates == [2, 3] as Set
+        solverBoard.solverCellMap[board.getCell(38)].candidates == [7, 9] as Set
+        solverBoard.solverCellMap[board.getCell(29)].candidates == [7, 9] as Set
     }
 }
