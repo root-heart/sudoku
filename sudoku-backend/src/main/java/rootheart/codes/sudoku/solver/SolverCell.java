@@ -1,7 +1,6 @@
 package rootheart.codes.sudoku.solver;
 
 import lombok.Getter;
-import lombok.experimental.Delegate;
 import org.eclipse.collections.api.iterator.IntIterator;
 import org.eclipse.collections.api.set.primitive.IntSet;
 import org.eclipse.collections.api.set.primitive.MutableIntSet;
@@ -54,35 +53,6 @@ public class SolverCell {
         }
     }
 
-    private void forAllOtherCells(Consumer<SolverCellCollection> consumer) {
-        consumer.accept(otherCellsInColumn);
-        consumer.accept(otherCellsInRow);
-        consumer.accept(otherCellsInBlock);
-    }
-
-    private void eliminateCandidatesThatAreSetInBuddyCells() {
-        forAllOtherCells(g -> g.getNumbers().forEach(this::removeCandidate));
-    }
-
-    private void eliminateLockedCandidates() {
-        // Für jeden Kandidaten schauen, ob er in einer Zelle einer anderen Zeile/Spalte in diesem Block existiert.
-        // Falls nein, den Kandidaten für alle Zellen dieser Zeile/Spalte in anderen Blöcken löschen
-        candidates.forEach(candidate -> {
-            if (emptyCellsInSameBlockInOtherRows.noCellContainsCandidate(candidate)) {
-                emptyCellsInSameRowInOtherBlocks.removeCandidate(candidate);
-            }
-            if (emptyCellsInSameRowInOtherBlocks.noCellContainsCandidate(candidate)) {
-                emptyCellsInSameBlockInOtherRows.removeCandidate(candidate);
-            }
-            if (emptyCellsInSameBlockInOtherColumns.noCellContainsCandidate(candidate)) {
-                emptyCellsInSameColumnInOtherBlocks.removeCandidate(candidate);
-            }
-            if (emptyCellsInSameColumnInOtherBlocks.noCellContainsCandidate(candidate)) {
-                emptyCellsInSameBlockInOtherColumns.removeCandidate(candidate);
-            }
-        });
-    }
-
     public boolean hasOneCandidate() {
         return candidates.size() == 1;
     }
@@ -109,6 +79,29 @@ public class SolverCell {
 
     public boolean containsCandidate(int candidate) {
         return candidates.contains(candidate);
+    }
+
+    private void eliminateCandidatesThatAreSetInBuddyCells() {
+        forAllOtherCells(g -> g.getNumbers().forEach(this::removeCandidate));
+    }
+
+    private void eliminateLockedCandidates() {
+        // Für jeden Kandidaten schauen, ob er in einer Zelle einer anderen Zeile/Spalte in diesem Block existiert.
+        // Falls nein, den Kandidaten für alle Zellen dieser Zeile/Spalte in anderen Blöcken löschen
+        candidates.forEach(candidate -> {
+            if (emptyCellsInSameBlockInOtherRows.noCellContainsCandidate(candidate)) {
+                emptyCellsInSameRowInOtherBlocks.removeCandidate(candidate);
+            }
+            if (emptyCellsInSameRowInOtherBlocks.noCellContainsCandidate(candidate)) {
+                emptyCellsInSameBlockInOtherRows.removeCandidate(candidate);
+            }
+            if (emptyCellsInSameBlockInOtherColumns.noCellContainsCandidate(candidate)) {
+                emptyCellsInSameColumnInOtherBlocks.removeCandidate(candidate);
+            }
+            if (emptyCellsInSameColumnInOtherBlocks.noCellContainsCandidate(candidate)) {
+                emptyCellsInSameBlockInOtherColumns.removeCandidate(candidate);
+            }
+        });
     }
 
     private void revealHiddenSingle() {
@@ -161,6 +154,12 @@ public class SolverCell {
                 }
             }
         }
+    }
+
+    private void forAllOtherCells(Consumer<SolverCellCollection> consumer) {
+        consumer.accept(otherCellsInColumn);
+        consumer.accept(otherCellsInRow);
+        consumer.accept(otherCellsInBlock);
     }
 
     private boolean columnDiffers(SolverCell otherCell) {
