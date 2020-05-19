@@ -27,32 +27,38 @@ public class SolverCell {
     }
 
     public void addOtherCellInColumn(SolverCell cell) {
-        otherCellsInColumn.add(cell);
         if (cell.isEmpty()) {
+            otherCellsInColumn.add(cell);
             if (blockDiffers(cell)) {
                 emptyCellsInSameColumnInOtherBlocks.add(cell);
             }
+        } else {
+            candidates.remove(cell.getCell().getNumber());
         }
     }
 
     public void addOtherCellInRow(SolverCell cell) {
-        otherCellsInRow.add(cell);
         if (cell.isEmpty()) {
+            otherCellsInRow.add(cell);
             if (blockDiffers(cell)) {
                 emptyCellsInSameRowInOtherBlocks.add(cell);
             }
+        } else {
+            candidates.remove(cell.getCell().getNumber());
         }
     }
 
     public void addOtherCellInBlock(SolverCell cell) {
-        otherCellsInBlock.add(cell);
         if (cell.isEmpty()) {
+            otherCellsInBlock.add(cell);
             if (rowDiffers(cell)) {
                 emptyCellsInSameBlockInOtherRows.add(cell);
             }
             if (columnDiffers(cell)) {
                 emptyCellsInSameBlockInOtherColumns.add(cell);
             }
+        } else {
+            candidates.remove(cell.getCell().getNumber());
         }
     }
 
@@ -60,7 +66,6 @@ public class SolverCell {
         if (!isEmpty()) {
             return;
         }
-        eliminateCandidatesThatAreSetInBuddyCells();
         revealHiddenSingle();
         eliminateLockedCandidates();
         eliminateNakedTwins();
@@ -71,10 +76,6 @@ public class SolverCell {
 
     public boolean isEmpty() {
         return cell.isEmpty();
-    }
-
-    void eliminateCandidatesThatAreSetInBuddyCells() {
-        forAllOtherCells(g -> candidates.removeAll(g.getNumbers()));
     }
 
     void eliminateLockedCandidates() {

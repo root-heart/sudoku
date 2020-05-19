@@ -10,7 +10,6 @@ import java.util.List;
 @Getter
 public class SolverCellCollection {
     private final List<SolverCell> emptyCells = new ArrayList<>();
-    private final NumberSet numbers = new NumberSet();
 
     public void removeCandidates(SolverCell solverCell) {
         emptyCells.forEach(cell -> cell.getCandidates().removeAll(solverCell.getCandidates()));
@@ -23,8 +22,6 @@ public class SolverCellCollection {
     public void add(SolverCell cell) {
         if (cell.isEmpty()) {
             emptyCells.add(cell);
-        } else {
-            numbers.add(cell.getCell().getNumber());
         }
     }
 
