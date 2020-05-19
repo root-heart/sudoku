@@ -2,9 +2,6 @@ package rootheart.codes.sudoku.solver;
 
 import lombok.Getter;
 import org.eclipse.collections.api.iterator.IntIterator;
-import org.eclipse.collections.api.set.primitive.IntSet;
-import org.eclipse.collections.api.set.primitive.MutableIntSet;
-import org.eclipse.collections.impl.factory.primitive.IntSets;
 import rootheart.codes.sudoku.game.Board;
 import rootheart.codes.sudoku.game.Cell;
 
@@ -86,8 +83,12 @@ public class SolverCell {
 //        candidates.remove(candidate);
     }
 
+    private void removeBinaryEncodedCandidates(int binaryEncodedNumbers) {
+        candidates &= ~binaryEncodedNumbers;
+    }
+
     public void removeCandidates(SolverCell otherCell) {
-        candidates &= ~otherCell.candidates;
+        removeBinaryEncodedCandidates(otherCell.candidates);
 //        this.candidates.removeAll(otherCell.candidates);
 //        candidates.forEach(this::removeCandidate);
     }
@@ -118,7 +119,8 @@ public class SolverCell {
     }
 
     private void eliminateCandidatesThatAreSetInBuddyCells() {
-        forAllOtherCells(g -> g.getNumbers().forEach(this::removeCandidate));
+//        forAllOtherCells(g -> g.getNumbers().forEach(this::removeCandidate));
+        forAllOtherCells(g -> removeBinaryEncodedCandidates(g.getNumbers()));
     }
 
     private void eliminateLockedCandidates() {
@@ -196,7 +198,7 @@ public class SolverCell {
         if (twin != null) {
             for (SolverCell otherCell : otherCells.getEmptyCells()) {
                 if (otherCell != twin) {
-                    otherCell.removeCandidates(this);
+                    otherCell.removeBinaryEncodedCandidates(candidates);
                 }
             }
         }
