@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+// XXX idea: consider this solver board a cube with the fixed numbers on layer 0. layer 1 is where 1 is possible etc.
+// Would that make things easier? Faster? Better readable?
 @Getter
 public class SolverBoard {
 
@@ -28,9 +30,7 @@ public class SolverBoard {
             }
         }
         for (SolverCell solverCell : emptyCells) {
-            solverCell.addCellsFromGroup(solverCell.getCellsInColumn(), solverCellMap);
-            solverCell.addCellsFromGroup(solverCell.getCellsInRow(), solverCellMap);
-            solverCell.addCellsFromGroup(solverCell.getCellsInBlock(), solverCellMap);
+            solverCell.updateBuddyCells(solverCellMap);
         }
     }
 

@@ -8,13 +8,9 @@ import rootheart.codes.sudoku.game.Group;
 import java.util.Map;
 
 public class SolverCell {
-    @Getter
     private final Cell cell;
-    @Getter
     private final GroupCells cellsInColumn = new ColumnCells();
-    @Getter
     private final GroupCells cellsInRow = new RowCells();
-    @Getter
     private final GroupCells cellsInBlock = new BlockCells();
     @Getter
     private final NumberSet candidates = new NumberSet();
@@ -28,7 +24,17 @@ public class SolverCell {
         candidates.addAll(board.getPossibleValues());
     }
 
-    public void addCellsFromGroup(GroupCells groupCells, Map<Cell, SolverCell> solverCellMap) {
+    public void updateBuddyCells(Map<Cell, SolverCell> solverCellMap) {
+        addCellsFromGroup(cellsInColumn, solverCellMap);
+        addCellsFromGroup(cellsInRow, solverCellMap);
+        addCellsFromGroup(cellsInBlock, solverCellMap);
+    }
+
+    public void setNumber() {
+        cell.setNumber(candidates.getFirst());
+    }
+
+    private void addCellsFromGroup(GroupCells groupCells, Map<Cell, SolverCell> solverCellMap) {
         for (Cell groupCell : groupCells.getGroup().getCells()) {
             if (groupCell != cell) {
                 if (groupCell.isEmpty()) {
@@ -46,9 +52,9 @@ public class SolverCell {
         eliminateNakedTwins();
         if (candidates.hasOneNumber()) {
             // TODO here some cells will be updated multiple times
-            cellsInColumn.getEmptyCells().forEach(c -> c.getCandidates().removeAll(candidates));
-            cellsInRow.getEmptyCells().forEach(c -> c.getCandidates().removeAll(candidates));
-            cellsInBlock.getEmptyCells().forEach(c -> c.getCandidates().removeAll(candidates));
+            cellsInColumn.getEmptyCells().forEach(c -> c.candidates.removeAll(candidates));
+            cellsInRow.getEmptyCells().forEach(c -> c.candidates.removeAll(candidates));
+            cellsInBlock.getEmptyCells().forEach(c -> c.candidates.removeAll(candidates));
         }
     }
 
@@ -105,7 +111,7 @@ public class SolverCell {
         if (twin != null) {
             for (SolverCell otherCell : cells.getEmptyCells()) {
                 if (otherCell != twin) {
-                    otherCell.getCandidates().removeAll(candidates);
+                    otherCell.candidates.removeAll(candidates);
                 }
             }
         }

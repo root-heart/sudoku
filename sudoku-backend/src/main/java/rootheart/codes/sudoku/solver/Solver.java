@@ -20,16 +20,14 @@ public class Solver {
             throw new NoSolutionException("found no solution");
         }
 
-        int singleCandidateCount = solverBoard.getSingleCandidates().size();
-        solverBoard.getSingleCandidates().forEach(solverCell -> {
-            solverCell.getCell().setNumber(solverCell.getCandidates().getFirst());
-        });
+        solverBoard.getSingleCandidates().forEach(SolverCell::setNumber);
         if (!board.isValid()) {
             throw new BoardInvalidException();
         }
-        long emptyCellCount = board.streamEmptyCells().count();
+//        int singleCandidateCount = solverBoard.getSingleCandidates().size();
+//        long emptyCellCount = board.streamEmptyCells().count();
 //        log.debug("single candidates: " + singleCandidateCount + "  remaining empty cells: " + emptyCellCount);
-        if (emptyCellCount > 0) {
+        if (board.hasEmptyCells()) {
             solveBruteForce(board);
         }
     }
