@@ -1,10 +1,17 @@
 package rootheart.codes.sudoku.solver;
 
+import lombok.NoArgsConstructor;
+
 import java.util.Objects;
 import java.util.function.IntConsumer;
 
+@NoArgsConstructor
 public class NumberSet implements Cloneable {
     private int binaryEncodedNumbers;
+
+    public NumberSet(NumberSet other) {
+        binaryEncodedNumbers = other.binaryEncodedNumbers;
+    }
 
     public void add(int number) {
         binaryEncodedNumbers |= 1 << number;
