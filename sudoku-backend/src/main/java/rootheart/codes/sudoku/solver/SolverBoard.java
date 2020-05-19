@@ -46,7 +46,7 @@ public class SolverBoard {
     }
 
     public void eliminateImpossibleCandidates() {
-        for (long countBefore = singleCandidates.size(); ; ) {
+        for (int countBefore = singleCandidates.size(); ; ) {
             for (SolverCell cell : emptyCells) {
                 if (!singleCandidates.contains(cell)) {
                     cell.eliminateImpossibleCandidates();
@@ -55,8 +55,8 @@ public class SolverBoard {
                     }
                 }
             }
-            long countAfter = singleCandidates.size();
-            if (countAfter == 0 || countBefore == countAfter) {
+            int countAfter = singleCandidates.size();
+            if (countAfter == 0 || countBefore == countAfter || countAfter == emptyCells.size()) {
                 return;
             }
             countBefore = countAfter;
