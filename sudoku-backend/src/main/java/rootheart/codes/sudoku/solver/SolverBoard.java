@@ -4,23 +4,28 @@ import lombok.Getter;
 import rootheart.codes.sudoku.game.Board;
 import rootheart.codes.sudoku.game.Cell;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Getter
 public class SolverBoard {
 
     private final Set<SolverCell> singleCandidates = new HashSet<>();
-    private final List<SolverCell> emptyCells;
+    private final List<SolverCell> emptyCells = new ArrayList<>();
 
     public SolverBoard(Board board) {
-        Map<Cell, SolverCell> solverCellMap = board.streamCells()
-                .map(cell -> new SolverCell(cell, board))
-                .collect(Collectors.toMap(SolverCell::getCell, Function.identity()));
+        Map<Cell, SolverCell> solverCellMap = new HashMap<>();
+        for (Cell cell : board.getCells()) {
+            SolverCell solverCell = new SolverCell(cell, board);
+            solverCellMap.put(cell, solverCell);
+            if (cell.isEmpty()) {
+                emptyCells.add(solverCell);
+            }
+        }
         solverCellMap.forEach((cell, solverCell) -> {
             for (Cell columnCell : cell.getColumn().getCells()) {
                 if (columnCell != cell) {
@@ -38,7 +43,6 @@ public class SolverBoard {
                 }
             }
         });
-        emptyCells = solverCellMap.values().stream().filter(SolverCell::isEmpty).collect(Collectors.toList());
     }
 
     public void eliminateImpossibleCandidates() {
