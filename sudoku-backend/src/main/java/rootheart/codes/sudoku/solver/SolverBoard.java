@@ -28,36 +28,12 @@ public class SolverBoard {
             }
         }
         for (SolverCell solverCell : emptyCells) {
-            Cell cell = solverCell.getCell();
-            for (Cell columnCell : cell.getColumn().getCells()) {
-                if (columnCell != cell) {
-                    if (!columnCell.isEmpty()) {
-                        solverCell.getCandidates().remove(columnCell.getNumber());
-                    } else {
-                        solverCell.addOtherCellInColumn(solverCellMap.get(columnCell));
-                    }
-                }
-            }
-            for (Cell rowCell : cell.getRow().getCells()) {
-                if (rowCell != cell) {
-                    if (!rowCell.isEmpty()) {
-                        solverCell.getCandidates().remove(rowCell.getNumber());
-                    } else {
-                        solverCell.addOtherCellInRow(solverCellMap.get(rowCell));
-                    }
-                }
-            }
-            for (Cell blockCell : cell.getBlock().getCells()) {
-                if (blockCell != cell) {
-                    if (!blockCell.isEmpty()) {
-                        solverCell.getCandidates().remove(blockCell.getNumber());
-                    } else {
-                        solverCell.addOtherCellInBlock(solverCellMap.get(blockCell));
-                    }
-                }
-            }
+            solverCell.addCellsFromGroup(solverCell.getCellsInColumn(), solverCellMap);
+            solverCell.addCellsFromGroup(solverCell.getCellsInRow(), solverCellMap);
+            solverCell.addCellsFromGroup(solverCell.getCellsInBlock(), solverCellMap);
         }
     }
+
 
     public void eliminateImpossibleCandidates() {
         for (int countBefore = singleCandidates.size(); ; ) {

@@ -3,13 +3,19 @@ package rootheart.codes.sudoku.solver;
 import lombok.Getter;
 import rootheart.codes.sudoku.game.Board;
 import rootheart.codes.sudoku.game.Cell;
+import rootheart.codes.sudoku.game.Group;
+
+import java.util.Map;
 
 public class SolverCell {
     @Getter
     private final Cell cell;
-    private final SolverCellCollection cellsInColumn = new SolverCellCollection();
-    private final SolverCellCollection cellsInRow = new SolverCellCollection();
-    private final SolverCellCollection cellsInBlock = new SolverCellCollection();
+    @Getter
+    private final GroupCells cellsInColumn = new ColumnCells();
+    @Getter
+    private final GroupCells cellsInRow = new RowCells();
+    @Getter
+    private final GroupCells cellsInBlock = new BlockCells();
     @Getter
     private final NumberSet candidates = new NumberSet();
     private final SolverCellCollection cellsInSameBlockInOtherRows = new SolverCellCollection();
@@ -22,27 +28,15 @@ public class SolverCell {
         candidates.addAll(board.getPossibleValues());
     }
 
-    public void addOtherCellInColumn(SolverCell cell) {
-        cellsInColumn.add(cell);
-        if (blockDiffers(cell)) {
-            cellsInSameColumnInOtherBlocks.add(cell);
-        }
-    }
-
-    public void addOtherCellInRow(SolverCell cell) {
-        cellsInRow.add(cell);
-        if (blockDiffers(cell)) {
-            cellsInSameRowInOtherBlocks.add(cell);
-        }
-    }
-
-    public void addOtherCellInBlock(SolverCell cell) {
-        cellsInBlock.add(cell);
-        if (rowDiffers(cell)) {
-            cellsInSameBlockInOtherRows.add(cell);
-        }
-        if (columnDiffers(cell)) {
-            cellsInSameBlockInOtherColumns.add(cell);
+    public void addCellsFromGroup(GroupCells groupCells, Map<Cell, SolverCell> solverCellMap) {
+        for (Cell groupCell : groupCells.getGroup().getCells()) {
+            if (groupCell != cell) {
+                if (groupCell.isEmpty()) {
+                    groupCells.add(solverCellMap.get(groupCell));
+                } else {
+                    candidates.remove(groupCell.getNumber());
+                }
+            }
         }
     }
 
@@ -127,5 +121,58 @@ public class SolverCell {
 
     private boolean blockDiffers(SolverCell otherCell) {
         return cell.getBlock() != otherCell.cell.getBlock();
+    }
+
+    private abstract static class GroupCells extends SolverCellCollection {
+        public abstract Group getGroup();
+    }
+
+    private class ColumnCells extends GroupCells {
+        @Override
+        public Group getGroup() {
+            return cell.getColumn();
+        }
+
+        @Override
+        public void add(SolverCell cell) {
+            super.add(cell);
+            if (blockDiffers(cell)) {
+                cellsInSameColumnInOtherBlocks.add(cell);
+            }
+        }
+    }
+
+    private class RowCells extends GroupCells {
+        @Override
+        public Group getGroup() {
+            return cell.getRow();
+        }
+
+        @Override
+        public void add(SolverCell cell) {
+            super.add(cell);
+            if (blockDiffers(cell)) {
+                cellsInSameRowInOtherBlocks.add(cell);
+            }
+        }
+    }
+
+
+    private class BlockCells extends GroupCells {
+        @Override
+        public Group getGroup() {
+            return cell.getBlock();
+        }
+
+        @Override
+        public void add(SolverCell cell) {
+            super.add(cell);
+            if (rowDiffers(cell)) {
+                cellsInSameBlockInOtherRows.add(cell);
+            }
+            if (columnDiffers(cell)) {
+                cellsInSameBlockInOtherColumns.add(cell);
+            }
+        }
     }
 }
