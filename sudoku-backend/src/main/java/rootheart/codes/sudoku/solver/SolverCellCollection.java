@@ -37,14 +37,4 @@ public class SolverCellCollection {
         }
         return n.contains(candidate);
     }
-
-    public SolverCellCollection createNewWithFilteredEmptyCells(Predicate<SolverCell> filter) {
-        SolverCellCollection collection = new SolverCellCollection();
-        for (SolverCell cell : emptyCells) {
-            if (filter.test(cell)) {
-                collection.add(cell);
-            }
-        }
-        return collection;
-    }
 }

@@ -9,18 +9,15 @@ import java.util.function.Consumer;
 public class SolverCell {
     @Getter
     private final Cell cell;
-    @Getter
     private final SolverCellCollection otherCellsInColumn = new SolverCellCollection();
-    @Getter
     private final SolverCellCollection otherCellsInRow = new SolverCellCollection();
-    @Getter
     private final SolverCellCollection otherCellsInBlock = new SolverCellCollection();
     @Getter
     private final NumberSet candidates = new NumberSet();
-    private SolverCellCollection emptyCellsInSameBlockInOtherRows;
-    private SolverCellCollection emptyCellsInSameRowInOtherBlocks;
-    private SolverCellCollection emptyCellsInSameBlockInOtherColumns;
-    private SolverCellCollection emptyCellsInSameColumnInOtherBlocks;
+    private final SolverCellCollection emptyCellsInSameBlockInOtherRows = new SolverCellCollection();
+    private final SolverCellCollection emptyCellsInSameRowInOtherBlocks = new SolverCellCollection();
+    private final SolverCellCollection emptyCellsInSameBlockInOtherColumns = new SolverCellCollection();
+    private final SolverCellCollection emptyCellsInSameColumnInOtherBlocks = new SolverCellCollection();
 
     public SolverCell(Cell cell, Board board) {
         this.cell = cell;
@@ -29,11 +26,34 @@ public class SolverCell {
         }
     }
 
-    public void initializationComplete() {
-        emptyCellsInSameBlockInOtherRows = otherCellsInBlock.createNewWithFilteredEmptyCells(this::rowDiffers);
-        emptyCellsInSameRowInOtherBlocks = otherCellsInRow.createNewWithFilteredEmptyCells(this::blockDiffers);
-        emptyCellsInSameBlockInOtherColumns = otherCellsInBlock.createNewWithFilteredEmptyCells(this::columnDiffers);
-        emptyCellsInSameColumnInOtherBlocks = otherCellsInColumn.createNewWithFilteredEmptyCells(this::blockDiffers);
+    public void addOtherCellInColumn(SolverCell cell) {
+        otherCellsInColumn.add(cell);
+        if (cell.isEmpty()) {
+            if (blockDiffers(cell)) {
+                emptyCellsInSameColumnInOtherBlocks.add(cell);
+            }
+        }
+    }
+
+    public void addOtherCellInRow(SolverCell cell) {
+        otherCellsInRow.add(cell);
+        if (cell.isEmpty()) {
+            if (blockDiffers(cell)) {
+                emptyCellsInSameRowInOtherBlocks.add(cell);
+            }
+        }
+    }
+
+    public void addOtherCellInBlock(SolverCell cell) {
+        otherCellsInBlock.add(cell);
+        if (cell.isEmpty()) {
+            if (rowDiffers(cell)) {
+                emptyCellsInSameBlockInOtherRows.add(cell);
+            }
+            if (columnDiffers(cell)) {
+                emptyCellsInSameBlockInOtherColumns.add(cell);
+            }
+        }
     }
 
     public void eliminateImpossibleCandidates() {

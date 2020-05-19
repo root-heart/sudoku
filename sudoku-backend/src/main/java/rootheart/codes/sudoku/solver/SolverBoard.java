@@ -24,21 +24,20 @@ public class SolverBoard {
         solverCellMap.forEach((cell, solverCell) -> {
             for (Cell columnCell : cell.getColumn().getCells()) {
                 if (columnCell != cell) {
-                    solverCell.getOtherCellsInColumn().add(solverCellMap.get(columnCell));
+                    solverCell.addOtherCellInColumn(solverCellMap.get(columnCell));
                 }
             }
             for (Cell rowCell : cell.getRow().getCells()) {
                 if (rowCell != cell) {
-                    solverCell.getOtherCellsInRow().add(solverCellMap.get(rowCell));
+                    solverCell.addOtherCellInRow(solverCellMap.get(rowCell));
                 }
             }
             for (Cell blockCell : cell.getBlock().getCells()) {
                 if (blockCell != cell) {
-                    solverCell.getOtherCellsInBlock().add(solverCellMap.get(blockCell));
+                    solverCell.addOtherCellInBlock(solverCellMap.get(blockCell));
                 }
             }
         });
-        solverCellMap.values().forEach(SolverCell::initializationComplete);
         emptyCells = solverCellMap.values().stream().filter(SolverCell::isEmpty).collect(Collectors.toList());
     }
 
