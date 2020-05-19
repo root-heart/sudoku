@@ -22,18 +22,21 @@ public class SolverBoard {
                 .map(cell -> new SolverCell(cell, board))
                 .collect(Collectors.toMap(SolverCell::getCell, Function.identity()));
         solverCellMap.forEach((cell, solverCell) -> {
-            cell.getColumn().streamCells()
-                    .filter(otherCell -> cell != otherCell)
-                    .map(solverCellMap::get)
-                    .forEach(c -> solverCell.getOtherCellsInColumn().add(c));
-            cell.getRow().streamCells()
-                    .filter(otherCell -> cell != otherCell)
-                    .map(solverCellMap::get)
-                    .forEach(c -> solverCell.getOtherCellsInRow().add(c));
-            cell.getBlock().streamCells()
-                    .filter(otherCell -> cell != otherCell)
-                    .map(solverCellMap::get)
-                    .forEach(c -> solverCell.getOtherCellsInBlock().add(c));
+            for (Cell columnCell : cell.getColumn().getCells()) {
+                if (columnCell != cell) {
+                    solverCell.getOtherCellsInColumn().add(solverCellMap.get(columnCell));
+                }
+            }
+            for (Cell rowCell : cell.getRow().getCells()) {
+                if (rowCell != cell) {
+                    solverCell.getOtherCellsInRow().add(solverCellMap.get(rowCell));
+                }
+            }
+            for (Cell blockCell : cell.getBlock().getCells()) {
+                if (blockCell != cell) {
+                    solverCell.getOtherCellsInBlock().add(solverCellMap.get(blockCell));
+                }
+            }
         });
         solverCellMap.values().forEach(SolverCell::initializationComplete);
         emptyCells = solverCellMap.values().stream().filter(SolverCell::isEmpty).collect(Collectors.toList());

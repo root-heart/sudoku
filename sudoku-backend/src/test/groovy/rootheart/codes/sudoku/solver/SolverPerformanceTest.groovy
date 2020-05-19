@@ -63,4 +63,26 @@ class SolverPerformanceTest extends Specification {
             println "solver took ${(e - s) / 1000} microseconds for $benchmarkCount iterations"
         }
     }
+
+    def testAnother() {
+        given:
+        def benchmarkCount = 1000
+
+        when:
+        warmUp(5000, mediumSudoku)
+
+        100.times {
+            long s = System.nanoTime()
+            benchmarkCount.times {
+                def solverBoard = new SolverBoard(new Board(mediumSudoku))
+                solverBoard.emptyCells.each { it.eliminateCandidatesThatAreSetInBuddyCells() }
+            }
+            long e = System.nanoTime()
+
+            println "solver took ${(e - s) / 1000} microseconds for $benchmarkCount iterations"
+        }
+
+        then:
+        true
+    }
 }

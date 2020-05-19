@@ -1,11 +1,14 @@
 package rootheart.codes.sudoku.game;
 
+import lombok.Getter;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 class CellList {
+    @Getter
     private final List<Cell> cells;
 
     public CellList(int size) {
