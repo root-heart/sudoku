@@ -16,8 +16,8 @@ public class SolverCellCollection {
     private final List<SolverCell> emptyCells = new ArrayList<>();
     private final MutableIntSet numbers = IntSets.mutable.empty();
 
-    public void removeCandidates(IntSet candidates) {
-        emptyCells.forEach(cell -> cell.removeCandidates(candidates));
+    public void removeCandidates(SolverCell solverCell) {
+        emptyCells.forEach(cell -> cell.removeCandidates(solverCell));
     }
 
     public void removeCandidate(int candidate) {
