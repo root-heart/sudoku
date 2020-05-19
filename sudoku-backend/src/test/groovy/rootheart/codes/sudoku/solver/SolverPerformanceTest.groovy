@@ -30,7 +30,7 @@ class SolverPerformanceTest extends Specification {
         def sudokuToSolve = mediumSudoku
 
         def warmUpCount = 1_500
-        def benchmarkCount = 1_00
+        def benchmarkCount = 100
 
         when:
         println "Warming up..."

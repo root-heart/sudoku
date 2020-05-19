@@ -6,14 +6,14 @@ import org.eclipse.collections.api.set.primitive.IntSet;
 import org.eclipse.collections.api.set.primitive.MutableIntSet;
 import org.eclipse.collections.impl.factory.primitive.IntSets;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Predicate;
 
 @NoArgsConstructor
 @Getter
 public class SolverCellCollection {
-    private final Set<SolverCell> emptyCells = new HashSet<>();
+    private final List<SolverCell> emptyCells = new ArrayList<>();
     private final MutableIntSet numbers = IntSets.mutable.empty();
 
     public void removeCandidates(IntSet candidates) {
@@ -22,10 +22,6 @@ public class SolverCellCollection {
 
     public void removeCandidate(int candidate) {
         emptyCells.forEach(cell -> cell.removeCandidate(candidate));
-    }
-
-    public IntSet getNumbers() {
-        return numbers;
     }
 
     public void add(SolverCell cell) {

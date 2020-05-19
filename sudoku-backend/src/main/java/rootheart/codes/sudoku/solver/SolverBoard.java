@@ -5,6 +5,7 @@ import rootheart.codes.sudoku.game.Board;
 import rootheart.codes.sudoku.game.Cell;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
@@ -14,7 +15,7 @@ import java.util.stream.Collectors;
 public class SolverBoard {
 
     private final Set<SolverCell> singleCandidates = new HashSet<>();
-    private final Set<SolverCell> emptyCells;
+    private final List<SolverCell> emptyCells;
 
     public SolverBoard(Board board) {
         Map<Cell, SolverCell> solverCellMap = board.streamCells()
@@ -35,7 +36,7 @@ public class SolverBoard {
                     .forEach(c -> solverCell.getOtherCellsInBlock().add(c));
         });
         solverCellMap.values().forEach(SolverCell::initializationComplete);
-        emptyCells = solverCellMap.values().stream().filter(SolverCell::isEmpty).collect(Collectors.toSet());
+        emptyCells = solverCellMap.values().stream().filter(SolverCell::isEmpty).collect(Collectors.toList());
     }
 
     public void eliminateImpossibleCandidates() {
