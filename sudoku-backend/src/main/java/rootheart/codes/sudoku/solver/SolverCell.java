@@ -34,18 +34,6 @@ public class SolverCell {
         cell.setNumber(candidates.getFirst());
     }
 
-    private void addCellsFromGroup(GroupCells groupCells, Map<Cell, SolverCell> solverCellMap) {
-        for (Cell groupCell : groupCells.getGroup().getCells()) {
-            if (groupCell != cell) {
-                if (groupCell.isEmpty()) {
-                    groupCells.add(solverCellMap.get(groupCell));
-                } else {
-                    candidates.remove(groupCell.getNumber());
-                }
-            }
-        }
-    }
-
     public void eliminateImpossibleCandidates() {
         revealHiddenSingle();
         eliminateLockedCandidates();
@@ -106,6 +94,17 @@ public class SolverCell {
         }
     }
 
+    private void addCellsFromGroup(GroupCells groupCells, Map<Cell, SolverCell> solverCellMap) {
+        for (Cell groupCell : groupCells.getGroup().getCells()) {
+            if (groupCell != cell) {
+                if (groupCell.isEmpty()) {
+                    groupCells.add(solverCellMap.get(groupCell));
+                } else {
+                    candidates.remove(groupCell.getNumber());
+                }
+            }
+        }
+    }
     private void removeCandidatesFromAllCellsIfATwinExists(SolverCellCollection cells) {
         SolverCell twin = cells.findExactlyOneCellWithCandidates(candidates);
         if (twin != null) {
