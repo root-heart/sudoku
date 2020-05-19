@@ -9,9 +9,9 @@ import java.util.function.Consumer;
 public class SolverCell {
     @Getter
     private final Cell cell;
-    private final SolverCellCollection otherCellsInColumn = new SolverCellCollection();
-    private final SolverCellCollection otherCellsInRow = new SolverCellCollection();
-    private final SolverCellCollection otherCellsInBlock = new SolverCellCollection();
+    private final SolverCellCollection emptyCellsInColumn = new SolverCellCollection();
+    private final SolverCellCollection emptyCellsInRow = new SolverCellCollection();
+    private final SolverCellCollection emptyCellsInBlock = new SolverCellCollection();
     @Getter
     private final NumberSet candidates = new NumberSet();
     private final SolverCellCollection emptyCellsInSameBlockInOtherRows = new SolverCellCollection();
@@ -28,7 +28,7 @@ public class SolverCell {
 
     public void addOtherCellInColumn(SolverCell cell) {
         if (cell.isEmpty()) {
-            otherCellsInColumn.add(cell);
+            emptyCellsInColumn.add(cell);
             if (blockDiffers(cell)) {
                 emptyCellsInSameColumnInOtherBlocks.add(cell);
             }
@@ -39,7 +39,7 @@ public class SolverCell {
 
     public void addOtherCellInRow(SolverCell cell) {
         if (cell.isEmpty()) {
-            otherCellsInRow.add(cell);
+            emptyCellsInRow.add(cell);
             if (blockDiffers(cell)) {
                 emptyCellsInSameRowInOtherBlocks.add(cell);
             }
@@ -50,7 +50,7 @@ public class SolverCell {
 
     public void addOtherCellInBlock(SolverCell cell) {
         if (cell.isEmpty()) {
-            otherCellsInBlock.add(cell);
+            emptyCellsInBlock.add(cell);
             if (rowDiffers(cell)) {
                 emptyCellsInSameBlockInOtherRows.add(cell);
             }
@@ -70,6 +70,7 @@ public class SolverCell {
         eliminateLockedCandidates();
         eliminateNakedTwins();
         if (candidates.hasOneNumber()) {
+            // TODO here some cells will be updated multiple times
             forAllOtherCells(g -> g.removeCandidates(this));
         }
     }
@@ -101,13 +102,13 @@ public class SolverCell {
         int hiddenSingle = 0;
         NumberSet n = new NumberSet();
         n.addAll(candidates);
-        for (SolverCell otherCell : otherCellsInColumn.getEmptyCells()) {
+        for (SolverCell otherCell : emptyCellsInColumn.getEmptyCells()) {
             n.removeAll(otherCell.candidates);
         }
-        for (SolverCell otherCell : otherCellsInRow.getEmptyCells()) {
+        for (SolverCell otherCell : emptyCellsInRow.getEmptyCells()) {
             n.removeAll(otherCell.candidates);
         }
-        for (SolverCell otherCell : otherCellsInBlock.getEmptyCells()) {
+        for (SolverCell otherCell : emptyCellsInBlock.getEmptyCells()) {
             n.removeAll(otherCell.candidates);
         }
         if (n.getCount() > 1) {
@@ -155,9 +156,9 @@ public class SolverCell {
     }
 
     private void forAllOtherCells(Consumer<SolverCellCollection> consumer) {
-        consumer.accept(otherCellsInColumn);
-        consumer.accept(otherCellsInRow);
-        consumer.accept(otherCellsInBlock);
+        consumer.accept(emptyCellsInColumn);
+        consumer.accept(emptyCellsInRow);
+        consumer.accept(emptyCellsInBlock);
     }
 
     private boolean columnDiffers(SolverCell otherCell) {

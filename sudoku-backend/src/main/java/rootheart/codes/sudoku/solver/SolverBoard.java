@@ -15,10 +15,11 @@ import java.util.Set;
 public class SolverBoard {
 
     private final Set<SolverCell> singleCandidates = new HashSet<>();
-    private final List<SolverCell> emptyCells = new ArrayList<>();
+    private final List<SolverCell> emptyCells;
 
     public SolverBoard(Board board) {
-        Map<Cell, SolverCell> solverCellMap = new HashMap<>();
+        emptyCells = new ArrayList<>(board.getCells().size());
+        Map<Cell, SolverCell> solverCellMap = new HashMap<>(board.getCells().size());
         for (Cell cell : board.getCells()) {
             SolverCell solverCell = new SolverCell(cell, board);
             solverCellMap.put(cell, solverCell);
@@ -26,7 +27,8 @@ public class SolverBoard {
                 emptyCells.add(solverCell);
             }
         }
-        solverCellMap.forEach((cell, solverCell) -> {
+        for (SolverCell solverCell : emptyCells) {
+            Cell cell = solverCell.getCell();
             for (Cell columnCell : cell.getColumn().getCells()) {
                 if (columnCell != cell) {
                     solverCell.addOtherCellInColumn(solverCellMap.get(columnCell));
@@ -42,7 +44,7 @@ public class SolverBoard {
                     solverCell.addOtherCellInBlock(solverCellMap.get(blockCell));
                 }
             }
-        });
+        }
     }
 
     public void eliminateImpossibleCandidates() {
