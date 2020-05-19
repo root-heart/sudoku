@@ -11,7 +11,7 @@ public class NumberSet implements Cloneable {
     }
 
     public void addAll(NumberSet otherSet) {
-        binaryEncodedNumbers = otherSet.binaryEncodedNumbers;
+        binaryEncodedNumbers |= otherSet.binaryEncodedNumbers;
     }
 
     public boolean hasOneNumber() {
@@ -85,5 +85,9 @@ public class NumberSet implements Cloneable {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public void clear() {
+        binaryEncodedNumbers = 0;
     }
 }

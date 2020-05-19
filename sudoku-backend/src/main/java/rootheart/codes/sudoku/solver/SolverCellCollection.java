@@ -11,6 +11,8 @@ import java.util.List;
 public class SolverCellCollection {
     private final List<SolverCell> emptyCells = new ArrayList<>();
 
+    private final NumberSet candidates = new NumberSet();
+
     public void removeCandidate(int candidate) {
         emptyCells.forEach(cell -> cell.getCandidates().remove(candidate));
     }
@@ -21,13 +23,15 @@ public class SolverCellCollection {
         }
     }
 
-    public boolean noCellContainsCandidate(int candidate) {
-        NumberSet n = new NumberSet();
-        n.add(candidate);
+    public void updateCandidates() {
+        candidates.clear();
         for (SolverCell cell : emptyCells) {
-            n.removeAll(cell.getCandidates());
+            candidates.addAll(cell.getCandidates());
         }
-        return n.contains(candidate);
+    }
+
+    public boolean noCellContainsCandidate(int candidate) {
+        return !candidates.contains(candidate);
     }
 
     public SolverCell findExactlyOneCellWithCandidates(NumberSet candidates) {
@@ -42,5 +46,4 @@ public class SolverCellCollection {
         }
         return twin;
     }
-
 }

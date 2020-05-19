@@ -80,6 +80,11 @@ public class SolverCell {
     }
 
     void eliminateLockedCandidates() {
+        emptyCellsInSameBlockInOtherRows.updateCandidates();
+        emptyCellsInSameBlockInOtherColumns.updateCandidates();
+        emptyCellsInSameColumnInOtherBlocks.updateCandidates();
+        emptyCellsInSameRowInOtherBlocks.updateCandidates();
+
         // Für jeden Kandidaten schauen, ob er in einer Zelle einer anderen Zeile/Spalte in diesem Block existiert.
         // Falls nein, den Kandidaten für alle Zellen dieser Zeile/Spalte in anderen Blöcken löschen
         candidates.forEach(candidate -> {
