@@ -18,7 +18,6 @@ public class SolverCell {
     private final SolverCellCollection otherCellsInBlock = new SolverCellCollection();
 
     private int candidates;
-    //        private final MutableIntSet candidates = IntSets.mutable.empty();
     private SolverCellCollection emptyCellsInSameBlockInOtherRows;
     private SolverCellCollection emptyCellsInSameRowInOtherBlocks;
     private SolverCellCollection emptyCellsInSameBlockInOtherColumns;
@@ -31,7 +30,6 @@ public class SolverCell {
         this.board = board;
         if (cell.isEmpty()) {
             board.getPossibleValues().forEach(v -> candidates |= 1 << v);
-//            candidates.addAll(board.getPossibleValues());
         }
     }
 
@@ -57,7 +55,6 @@ public class SolverCell {
 
     public boolean hasOneCandidate() {
         return (candidates & (candidates - 1)) == 0;
-//        return candidates.size() == 1;
     }
 
     public int getFirstCandidate() {
@@ -71,7 +68,6 @@ public class SolverCell {
             }
         }
         return 0;
-//        return candidates.intIterator().next();
     }
 
     public boolean isEmpty() {
@@ -80,7 +76,6 @@ public class SolverCell {
 
     public void removeCandidate(int candidate) {
         candidates &= ~(1 << candidate);
-//        candidates.remove(candidate);
     }
 
     private void removeBinaryEncodedCandidates(int binaryEncodedNumbers) {
@@ -89,8 +84,6 @@ public class SolverCell {
 
     public void removeCandidates(SolverCell otherCell) {
         removeBinaryEncodedCandidates(otherCell.candidates);
-//        this.candidates.removeAll(otherCell.candidates);
-//        candidates.forEach(this::removeCandidate);
     }
 
     public int getCandidateCount() {
@@ -101,25 +94,13 @@ public class SolverCell {
             n >>= 1;
         }
         return count;
-
-//        IntIterator it = board.getPossibleValues().intIterator();
-//        int count = 0;
-//        while (it.hasNext()) {
-//            if (containsCandidate(it.next())) {
-//                count++;
-//            }
-//        }
-//        return count;
-//        return candidates.size();
     }
 
     public boolean containsCandidate(int candidate) {
         return (candidates & 1 << candidate) > 0;
-//        return candidates.contains(candidate);
     }
 
     private void eliminateCandidatesThatAreSetInBuddyCells() {
-//        forAllOtherCells(g -> g.getNumbers().forEach(this::removeCandidate));
         forAllOtherCells(g -> removeBinaryEncodedCandidates(g.getNumbers()));
     }
 
@@ -127,7 +108,6 @@ public class SolverCell {
         // Für jeden Kandidaten schauen, ob er in einer Zelle einer anderen Zeile/Spalte in diesem Block existiert.
         // Falls nein, den Kandidaten für alle Zellen dieser Zeile/Spalte in anderen Blöcken löschen
         board.getPossibleValues().forEach(candidate -> {
-//        candidates.forEach(candidate -> {
             if (containsCandidate(candidate)) {
                 if (emptyCellsInSameBlockInOtherRows.noCellContainsCandidate(candidate)) {
                     emptyCellsInSameRowInOtherBlocks.removeCandidate(candidate);
@@ -147,8 +127,6 @@ public class SolverCell {
 
     private void revealHiddenSingle() {
         int hiddenSingle = 0;
-//        for (IntIterator it = candidates.intIterator(); it.hasNext(); ) {
-//            int candidate = it.next();
         IntIterator it = board.getPossibleValues().intIterator();
         while (it.hasNext()) {
             int candidate = it.next();
@@ -166,8 +144,6 @@ public class SolverCell {
         }
 
         if (hiddenSingle != 0) {
-//            candidates.clear();
-//            candidates.add(hiddenSingle);
             candidates = 1 << hiddenSingle;
         }
     }

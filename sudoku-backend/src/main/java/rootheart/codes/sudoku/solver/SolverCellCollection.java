@@ -11,7 +11,6 @@ import java.util.function.Predicate;
 @Getter
 public class SolverCellCollection {
     private final List<SolverCell> emptyCells = new ArrayList<>();
-//    private final MutableIntSet numbers = IntSets.mutable.empty();
     private int numbers;
 
     public void removeCandidates(SolverCell solverCell) {
@@ -26,7 +25,6 @@ public class SolverCellCollection {
         if (cell.isEmpty()) {
             emptyCells.add(cell);
         } else {
-//            numbers.add(cell.getCell().getNumber());
             numbers |= 1 << cell.getCell().getNumber();
         }
     }
