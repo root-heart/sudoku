@@ -33,12 +33,25 @@ class SolverPerformanceTest extends Specification {
         def benchmarkCount = 100
 
         when:
+        warmUp(warmUpCount, sudokuToSolve)
+        test(benchmarkCount, sudokuToSolve)
+
+        then:
+        true
+    }
+
+    def warmUp(warmUpCount, sudokuToSolve) {
         println "Warming up..."
+        def jdkSolver = new Solver()
         warmUpCount.times {
             def board = new Board(sudokuToSolve)
             jdkSolver.solve(board)
         }
 
+    }
+
+    void test(int benchmarkCount, String sudokuToSolve) {
+        def jdkSolver = new Solver()
         5.times {
             long s = System.nanoTime()
             benchmarkCount.times {
@@ -49,8 +62,5 @@ class SolverPerformanceTest extends Specification {
 
             println "solver took ${(e - s) / 1000} microseconds for $benchmarkCount iterations"
         }
-
-        then:
-        true
     }
 }
