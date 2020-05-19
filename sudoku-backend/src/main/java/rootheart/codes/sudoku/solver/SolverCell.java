@@ -1,7 +1,6 @@
 package rootheart.codes.sudoku.solver;
 
 import lombok.Getter;
-import org.eclipse.collections.api.iterator.IntIterator;
 import rootheart.codes.sudoku.game.Board;
 import rootheart.codes.sudoku.game.Cell;
 
@@ -23,13 +22,10 @@ public class SolverCell {
     private SolverCellCollection emptyCellsInSameBlockInOtherColumns;
     private SolverCellCollection emptyCellsInSameColumnInOtherBlocks;
 
-    private final Board board;
-
     public SolverCell(Cell cell, Board board) {
         this.cell = cell;
-        this.board = board;
         if (cell.isEmpty()) {
-            board.getPossibleValues().forEach(candidates::add);
+            candidates.addAll(board.getPossibleValues());
         }
     }
 
@@ -57,47 +53,47 @@ public class SolverCell {
         return cell.isEmpty();
     }
 
-    private void eliminateCandidatesThatAreSetInBuddyCells() {
+    void eliminateCandidatesThatAreSetInBuddyCells() {
         forAllOtherCells(g -> candidates.removeAll(g.getNumbers()));
     }
 
-    private void eliminateLockedCandidates() {
+    void eliminateLockedCandidates() {
         // Für jeden Kandidaten schauen, ob er in einer Zelle einer anderen Zeile/Spalte in diesem Block existiert.
         // Falls nein, den Kandidaten für alle Zellen dieser Zeile/Spalte in anderen Blöcken löschen
-        board.getPossibleValues().forEach(candidate -> {
-            if (candidates.contains(candidate)) {
-                if (emptyCellsInSameBlockInOtherRows.noCellContainsCandidate(candidate)) {
-                    emptyCellsInSameRowInOtherBlocks.removeCandidate(candidate);
-                }
-                if (emptyCellsInSameRowInOtherBlocks.noCellContainsCandidate(candidate)) {
-                    emptyCellsInSameBlockInOtherRows.removeCandidate(candidate);
-                }
-                if (emptyCellsInSameBlockInOtherColumns.noCellContainsCandidate(candidate)) {
-                    emptyCellsInSameColumnInOtherBlocks.removeCandidate(candidate);
-                }
-                if (emptyCellsInSameColumnInOtherBlocks.noCellContainsCandidate(candidate)) {
-                    emptyCellsInSameBlockInOtherColumns.removeCandidate(candidate);
-                }
+        candidates.forEach(candidate -> {
+            if (emptyCellsInSameBlockInOtherRows.noCellContainsCandidate(candidate)) {
+                emptyCellsInSameRowInOtherBlocks.removeCandidate(candidate);
+            }
+            if (emptyCellsInSameRowInOtherBlocks.noCellContainsCandidate(candidate)) {
+                emptyCellsInSameBlockInOtherRows.removeCandidate(candidate);
+            }
+            if (emptyCellsInSameBlockInOtherColumns.noCellContainsCandidate(candidate)) {
+                emptyCellsInSameColumnInOtherBlocks.removeCandidate(candidate);
+            }
+            if (emptyCellsInSameColumnInOtherBlocks.noCellContainsCandidate(candidate)) {
+                emptyCellsInSameBlockInOtherColumns.removeCandidate(candidate);
             }
         });
     }
 
-    private void revealHiddenSingle() {
+    void revealHiddenSingle() {
         int hiddenSingle = 0;
-        IntIterator it = board.getPossibleValues().intIterator();
-        while (it.hasNext()) {
-            int candidate = it.next();
-            if (!candidates.contains(candidate)) {
-                continue;
-            }
-            if (otherCellsInColumn.noCellContainsCandidate(candidate)
-                    || otherCellsInRow.noCellContainsCandidate(candidate)
-                    || otherCellsInBlock.noCellContainsCandidate(candidate)) {
-                if (hiddenSingle != 0) {
-                    throw new NoSolutionException("multiple values can only exist in this cell, this is not possible");
-                }
-                hiddenSingle = candidate;
-            }
+        NumberSet n = new NumberSet();
+        n.addAll(candidates);
+        for (SolverCell otherCell : otherCellsInColumn.getEmptyCells()) {
+            n.removeAll(otherCell.candidates);
+        }
+        for (SolverCell otherCell : otherCellsInRow.getEmptyCells()) {
+            n.removeAll(otherCell.candidates);
+        }
+        for (SolverCell otherCell : otherCellsInBlock.getEmptyCells()) {
+            n.removeAll(otherCell.candidates);
+        }
+        if (n.getCount() > 1) {
+            throw new NoSolutionException("multiple values can only exist in this cell, this is not possible");
+        }
+        if (n.getCount() == 1) {
+            hiddenSingle = n.getFirst();
         }
 
         if (hiddenSingle != 0) {
@@ -105,7 +101,7 @@ public class SolverCell {
         }
     }
 
-    private void eliminateNakedTwins() {
+    void eliminateNakedTwins() {
         if (candidates.getCount() == 2) {
             forAllOtherCells(otherCells -> {
                 SolverCell twin = findTwin(otherCells);

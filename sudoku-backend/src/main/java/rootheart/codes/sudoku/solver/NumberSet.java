@@ -1,12 +1,17 @@
 package rootheart.codes.sudoku.solver;
 
 import java.util.Objects;
+import java.util.function.IntConsumer;
 
-public class NumberSet {
+public class NumberSet implements Cloneable {
     private int binaryEncodedNumbers;
 
     public void add(int number) {
         binaryEncodedNumbers |= 1 << number;
+    }
+
+    public void addAll(NumberSet otherSet) {
+        binaryEncodedNumbers = otherSet.binaryEncodedNumbers;
     }
 
     public boolean hasOneNumber() {
@@ -52,6 +57,14 @@ public class NumberSet {
         return count;
     }
 
+    public void forEach(IntConsumer consumer) {
+        for (int number = 0; number < 32; number++) {
+            if (contains(number)) {
+                consumer.accept(number);
+            }
+        }
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -63,5 +76,14 @@ public class NumberSet {
     @Override
     public int hashCode() {
         return Objects.hash(binaryEncodedNumbers);
+    }
+
+    public NumberSet clone() {
+        try {
+            return (NumberSet) super.clone();
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

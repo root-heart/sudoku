@@ -1,8 +1,8 @@
 package rootheart.codes.sudoku.game;
 
 import lombok.Getter;
-import org.eclipse.collections.api.list.primitive.IntList;
 import org.eclipse.collections.impl.factory.primitive.IntLists;
+import rootheart.codes.sudoku.solver.NumberSet;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;
@@ -15,7 +15,7 @@ public class Board extends CellList {
     private Group[] columns;
     private Group[] rows;
     private Group[] blocks;
-    private IntList possibleValues;
+    private NumberSet possibleValues;
 
     public Board(String board) {
         super(board.length());
@@ -40,7 +40,8 @@ public class Board extends CellList {
             blocks[i] = new Group(this);
         }
 
-        possibleValues = IntLists.immutable.ofAll(IntStream.rangeClosed(1, maxValue));
+        possibleValues = new NumberSet();
+        IntStream.rangeClosed(1, maxValue).forEach(possibleValues::add);
 
         createCells();
         initCells(board);

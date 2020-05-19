@@ -30,12 +30,12 @@ public class SolverCellCollection {
     }
 
     public boolean noCellContainsCandidate(int candidate) {
+        NumberSet n = new NumberSet();
+        n.add(candidate);
         for (SolverCell cell : emptyCells) {
-            if (cell.getCandidates().contains(candidate)) {
-                return false;
-            }
+            n.removeAll(cell.getCandidates());
         }
-        return true;
+        return n.contains(candidate);
     }
 
     public SolverCellCollection createNewWithFilteredEmptyCells(Predicate<SolverCell> filter) {
