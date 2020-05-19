@@ -4,8 +4,6 @@ import lombok.Getter;
 import rootheart.codes.sudoku.game.Board;
 import rootheart.codes.sudoku.game.Cell;
 
-import java.util.function.Consumer;
-
 public class SolverCell {
     @Getter
     private final Cell cell;
@@ -71,7 +69,9 @@ public class SolverCell {
         eliminateNakedTwins();
         if (candidates.hasOneNumber()) {
             // TODO here some cells will be updated multiple times
-            forAllOtherCells(g -> g.removeCandidates(this));
+            emptyCellsInColumn.getEmptyCells().forEach(c -> c.getCandidates().removeAll(candidates));
+            emptyCellsInRow.getEmptyCells().forEach(c -> c.getCandidates().removeAll(candidates));
+            emptyCellsInBlock.getEmptyCells().forEach(c -> c.getCandidates().removeAll(candidates));
         }
     }
 
@@ -125,40 +125,21 @@ public class SolverCell {
 
     void eliminateNakedTwins() {
         if (candidates.getCount() == 2) {
-            forAllOtherCells(otherCells -> {
-                SolverCell twin = findTwin(otherCells);
-                removeCandidatesExceptFromTwin(otherCells, twin);
-            });
+            removeCandidatesFromAllCellsIfATwinExists(emptyCellsInColumn);
+            removeCandidatesFromAllCellsIfATwinExists(emptyCellsInRow);
+            removeCandidatesFromAllCellsIfATwinExists(emptyCellsInBlock);
         }
     }
 
-    private SolverCell findTwin(SolverCellCollection cells) {
-        SolverCell twin = null;
-        for (SolverCell otherCell : cells.getEmptyCells()) {
-            if (otherCell.candidates.equals(candidates)) {
-                if (twin != null) {
-                    throw new NoSolutionException("more than two cells only allow the same two numbers, this is not possible");
-                }
-                twin = otherCell;
-            }
-        }
-        return twin;
-    }
-
-    private void removeCandidatesExceptFromTwin(SolverCellCollection otherCells, SolverCell twin) {
+    private void removeCandidatesFromAllCellsIfATwinExists(SolverCellCollection cells) {
+        SolverCell twin = cells.findExactlyOneCellWithCandidates(candidates);
         if (twin != null) {
-            for (SolverCell otherCell : otherCells.getEmptyCells()) {
+            for (SolverCell otherCell : cells.getEmptyCells()) {
                 if (otherCell != twin) {
-                    otherCell.candidates.removeAll(candidates);
+                    otherCell.getCandidates().removeAll(candidates);
                 }
             }
         }
-    }
-
-    private void forAllOtherCells(Consumer<SolverCellCollection> consumer) {
-        consumer.accept(emptyCellsInColumn);
-        consumer.accept(emptyCellsInRow);
-        consumer.accept(emptyCellsInBlock);
     }
 
     private boolean columnDiffers(SolverCell otherCell) {

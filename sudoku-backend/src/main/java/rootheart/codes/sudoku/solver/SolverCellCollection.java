@@ -11,10 +11,6 @@ import java.util.List;
 public class SolverCellCollection {
     private final List<SolverCell> emptyCells = new ArrayList<>();
 
-    public void removeCandidates(SolverCell solverCell) {
-        emptyCells.forEach(cell -> cell.getCandidates().removeAll(solverCell.getCandidates()));
-    }
-
     public void removeCandidate(int candidate) {
         emptyCells.forEach(cell -> cell.getCandidates().remove(candidate));
     }
@@ -33,4 +29,18 @@ public class SolverCellCollection {
         }
         return n.contains(candidate);
     }
+
+    public SolverCell findExactlyOneCellWithCandidates(NumberSet candidates) {
+        SolverCell twin = null;
+        for (SolverCell cell : emptyCells) {
+            if (cell.getCandidates().equals(candidates)) {
+                if (twin != null) {
+                    throw new NoSolutionException("more than two cells only allow the same two numbers, this is not possible");
+                }
+                twin = cell;
+            }
+        }
+        return twin;
+    }
+
 }
