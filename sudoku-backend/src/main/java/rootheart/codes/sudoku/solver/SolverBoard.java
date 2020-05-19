@@ -56,6 +56,6 @@ public class SolverBoard {
 
     public boolean isNotSolvable() {
         return emptyCells.stream()
-                .anyMatch(entry -> entry.getCandidates().size() == 0);
+                .anyMatch(entry -> entry.getCandidateCount() == 0);
     }
 }

@@ -17,11 +17,11 @@ public class SolverCellCollection {
     private final MutableIntSet numbers = IntSets.mutable.empty();
 
     public void removeCandidates(IntSet candidates) {
-        emptyCells.forEach(cell -> cell.getCandidates().removeAll(candidates));
+        emptyCells.forEach(cell -> cell.removeCandidates(candidates));
     }
 
     public void removeCandidate(int candidate) {
-        emptyCells.forEach(cell -> cell.getCandidates().remove(candidate));
+        emptyCells.forEach(cell -> cell.removeCandidate(candidate));
     }
 
     public IntSet getNumbers() {
@@ -38,7 +38,7 @@ public class SolverCellCollection {
 
     public boolean noCellContainsCandidate(int candidate) {
         for (SolverCell cell : emptyCells) {
-            if (cell.getCandidates().contains(candidate)) {
+            if (cell.containsCandidate(candidate)) {
                 return false;
             }
         }

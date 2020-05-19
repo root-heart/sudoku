@@ -1,7 +1,9 @@
 package rootheart.codes.sudoku.solver;
 
 import lombok.Getter;
+import lombok.experimental.Delegate;
 import org.eclipse.collections.api.iterator.IntIterator;
+import org.eclipse.collections.api.set.primitive.IntSet;
 import org.eclipse.collections.api.set.primitive.MutableIntSet;
 import org.eclipse.collections.impl.factory.primitive.IntSets;
 import rootheart.codes.sudoku.game.Board;
@@ -9,13 +11,17 @@ import rootheart.codes.sudoku.game.Cell;
 
 import java.util.function.Consumer;
 
-@Getter
 public class SolverCell {
+    @Getter
     private final Cell cell;
-    private final MutableIntSet candidates = IntSets.mutable.empty();
+    @Getter
     private final SolverCellCollection otherCellsInColumn = new SolverCellCollection();
+    @Getter
     private final SolverCellCollection otherCellsInRow = new SolverCellCollection();
+    @Getter
     private final SolverCellCollection otherCellsInBlock = new SolverCellCollection();
+
+    private final MutableIntSet candidates = IntSets.mutable.empty();
     private SolverCellCollection emptyCellsInSameBlockInOtherRows;
     private SolverCellCollection emptyCellsInSameRowInOtherBlocks;
     private SolverCellCollection emptyCellsInSameBlockInOtherColumns;
@@ -36,6 +42,9 @@ public class SolverCell {
     }
 
     public void eliminateImpossibleCandidates() {
+        if (!isEmpty()) {
+            return;
+        }
         eliminateCandidatesThatAreSetInBuddyCells();
         revealHiddenSingle();
         eliminateLockedCandidates();
@@ -52,7 +61,7 @@ public class SolverCell {
     }
 
     private void eliminateCandidatesThatAreSetInBuddyCells() {
-        forAllOtherCells(g -> g.getNumbers().forEach(candidates::remove));
+        forAllOtherCells(g -> g.getNumbers().forEach(this::removeCandidate));
     }
 
     private void eliminateLockedCandidates() {
@@ -84,6 +93,22 @@ public class SolverCell {
 
     public boolean isEmpty() {
         return cell.isEmpty();
+    }
+
+    public void removeCandidate(int candidate) {
+        candidates.remove(candidate);
+    }
+
+    public void removeCandidates(IntSet candidates) {
+        this.candidates.removeAll(candidates);
+    }
+
+    public int getCandidateCount() {
+        return candidates.size();
+    }
+
+    public boolean containsCandidate(int candidate) {
+        return candidates.contains(candidate);
     }
 
     private void revealHiddenSingle() {
@@ -132,7 +157,7 @@ public class SolverCell {
         if (twin != null) {
             for (SolverCell otherCell : otherCells.getEmptyCells()) {
                 if (otherCell != twin) {
-                    otherCell.candidates.removeAll(candidates);
+                    otherCell.removeCandidates(candidates);
                 }
             }
         }
