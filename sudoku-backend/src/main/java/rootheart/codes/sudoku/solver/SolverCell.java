@@ -16,8 +16,8 @@ public class SolverCell {
     private final SolverCellCollection otherCellsInRow = new SolverCellCollection();
     @Getter
     private final SolverCellCollection otherCellsInBlock = new SolverCellCollection();
-
-    private int candidates;
+    @Getter
+    private final NumberSet candidates = new NumberSet();
     private SolverCellCollection emptyCellsInSameBlockInOtherRows;
     private SolverCellCollection emptyCellsInSameRowInOtherBlocks;
     private SolverCellCollection emptyCellsInSameBlockInOtherColumns;
@@ -29,7 +29,7 @@ public class SolverCell {
         this.cell = cell;
         this.board = board;
         if (cell.isEmpty()) {
-            board.getPossibleValues().forEach(v -> candidates |= 1 << v);
+            board.getPossibleValues().forEach(candidates::add);
         }
     }
 
@@ -48,67 +48,24 @@ public class SolverCell {
         revealHiddenSingle();
         eliminateLockedCandidates();
         eliminateNakedTwins();
-        if (hasOneCandidate()) {
+        if (candidates.hasOneNumber()) {
             forAllOtherCells(g -> g.removeCandidates(this));
         }
-    }
-
-    public boolean hasOneCandidate() {
-        return (candidates & (candidates - 1)) == 0;
-    }
-
-    public int getFirstCandidate() {
-        if (candidates == 0) {
-            return 0;
-        }
-
-        for (int candidateTest = 1; candidateTest < 32; candidateTest++) {
-            if (containsCandidate(candidateTest)) {
-                return candidateTest;
-            }
-        }
-        return 0;
     }
 
     public boolean isEmpty() {
         return cell.isEmpty();
     }
 
-    public void removeCandidate(int candidate) {
-        candidates &= ~(1 << candidate);
-    }
-
-    private void removeBinaryEncodedCandidates(int binaryEncodedNumbers) {
-        candidates &= ~binaryEncodedNumbers;
-    }
-
-    public void removeCandidates(SolverCell otherCell) {
-        removeBinaryEncodedCandidates(otherCell.candidates);
-    }
-
-    public int getCandidateCount() {
-        int count = 0;
-        int n = candidates;
-        while (n > 0) {
-            count += n & 1;
-            n >>= 1;
-        }
-        return count;
-    }
-
-    public boolean containsCandidate(int candidate) {
-        return (candidates & 1 << candidate) > 0;
-    }
-
     private void eliminateCandidatesThatAreSetInBuddyCells() {
-        forAllOtherCells(g -> removeBinaryEncodedCandidates(g.getNumbers()));
+        forAllOtherCells(g -> candidates.removeAll(g.getNumbers()));
     }
 
     private void eliminateLockedCandidates() {
         // Für jeden Kandidaten schauen, ob er in einer Zelle einer anderen Zeile/Spalte in diesem Block existiert.
         // Falls nein, den Kandidaten für alle Zellen dieser Zeile/Spalte in anderen Blöcken löschen
         board.getPossibleValues().forEach(candidate -> {
-            if (containsCandidate(candidate)) {
+            if (candidates.contains(candidate)) {
                 if (emptyCellsInSameBlockInOtherRows.noCellContainsCandidate(candidate)) {
                     emptyCellsInSameRowInOtherBlocks.removeCandidate(candidate);
                 }
@@ -130,7 +87,7 @@ public class SolverCell {
         IntIterator it = board.getPossibleValues().intIterator();
         while (it.hasNext()) {
             int candidate = it.next();
-            if (!containsCandidate(candidate)) {
+            if (!candidates.contains(candidate)) {
                 continue;
             }
             if (otherCellsInColumn.noCellContainsCandidate(candidate)
@@ -144,12 +101,12 @@ public class SolverCell {
         }
 
         if (hiddenSingle != 0) {
-            candidates = 1 << hiddenSingle;
+            candidates.removeAllAndAdd(hiddenSingle);
         }
     }
 
     private void eliminateNakedTwins() {
-        if (getCandidateCount() == 2) {
+        if (candidates.getCount() == 2) {
             forAllOtherCells(otherCells -> {
                 SolverCell twin = findTwin(otherCells);
                 removeCandidatesExceptFromTwin(otherCells, twin);
@@ -160,7 +117,7 @@ public class SolverCell {
     private SolverCell findTwin(SolverCellCollection cells) {
         SolverCell twin = null;
         for (SolverCell otherCell : cells.getEmptyCells()) {
-            if (otherCell.candidates == candidates) {
+            if (otherCell.candidates.equals(candidates)) {
                 if (twin != null) {
                     throw new NoSolutionException("more than two cells only allow the same two numbers, this is not possible");
                 }
@@ -174,7 +131,7 @@ public class SolverCell {
         if (twin != null) {
             for (SolverCell otherCell : otherCells.getEmptyCells()) {
                 if (otherCell != twin) {
-                    otherCell.removeBinaryEncodedCandidates(candidates);
+                    otherCell.candidates.removeAll(candidates);
                 }
             }
         }

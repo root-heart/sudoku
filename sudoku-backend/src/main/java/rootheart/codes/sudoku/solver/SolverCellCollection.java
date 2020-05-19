@@ -11,27 +11,27 @@ import java.util.function.Predicate;
 @Getter
 public class SolverCellCollection {
     private final List<SolverCell> emptyCells = new ArrayList<>();
-    private int numbers;
+    private final NumberSet numbers = new NumberSet();
 
     public void removeCandidates(SolverCell solverCell) {
-        emptyCells.forEach(cell -> cell.removeCandidates(solverCell));
+        emptyCells.forEach(cell -> cell.getCandidates().removeAll(solverCell.getCandidates()));
     }
 
     public void removeCandidate(int candidate) {
-        emptyCells.forEach(cell -> cell.removeCandidate(candidate));
+        emptyCells.forEach(cell -> cell.getCandidates().remove(candidate));
     }
 
     public void add(SolverCell cell) {
         if (cell.isEmpty()) {
             emptyCells.add(cell);
         } else {
-            numbers |= 1 << cell.getCell().getNumber();
+            numbers.add(cell.getCell().getNumber());
         }
     }
 
     public boolean noCellContainsCandidate(int candidate) {
         for (SolverCell cell : emptyCells) {
-            if (cell.containsCandidate(candidate)) {
+            if (cell.getCandidates().contains(candidate)) {
                 return false;
             }
         }

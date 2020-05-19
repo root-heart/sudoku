@@ -22,7 +22,7 @@ public class Solver {
 
         int singleCandidateCount = solverBoard.getSingleCandidates().size();
         solverBoard.getSingleCandidates().forEach(solverCell -> {
-            solverCell.getCell().setNumber(solverCell.getFirstCandidate());
+            solverCell.getCell().setNumber(solverCell.getCandidates().getFirst());
         });
         if (!board.isValid()) {
             throw new BoardInvalidException();

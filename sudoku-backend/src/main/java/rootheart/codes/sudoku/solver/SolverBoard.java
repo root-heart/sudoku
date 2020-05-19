@@ -43,7 +43,7 @@ public class SolverBoard {
         for (long countBefore = singleCandidates.size(); ; ) {
             for (SolverCell cell : emptyCells) {
                 cell.eliminateImpossibleCandidates();
-                if (cell.hasOneCandidate()) {
+                if (cell.getCandidates().hasOneNumber()) {
                     singleCandidates.add(cell);
                 }
             }
@@ -57,6 +57,6 @@ public class SolverBoard {
 
     public boolean isNotSolvable() {
         return emptyCells.stream()
-                .anyMatch(entry -> entry.getCandidateCount() == 0);
+                .anyMatch(entry -> entry.getCandidates().getCount() == 0);
     }
 }
