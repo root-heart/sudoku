@@ -104,18 +104,15 @@ public class SolverCell {
     }
 
     void revealHiddenSingle() {
+        emptyCellsInColumn.updateCandidates();
+        emptyCellsInRow.updateCandidates();
+        emptyCellsInBlock.updateCandidates();
         int hiddenSingle = 0;
         NumberSet n = new NumberSet();
         n.addAll(candidates);
-        for (SolverCell otherCell : emptyCellsInColumn.getEmptyCells()) {
-            n.removeAll(otherCell.candidates);
-        }
-        for (SolverCell otherCell : emptyCellsInRow.getEmptyCells()) {
-            n.removeAll(otherCell.candidates);
-        }
-        for (SolverCell otherCell : emptyCellsInBlock.getEmptyCells()) {
-            n.removeAll(otherCell.candidates);
-        }
+        n.removeAll(emptyCellsInColumn.getCandidates());
+        n.removeAll(emptyCellsInRow.getCandidates());
+        n.removeAll(emptyCellsInBlock.getCandidates());
         if (n.getCount() > 1) {
             throw new NoSolutionException("multiple values can only exist in this cell, this is not possible");
         }
