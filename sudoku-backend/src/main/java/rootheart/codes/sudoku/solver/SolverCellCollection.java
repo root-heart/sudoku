@@ -3,55 +3,55 @@ package rootheart.codes.sudoku.solver;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.eclipse.collections.api.set.primitive.IntSet;
+import org.eclipse.collections.api.set.primitive.MutableIntSet;
 import org.eclipse.collections.impl.factory.primitive.IntSets;
-import rootheart.codes.sudoku.game.Cell;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.function.Predicate;
 
 @NoArgsConstructor
 @Getter
 public class SolverCellCollection {
-    private final Set<SolverCell> cells = new HashSet<>();
-
-    private Set<SolverCell> emptyCells;
-    private IntSet numbers;
-
-    public SolverCellCollection(Set<SolverCell> cells) {
-        this.cells.addAll(cells);
-    }
-
-    public void initializationComplete() {
-        emptyCells = cells.stream()
-                .filter(SolverCell::isEmpty)
-                .collect(Collectors.toSet());
-        numbers = IntSets.immutable.ofAll(cells.stream().map(SolverCell::getCell).mapToInt(Cell::getNumber));
-    }
+    private final Set<SolverCell> emptyCells = new HashSet<>();
+    private final MutableIntSet numbers = IntSets.mutable.empty();
 
     public void removeCandidates(IntSet candidates) {
-        cells.forEach(otherCell -> otherCell.getCandidates().removeAll(candidates));
+        emptyCells.forEach(cell -> cell.getCandidates().removeAll(candidates));
     }
 
     public void removeCandidate(int candidate) {
-        cells.forEach(otherCell -> otherCell.getCandidates().remove(candidate));
+        emptyCells.forEach(cell -> cell.getCandidates().remove(candidate));
     }
 
     public IntSet getNumbers() {
         return numbers;
     }
 
-    public void add(SolverCell solverCell) {
-        cells.add(solverCell);
+    public void add(SolverCell cell) {
+        if (cell.isEmpty()) {
+            emptyCells.add(cell);
+        } else {
+            numbers.add(cell.getCell().getNumber());
+        }
     }
 
     public boolean noCellContainsCandidate(int candidate) {
-        for (SolverCell otherCell : cells) {
-            if (otherCell.getCandidates().contains(candidate)) {
+        for (SolverCell cell : emptyCells) {
+            if (cell.getCandidates().contains(candidate)) {
                 return false;
             }
         }
         return true;
     }
-}
 
+    public SolverCellCollection createNewWithFilteredEmptyCells(Predicate<SolverCell> filter) {
+        SolverCellCollection collection = new SolverCellCollection();
+        for (SolverCell cell : emptyCells) {
+            if (filter.test(cell)) {
+                collection.add(cell);
+            }
+        }
+        return collection;
+    }
+}

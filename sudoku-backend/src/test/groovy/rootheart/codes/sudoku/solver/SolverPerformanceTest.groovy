@@ -27,7 +27,7 @@ class SolverPerformanceTest extends Specification {
     def 'Test performance'() {
         given:
         def jdkSolver = new Solver()
-        def sudokuToSolve = extremeDifficultSudoku
+        def sudokuToSolve = mediumSudoku
 
         def warmUpCount = 1_500
         def benchmarkCount = 1_00
