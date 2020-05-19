@@ -48,9 +48,11 @@ public class SolverBoard {
     public void eliminateImpossibleCandidates() {
         for (long countBefore = singleCandidates.size(); ; ) {
             for (SolverCell cell : emptyCells) {
-                cell.eliminateImpossibleCandidates();
-                if (cell.getCandidates().hasOneNumber()) {
-                    singleCandidates.add(cell);
+                if (!singleCandidates.contains(cell)) {
+                    cell.eliminateImpossibleCandidates();
+                    if (cell.getCandidates().hasOneNumber()) {
+                        singleCandidates.add(cell);
+                    }
                 }
             }
             long countAfter = singleCandidates.size();
