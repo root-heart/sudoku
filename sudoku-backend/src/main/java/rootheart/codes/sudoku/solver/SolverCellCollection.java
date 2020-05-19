@@ -18,9 +18,7 @@ public class SolverCellCollection {
     }
 
     public void add(SolverCell cell) {
-        if (cell.isEmpty()) {
-            emptyCells.add(cell);
-        }
+        emptyCells.add(cell);
     }
 
     public void updateCandidates() {

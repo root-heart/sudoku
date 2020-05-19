@@ -21,9 +21,9 @@ public class SolverBoard {
         emptyCells = new ArrayList<>(board.getCells().size());
         Map<Cell, SolverCell> solverCellMap = new HashMap<>(board.getCells().size());
         for (Cell cell : board.getCells()) {
-            SolverCell solverCell = new SolverCell(cell, board);
-            solverCellMap.put(cell, solverCell);
             if (cell.isEmpty()) {
+                SolverCell solverCell = new SolverCell(cell, board);
+                solverCellMap.put(cell, solverCell);
                 emptyCells.add(solverCell);
             }
         }
@@ -31,17 +31,29 @@ public class SolverBoard {
             Cell cell = solverCell.getCell();
             for (Cell columnCell : cell.getColumn().getCells()) {
                 if (columnCell != cell) {
-                    solverCell.addOtherCellInColumn(solverCellMap.get(columnCell));
+                    if (!columnCell.isEmpty()) {
+                        solverCell.getCandidates().remove(columnCell.getNumber());
+                    } else {
+                        solverCell.addOtherCellInColumn(solverCellMap.get(columnCell));
+                    }
                 }
             }
             for (Cell rowCell : cell.getRow().getCells()) {
                 if (rowCell != cell) {
-                    solverCell.addOtherCellInRow(solverCellMap.get(rowCell));
+                    if (!rowCell.isEmpty()) {
+                        solverCell.getCandidates().remove(rowCell.getNumber());
+                    } else {
+                        solverCell.addOtherCellInRow(solverCellMap.get(rowCell));
+                    }
                 }
             }
             for (Cell blockCell : cell.getBlock().getCells()) {
                 if (blockCell != cell) {
-                    solverCell.addOtherCellInBlock(solverCellMap.get(blockCell));
+                    if (!blockCell.isEmpty()) {
+                        solverCell.getCandidates().remove(blockCell.getNumber());
+                    } else {
+                        solverCell.addOtherCellInBlock(solverCellMap.get(blockCell));
+                    }
                 }
             }
         }

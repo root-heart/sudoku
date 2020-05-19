@@ -19,51 +19,34 @@ public class SolverCell {
 
     public SolverCell(Cell cell, Board board) {
         this.cell = cell;
-        if (cell.isEmpty()) {
-            candidates.addAll(board.getPossibleValues());
-        }
+        candidates.addAll(board.getPossibleValues());
     }
 
     public void addOtherCellInColumn(SolverCell cell) {
-        if (cell.isEmpty()) {
-            emptyCellsInColumn.add(cell);
-            if (blockDiffers(cell)) {
-                emptyCellsInSameColumnInOtherBlocks.add(cell);
-            }
-        } else {
-            candidates.remove(cell.getCell().getNumber());
+        emptyCellsInColumn.add(cell);
+        if (blockDiffers(cell)) {
+            emptyCellsInSameColumnInOtherBlocks.add(cell);
         }
     }
 
     public void addOtherCellInRow(SolverCell cell) {
-        if (cell.isEmpty()) {
-            emptyCellsInRow.add(cell);
-            if (blockDiffers(cell)) {
-                emptyCellsInSameRowInOtherBlocks.add(cell);
-            }
-        } else {
-            candidates.remove(cell.getCell().getNumber());
+        emptyCellsInRow.add(cell);
+        if (blockDiffers(cell)) {
+            emptyCellsInSameRowInOtherBlocks.add(cell);
         }
     }
 
     public void addOtherCellInBlock(SolverCell cell) {
-        if (cell.isEmpty()) {
-            emptyCellsInBlock.add(cell);
-            if (rowDiffers(cell)) {
-                emptyCellsInSameBlockInOtherRows.add(cell);
-            }
-            if (columnDiffers(cell)) {
-                emptyCellsInSameBlockInOtherColumns.add(cell);
-            }
-        } else {
-            candidates.remove(cell.getCell().getNumber());
+        emptyCellsInBlock.add(cell);
+        if (rowDiffers(cell)) {
+            emptyCellsInSameBlockInOtherRows.add(cell);
+        }
+        if (columnDiffers(cell)) {
+            emptyCellsInSameBlockInOtherColumns.add(cell);
         }
     }
 
     public void eliminateImpossibleCandidates() {
-        if (!isEmpty()) {
-            return;
-        }
         revealHiddenSingle();
         eliminateLockedCandidates();
         eliminateNakedTwins();
@@ -73,10 +56,6 @@ public class SolverCell {
             emptyCellsInRow.getEmptyCells().forEach(c -> c.getCandidates().removeAll(candidates));
             emptyCellsInBlock.getEmptyCells().forEach(c -> c.getCandidates().removeAll(candidates));
         }
-    }
-
-    public boolean isEmpty() {
-        return cell.isEmpty();
     }
 
     void eliminateLockedCandidates() {
