@@ -3,9 +3,6 @@ package rootheart.codes.sudoku.solver;
 import rootheart.codes.sudoku.game.Board;
 import rootheart.codes.sudoku.game.Cell;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class Solver {
 
     public void solve(Board board) {
@@ -15,12 +12,8 @@ public class Solver {
         if (!board.isValid()) {
             throw new BoardInvalidException();
         }
-        board.getCells().forEach(Cell::updateBuddyCells);
         board.eliminateImpossibleCandidates();
         if (board.isNotSolvable()) {
-//        SolverBoard solverBoard = new SolverBoard(board);
-//        solverBoard.eliminateImpossibleCandidates();
-//        if (solverBoard.isNotSolvable()) {
             throw new NoSolutionException("found no solution");
         }
 
@@ -65,8 +58,8 @@ public class Solver {
 //        board.set(solutions.get(0).getBoardString());
     }
 
-    private Board clone(Board board) {
-        String boardString = board.getBoardString();
-        return new Board(boardString);
-    }
+//    private Board clone(Board board) {
+//        String boardString = board.getBoardString();
+//        return new Board(boardString);
+//    }
 }

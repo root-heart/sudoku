@@ -2,27 +2,27 @@ package rootheart.codes.sudoku.game;
 
 import lombok.Getter;
 import rootheart.codes.sudoku.solver.NumberSet;
-import rootheart.codes.sudoku.solver.SolverCell;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Getter
-public class Board extends CellList {
+public class Board {
     private int size;
     private int maxValue;
     private Group[] columns;
     private Group[] rows;
     private Group[] blocks;
-    private NumberSet possibleValues;
+    private final NumberSet possibleValues = new NumberSet();
     private final Set<Cell> singleCandidates = new HashSet<>();
+    private final List<Cell> fixedCells = new ArrayList<>(100);
+    private final List<Cell> emptyCells = new ArrayList<>(100);
 
     public Board(String board) {
-        super(board.length());
         set(board);
     }
 
@@ -44,33 +44,33 @@ public class Board extends CellList {
             blocks[i] = new Group(this);
         }
 
-        possibleValues = new NumberSet();
+        possibleValues.clear();
         IntStream.rangeClosed(1, maxValue).forEach(possibleValues::add);
 
-        createCells();
-        initCells(board);
+        createCells(board);
     }
 
-    private void createCells() {
+    private void createCells(String board) {
         for (int rowIndex = 0; rowIndex < maxValue; rowIndex++) {
             for (int columnIndex = 0; columnIndex < maxValue; columnIndex++) {
                 int blockIndex = (rowIndex / size) * size + (columnIndex / size);
-                int blockCellIndex = columnIndex % size + rowIndex % size * size;
                 Cell cell = new Cell(columns[columnIndex], rows[rowIndex], blocks[blockIndex]);
                 columns[columnIndex].add(cell);
                 rows[rowIndex].add(cell);
                 blocks[blockIndex].add(cell);
-                add(cell);
+
+                int number = Character.getNumericValue(board.charAt(columnIndex + rowIndex * maxValue));
+                if (number == 0) {
+                    cell.getCandidates().addAll(possibleValues);
+                    emptyCells.add(cell);
+                } else {
+                    cell.setNumber(number);
+                    fixedCells.add(cell);
+                }
             }
         }
-    }
-
-    private void initCells(String board) {
-        for (int rowIndex = 0; rowIndex < maxValue; rowIndex++) {
-            for (int columnIndex = 0; columnIndex < maxValue; columnIndex++) {
-                int number = Character.getNumericValue(board.charAt(columnIndex + rowIndex * maxValue));
-                columns[columnIndex].getCell(rowIndex).setNumber(number);
-            }
+        for (Cell cell : emptyCells) {
+            cell.updateBuddyCells();
         }
     }
 
@@ -95,19 +95,19 @@ public class Board extends CellList {
         StringBuilder sb = new StringBuilder();
         for (int rowIndex = 0; rowIndex < maxValue; rowIndex++) {
             for (int columnIndex = 0; columnIndex < maxValue; columnIndex++) {
-                sb.append(cell(columnIndex, rowIndex).getNumber());
+                sb.append(columns[columnIndex].getCell(rowIndex).getNumber());
             }
             sb.append("\n");
         }
         return sb.toString();
     }
 
-    public String getBoardString() {
-        return getCells().stream()
-                .map(Cell::getNumber)
-                .map(String::valueOf)
-                .collect(Collectors.joining());
-    }
+//    public String getBoardString() {
+//        return getCells().stream()
+//                .map(Cell::getNumber)
+//                .map(String::valueOf)
+//                .collect(Collectors.joining());
+//    }
 
     public boolean isValid() {
         return Arrays.stream(columns).allMatch(Group::isValid)
@@ -115,10 +115,8 @@ public class Board extends CellList {
                 && Arrays.stream(blocks).allMatch(Group::isValid);
     }
 
-
     public void eliminateImpossibleCandidates() {
         for (int countBefore = singleCandidates.size(); ; ) {
-            List<Cell> emptyCells = getCells().stream().filter(Cell::isEmpty).collect(Collectors.toList());
             for (Cell cell : emptyCells) {
                 if (!singleCandidates.contains(cell)) {
                     cell.eliminateImpossibleCandidates();
@@ -135,9 +133,12 @@ public class Board extends CellList {
         }
     }
 
-
     public boolean isNotSolvable() {
-        return getCells().stream().filter(Cell::isEmpty)
+        return emptyCells.stream()
                 .anyMatch(entry -> entry.getCandidates().getCount() == 0);
+    }
+
+    public boolean hasEmptyCells() {
+        return emptyCells.size() > 0;
     }
 }

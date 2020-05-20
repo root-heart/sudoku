@@ -5,16 +5,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import rootheart.codes.sudoku.solver.NoSolutionException;
 import rootheart.codes.sudoku.solver.NumberSet;
-import rootheart.codes.sudoku.solver.SolverCell;
-import rootheart.codes.sudoku.solver.SolverCellCollection;
 
 @Getter
-@Setter
-//@RequiredArgsConstructor
+@RequiredArgsConstructor
 public class Cell {
     private final Group column;
     private final Group row;
     private final Group block;
+    @Setter
     private int number;
 
     private final GroupCells cellsInColumn = new ColumnCells();
@@ -26,22 +24,6 @@ public class Cell {
     private final CellList cellsInSameRowInOtherBlocks = new CellList(10);
     private final CellList cellsInSameBlockInOtherColumns = new CellList(10);
     private final CellList cellsInSameColumnInOtherBlocks = new CellList(10);
-
-
-    public Cell(Group column, Group row, Group block) {
-        this.column = column;
-        this.row = row;
-        this.block = block;
-        candidates.add(1);
-        candidates.add(2);
-        candidates.add(3);
-        candidates.add(4);
-        candidates.add(5);
-        candidates.add(6);
-        candidates.add(7);
-        candidates.add(8);
-        candidates.add(9);
-    }
 
     public boolean isEmpty() {
         return number == 0;
