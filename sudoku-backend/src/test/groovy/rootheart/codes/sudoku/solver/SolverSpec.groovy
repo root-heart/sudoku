@@ -119,6 +119,17 @@ class SolverSpec extends Specification {
 
         then:
         noExceptionThrown()
+
+        board.boardString == "762495318" +
+                "185673942" +
+                "934812756" +
+                "241387569" +
+                "873956421" +
+                "659124873" +
+                "528731694" +
+                "497268135" +
+                "316549287"
+
         println board
     }
 
