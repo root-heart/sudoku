@@ -1,6 +1,7 @@
 package rootheart.codes.sudoku
 
 import rootheart.codes.sudoku.game.Board
+import rootheart.codes.sudoku.solver.NumberSet
 import spock.lang.Specification
 
 class BoardSpec extends Specification {
@@ -44,9 +45,9 @@ class BoardSpec extends Specification {
             def rowCell = board.getRow(rowIndex).getCell(columnIndex)
             def blockCell = board.getBlock(blockIndex).getCell(blockCellIndex)
 
-            assert columnCell == rowCell
-            assert blockCell == columnCell
-            assert blockCell == rowCell
+            assert columnCell.is(rowCell)
+            assert blockCell.is(columnCell)
+            assert blockCell.is(rowCell)
         }
 
         board.rows[0].getCell(0) == board.columns[0].getCell(0)
@@ -103,5 +104,59 @@ class BoardSpec extends Specification {
 
         then:
         board.cell(1, 1).number == 2
+    }
+
+
+    def 'Test that candidates are eliminated correctly'() {
+        given:
+        def board = new Board("000000000" + "000789000" + "123000000" + "000000000" * 6)
+
+        when:
+        board.eliminateImpossibleCandidates()
+
+        then:
+        board.cell(3, 0).candidates.containsAll(4, 5, 6)
+        board.cell(4, 0).candidates.containsAll(4, 5, 6)
+        board.cell(5, 0).candidates.containsAll(4, 5, 6)
+
+//        when:
+//        board = new Board("100000000" + "200000000" + "300000000" + "070000000" + "080000000" + "090000000" + "000000000" * 3)
+//        solverBoard = new SolverBoard(board)
+//
+//        eliminateCandidatesThatAreSetInBuddyCells(solverBoard);
+//        eliminateLockedCandidates(solverBoard)
+//
+//        then:
+//        solverBoard.solverCellMap[board.getCell(56)].candidates == [4, 5, 6] as IntHashSet
+//        solverBoard.solverCellMap[board.getCell(65)].candidates == [4, 5, 6] as IntHashSet
+//        solverBoard.solverCellMap[board.getCell(74)].candidates == [4, 5, 6] as IntHashSet
+//
+//        when:
+//        board = new Board("000102000" + "000000000" + "000000300" + "000030000" + "000000000" * 5)
+//        solverBoard = new SolverBoard(board)
+//
+//        eliminateCandidatesThatAreSetInBuddyCells(solverBoard);
+//        eliminateLockedCandidates(solverBoard)
+//
+//        then:
+//        solverBoard.solverCellMap[board.getCell(0)].candidates.contains(3)
+//        solverBoard.solverCellMap[board.getCell(1)].candidates.contains(3)
+//        solverBoard.solverCellMap[board.getCell(2)].candidates.contains(3)
+//        !solverBoard.solverCellMap[board.getCell(9)].candidates.contains(3)
+//        !solverBoard.solverCellMap[board.getCell(10)].candidates.contains(3)
+//        !solverBoard.solverCellMap[board.getCell(11)].candidates.contains(3)
+    }
+
+    def 'Test that naked twins are eliminated'() {
+        given:
+        def board = new Board("000789456" + "000000000" + "000000000" + "410000000" + "500000000" + "600000000" + "001000000" + "000000000" * 2)
+
+        when:
+        board.eliminateImpossibleCandidates()
+
+        then:
+        board.cell(0, 0).candidates == new NumberSet(1)
+        board.cell(1, 0).candidates == new NumberSet(2, 3)
+        board.cell(2, 0).candidates == new NumberSet(2, 3)
     }
 }

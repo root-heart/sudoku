@@ -13,6 +13,16 @@ public class NumberSet implements Cloneable {
         binaryEncodedNumbers = other.binaryEncodedNumbers;
     }
 
+    public NumberSet(int number) {
+        add(number);
+    }
+
+    public NumberSet(int... numbers) {
+        for (int number : numbers) {
+            add(number);
+        }
+    }
+
     public void add(int number) {
         binaryEncodedNumbers |= 1 << number;
     }
@@ -44,6 +54,15 @@ public class NumberSet implements Cloneable {
 
     public boolean contains(int number) {
         return (binaryEncodedNumbers & 1 << number) > 0;
+    }
+
+    public boolean containsAll(int... numbers) {
+        for (int number : numbers) {
+            if (!contains(number)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public void removeAllAndAdd(int number) {

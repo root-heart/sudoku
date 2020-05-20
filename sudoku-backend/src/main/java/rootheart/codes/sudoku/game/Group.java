@@ -6,8 +6,8 @@ import java.util.BitSet;
 
 @Getter
 public class Group extends CellList {
-    public Group(Board board) {
-        super(board.getMaxValue());
+    public Group(int cellCount) {
+        super(cellCount);
     }
 
     @Override

@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.IntStream;
 
-@Getter
 public class Board {
     private int size;
     private int maxValue;
@@ -21,6 +20,10 @@ public class Board {
     private final Set<Cell> singleCandidates = new HashSet<>();
     private final List<Cell> fixedCells = new ArrayList<>(100);
     private final List<Cell> emptyCells = new ArrayList<>(100);
+
+    public Board() {
+        this("0".repeat(81));
+    }
 
     public Board(String board) {
         set(board);
@@ -39,15 +42,28 @@ public class Board {
         rows = new Group[maxValue];
         blocks = new Group[maxValue];
         for (int i = 0; i < maxValue; i++) {
-            columns[i] = new Group(this);
-            rows[i] = new Group(this);
-            blocks[i] = new Group(this);
+            columns[i] = new Group(maxValue);
+            rows[i] = new Group(maxValue);
+            blocks[i] = new Group(maxValue);
         }
 
         possibleValues.clear();
         IntStream.rangeClosed(1, maxValue).forEach(possibleValues::add);
 
         createCells(board);
+    }
+
+    public void setSingleCandidates() {
+        for (var it = emptyCells.iterator(); it.hasNext(); ) {
+            Cell cell = it.next();
+            cell.setNumber();
+            it.remove();
+            fixedCells.add(cell);
+        }
+    }
+
+    public Cell getAnyEmptyCell() {
+        return emptyCells.get(0);
     }
 
     private void createCells(String board) {
@@ -102,12 +118,15 @@ public class Board {
         return sb.toString();
     }
 
-//    public String getBoardString() {
-//        return getCells().stream()
-//                .map(Cell::getNumber)
-//                .map(String::valueOf)
-//                .collect(Collectors.joining());
-//    }
+    public String getBoardString() {
+        StringBuilder sb = new StringBuilder();
+        for (int rowIndex = 0; rowIndex < maxValue; rowIndex++) {
+            for (int columnIndex = 0; columnIndex < maxValue; columnIndex++) {
+                sb.append(cell(columnIndex, rowIndex).getNumber());
+            }
+        }
+        return sb.toString();
+    }
 
     public boolean isValid() {
         return Arrays.stream(columns).allMatch(Group::isValid)
