@@ -56,9 +56,11 @@ public class Board {
     public void setSingleCandidates() {
         for (var it = emptyCells.iterator(); it.hasNext(); ) {
             Cell cell = it.next();
-            cell.setNumber();
-            it.remove();
-            fixedCells.add(cell);
+            if (singleCandidates.contains(cell)) {
+                cell.setNumber();
+                it.remove();
+                fixedCells.add(cell);
+            }
         }
     }
 
