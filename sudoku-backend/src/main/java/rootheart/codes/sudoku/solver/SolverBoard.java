@@ -21,16 +21,14 @@ public class SolverBoard {
 
     public SolverBoard(Board board) {
         emptyCells = new ArrayList<>(board.getCells().size());
-        Map<Cell, SolverCell> solverCellMap = new HashMap<>(board.getCells().size());
         for (Cell cell : board.getCells()) {
             if (cell.isEmpty()) {
                 SolverCell solverCell = new SolverCell(cell, board);
-                solverCellMap.put(cell, solverCell);
                 emptyCells.add(solverCell);
             }
         }
         for (SolverCell solverCell : emptyCells) {
-            solverCell.updateBuddyCells(solverCellMap);
+            solverCell.updateBuddyCells();
         }
     }
 

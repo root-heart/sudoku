@@ -9,32 +9,27 @@ import java.util.List;
 @NoArgsConstructor
 @Getter
 public class SolverCellCollection {
-    private final List<SolverCell> emptyCells = new ArrayList<>();
-
+    private final List<SolverCell> cells = new ArrayList<>(10);
     private final NumberSet candidates = new NumberSet();
 
     public void removeCandidate(int candidate) {
-        emptyCells.forEach(cell -> cell.getCandidates().remove(candidate));
+        cells.forEach(cell -> cell.getCandidates().remove(candidate));
     }
 
     public void add(SolverCell cell) {
-        emptyCells.add(cell);
+        cells.add(cell);
     }
 
     public void updateCandidates() {
         candidates.clear();
-        for (SolverCell cell : emptyCells) {
+        for (SolverCell cell : cells) {
             candidates.addAll(cell.getCandidates());
         }
     }
 
-    public boolean noCellContainsCandidate(int candidate) {
-        return !candidates.contains(candidate);
-    }
-
     public SolverCell findExactlyOneCellWithCandidates(NumberSet candidates) {
         SolverCell twin = null;
-        for (SolverCell cell : emptyCells) {
+        for (SolverCell cell : cells) {
             if (cell.getCandidates().equals(candidates)) {
                 if (twin != null) {
                     throw new NoSolutionException("more than two cells only allow the same two numbers, this is not possible");

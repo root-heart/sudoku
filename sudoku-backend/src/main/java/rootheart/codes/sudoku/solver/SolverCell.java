@@ -5,8 +5,6 @@ import rootheart.codes.sudoku.game.Board;
 import rootheart.codes.sudoku.game.Cell;
 import rootheart.codes.sudoku.game.Group;
 
-import java.util.Map;
-
 public class SolverCell {
     private final Cell cell;
     private final GroupCells cellsInColumn = new ColumnCells();
@@ -21,13 +19,14 @@ public class SolverCell {
 
     public SolverCell(Cell cell, Board board) {
         this.cell = cell;
+        cell.setSolverCell(this);
         candidates.addAll(board.getPossibleValues());
     }
 
-    public void updateBuddyCells(Map<Cell, SolverCell> solverCellMap) {
-        addCellsFromGroup(cellsInColumn, solverCellMap);
-        addCellsFromGroup(cellsInRow, solverCellMap);
-        addCellsFromGroup(cellsInBlock, solverCellMap);
+    public void updateBuddyCells() {
+        addCellsFromGroup(cellsInColumn);
+        addCellsFromGroup(cellsInRow);
+        addCellsFromGroup(cellsInBlock);
     }
 
     public void setNumber() {
@@ -40,13 +39,15 @@ public class SolverCell {
         eliminateNakedTwins();
         if (candidates.hasOneNumber()) {
             // TODO here some cells will be updated multiple times
-            cellsInColumn.getEmptyCells().forEach(c -> c.candidates.removeAll(candidates));
-            cellsInRow.getEmptyCells().forEach(c -> c.candidates.removeAll(candidates));
-            cellsInBlock.getEmptyCells().forEach(c -> c.candidates.removeAll(candidates));
+            cellsInColumn.getCells().forEach(c -> c.candidates.removeAll(candidates));
+            cellsInRow.getCells().forEach(c -> c.candidates.removeAll(candidates));
+            cellsInBlock.getCells().forEach(c -> c.candidates.removeAll(candidates));
         }
     }
 
+    // slowest 8-10µs
     void eliminateLockedCandidates() {
+        // 4-7µs
         cellsInSameBlockInOtherRows.updateCandidates();
         cellsInSameBlockInOtherColumns.updateCandidates();
         cellsInSameColumnInOtherBlocks.updateCandidates();
@@ -55,21 +56,22 @@ public class SolverCell {
         // Für jeden Kandidaten schauen, ob er in einer Zelle einer anderen Zeile/Spalte in diesem Block existiert.
         // Falls nein, den Kandidaten für alle Zellen dieser Zeile/Spalte in anderen Blöcken löschen
         candidates.forEach(candidate -> {
-            if (cellsInSameBlockInOtherRows.noCellContainsCandidate(candidate)) {
+            if (!cellsInSameBlockInOtherRows.getCandidates().contains(candidate)) {
                 cellsInSameRowInOtherBlocks.removeCandidate(candidate);
             }
-            if (cellsInSameRowInOtherBlocks.noCellContainsCandidate(candidate)) {
+            if (!cellsInSameRowInOtherBlocks.getCandidates().contains(candidate)) {
                 cellsInSameBlockInOtherRows.removeCandidate(candidate);
             }
-            if (cellsInSameBlockInOtherColumns.noCellContainsCandidate(candidate)) {
+            if (!cellsInSameBlockInOtherColumns.getCandidates().contains(candidate)) {
                 cellsInSameColumnInOtherBlocks.removeCandidate(candidate);
             }
-            if (cellsInSameColumnInOtherBlocks.noCellContainsCandidate(candidate)) {
+            if (!cellsInSameColumnInOtherBlocks.getCandidates().contains(candidate)) {
                 cellsInSameBlockInOtherColumns.removeCandidate(candidate);
             }
         });
     }
 
+    // medium 1-4µs
     void revealHiddenSingle() {
         cellsInColumn.updateCandidates();
         cellsInRow.updateCandidates();
@@ -78,14 +80,14 @@ public class SolverCell {
         n.removeAll(cellsInColumn.getCandidates());
         n.removeAll(cellsInRow.getCandidates());
         n.removeAll(cellsInBlock.getCandidates());
-        if (n.getCount() > 1) {
-            throw new NoSolutionException("multiple values can only exist in this cell, this is not possible");
-        }
         if (n.getCount() == 1) {
             candidates.removeAllAndAdd(n.getFirst());
+        } else if (n.getCount() > 1) {
+            throw new NoSolutionException("multiple values can only exist in this cell, this is not possible");
         }
     }
 
+    // fastest <2µs
     void eliminateNakedTwins() {
         if (candidates.getCount() == 2) {
             removeCandidatesFromAllCellsIfATwinExists(cellsInColumn);
@@ -94,21 +96,22 @@ public class SolverCell {
         }
     }
 
-    private void addCellsFromGroup(GroupCells groupCells, Map<Cell, SolverCell> solverCellMap) {
-        for (Cell groupCell : groupCells.getGroup().getCells()) {
+    private void addCellsFromGroup(GroupCells groupCells) {
+        for (Cell groupCell : groupCells.getGroup().getCells()) { // 3µs
             if (groupCell != cell) {
                 if (groupCell.isEmpty()) {
-                    groupCells.add(solverCellMap.get(groupCell));
+                    groupCells.add(groupCell.getSolverCell());
                 } else {
-                    candidates.remove(groupCell.getNumber());
+                    candidates.remove(groupCell.getNumber()); // <=1µs
                 }
             }
         }
     }
+
     private void removeCandidatesFromAllCellsIfATwinExists(SolverCellCollection cells) {
         SolverCell twin = cells.findExactlyOneCellWithCandidates(candidates);
         if (twin != null) {
-            for (SolverCell otherCell : cells.getEmptyCells()) {
+            for (SolverCell otherCell : cells.getCells()) {
                 if (otherCell != twin) {
                     otherCell.candidates.removeAll(candidates);
                 }
