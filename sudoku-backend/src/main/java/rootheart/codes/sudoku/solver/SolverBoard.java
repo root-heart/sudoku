@@ -15,44 +15,44 @@ import java.util.Set;
 // Would that make things easier? Faster? Better readable?
 @Getter
 public class SolverBoard {
-
-    private final Set<SolverCell> singleCandidates = new HashSet<>();
-    private final List<SolverCell> emptyCells;
-
-    public SolverBoard(Board board) {
-        emptyCells = new ArrayList<>(board.getCells().size());
-        for (Cell cell : board.getCells()) {
-            if (cell.isEmpty()) {
-                SolverCell solverCell = new SolverCell(cell, board);
-                emptyCells.add(solverCell);
-            }
-        }
-        for (SolverCell solverCell : emptyCells) {
-            solverCell.updateBuddyCells();
-        }
-    }
-
-
-    public void eliminateImpossibleCandidates() {
-        for (int countBefore = singleCandidates.size(); ; ) {
-            for (SolverCell cell : emptyCells) {
-                if (!singleCandidates.contains(cell)) {
-                    cell.eliminateImpossibleCandidates();
-                    if (cell.getCandidates().hasOneNumber()) {
-                        singleCandidates.add(cell);
-                    }
-                }
-            }
-            int countAfter = singleCandidates.size();
-            if (countAfter == 0 || countBefore == countAfter || countAfter == emptyCells.size()) {
-                return;
-            }
-            countBefore = countAfter;
-        }
-    }
-
-    public boolean isNotSolvable() {
-        return emptyCells.stream()
-                .anyMatch(entry -> entry.getCandidates().getCount() == 0);
-    }
+//
+//    private final Set<SolverCell> singleCandidates = new HashSet<>();
+//    private final List<SolverCell> emptyCells;
+//
+//    public SolverBoard(Board board) {
+//        emptyCells = new ArrayList<>(board.getCells().size());
+//        for (Cell cell : board.getCells()) {
+//            if (cell.isEmpty()) {
+//                SolverCell solverCell = new SolverCell(cell, board);
+//                emptyCells.add(solverCell);
+//            }
+//        }
+//        for (SolverCell solverCell : emptyCells) {
+//            solverCell.updateBuddyCells();
+//        }
+//    }
+//
+//
+//    public void eliminateImpossibleCandidates() {
+//        for (int countBefore = singleCandidates.size(); ; ) {
+//            for (SolverCell cell : emptyCells) {
+//                if (!singleCandidates.contains(cell)) {
+//                    cell.eliminateImpossibleCandidates();
+//                    if (cell.getCandidates().hasOneNumber()) {
+//                        singleCandidates.add(cell);
+//                    }
+//                }
+//            }
+//            int countAfter = singleCandidates.size();
+//            if (countAfter == 0 || countBefore == countAfter || countAfter == emptyCells.size()) {
+//                return;
+//            }
+//            countBefore = countAfter;
+//        }
+//    }
+//
+//    public boolean isNotSolvable() {
+//        return emptyCells.stream()
+//                .anyMatch(entry -> entry.getCandidates().getCount() == 0);
+//    }
 }

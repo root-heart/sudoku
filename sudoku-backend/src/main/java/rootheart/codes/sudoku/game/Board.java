@@ -1,10 +1,13 @@
 package rootheart.codes.sudoku.game;
 
 import lombok.Getter;
-import org.eclipse.collections.impl.factory.primitive.IntLists;
 import rootheart.codes.sudoku.solver.NumberSet;
+import rootheart.codes.sudoku.solver.SolverCell;
 
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -16,6 +19,7 @@ public class Board extends CellList {
     private Group[] rows;
     private Group[] blocks;
     private NumberSet possibleValues;
+    private final Set<Cell> singleCandidates = new HashSet<>();
 
     public Board(String board) {
         super(board.length());
@@ -53,10 +57,10 @@ public class Board extends CellList {
                 int blockIndex = (rowIndex / size) * size + (columnIndex / size);
                 int blockCellIndex = columnIndex % size + rowIndex % size * size;
                 Cell cell = new Cell(columns[columnIndex], rows[rowIndex], blocks[blockIndex]);
-                columns[columnIndex].setCell(rowIndex, cell);
-                rows[rowIndex].setCell(columnIndex, cell);
-                blocks[blockIndex].setCell(blockCellIndex, cell);
-                setCell(rowIndex * maxValue + columnIndex, cell);
+                columns[columnIndex].add(cell);
+                rows[rowIndex].add(cell);
+                blocks[blockIndex].add(cell);
+                add(cell);
             }
         }
     }
@@ -99,7 +103,7 @@ public class Board extends CellList {
     }
 
     public String getBoardString() {
-        return streamCells()
+        return getCells().stream()
                 .map(Cell::getNumber)
                 .map(String::valueOf)
                 .collect(Collectors.joining());
@@ -109,5 +113,31 @@ public class Board extends CellList {
         return Arrays.stream(columns).allMatch(Group::isValid)
                 && Arrays.stream(rows).allMatch(Group::isValid)
                 && Arrays.stream(blocks).allMatch(Group::isValid);
+    }
+
+
+    public void eliminateImpossibleCandidates() {
+        for (int countBefore = singleCandidates.size(); ; ) {
+            List<Cell> emptyCells = getCells().stream().filter(Cell::isEmpty).collect(Collectors.toList());
+            for (Cell cell : emptyCells) {
+                if (!singleCandidates.contains(cell)) {
+                    cell.eliminateImpossibleCandidates();
+                    if (cell.getCandidates().hasOneNumber()) {
+                        singleCandidates.add(cell);
+                    }
+                }
+            }
+            int countAfter = singleCandidates.size();
+            if (countAfter == 0 || countBefore == countAfter || countAfter == emptyCells.size()) {
+                return;
+            }
+            countBefore = countAfter;
+        }
+    }
+
+
+    public boolean isNotSolvable() {
+        return getCells().stream().filter(Cell::isEmpty)
+                .anyMatch(entry -> entry.getCandidates().getCount() == 0);
     }
 }

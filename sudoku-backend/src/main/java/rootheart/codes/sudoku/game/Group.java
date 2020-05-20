@@ -13,13 +13,13 @@ public class Group extends CellList {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        forEach(cell -> sb.append(cell.getNumber()));
+        getCells().forEach(cell -> sb.append(cell.getNumber()));
         return sb.toString();
     }
 
     public boolean isValid() {
         BitSet b = new BitSet();
-        return streamCells()
+        return getCells().stream()
                 .filter(c -> !c.isEmpty())
                 .allMatch(c -> {
                     if (b.get(c.getNumber())) {
