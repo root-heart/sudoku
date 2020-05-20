@@ -47,16 +47,7 @@ class CellList {
         return twin;
     }
 
-    public boolean hasEmptyCells() {
-        return cells.stream().anyMatch(Cell::isEmpty);
-    }
-
-
     public Cell getCell(int index) {
         return cells.get(index);
-    }
-
-    public void setCell(int index, Cell cell) {
-        cells.set(index, cell);
     }
 }

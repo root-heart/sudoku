@@ -115,7 +115,6 @@ public class Cell {
         }
     }
 
-
     private void removeCandidatesFromAllCellsIfATwinExists(CellList cells) {
         Cell twin = cells.findExactlyOneCellWithCandidates(candidates);
         if (twin != null) {
@@ -126,6 +125,7 @@ public class Cell {
             }
         }
     }
+
     private boolean columnDiffers(Cell otherCell) {
         return getColumn() != otherCell.getColumn();
     }
@@ -149,7 +149,7 @@ public class Cell {
     private class ColumnCells extends GroupCells {
         @Override
         public Group getGroup() {
-            return getColumn();
+            return column;
         }
 
         @Override
@@ -164,7 +164,7 @@ public class Cell {
     private class RowCells extends GroupCells {
         @Override
         public Group getGroup() {
-            return getRow();
+            return row;
         }
 
         @Override
@@ -180,7 +180,7 @@ public class Cell {
     private class BlockCells extends GroupCells {
         @Override
         public Group getGroup() {
-            return getBlock();
+            return block;
         }
 
         @Override
