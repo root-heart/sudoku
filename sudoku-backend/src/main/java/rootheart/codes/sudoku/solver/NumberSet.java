@@ -65,6 +65,10 @@ public class NumberSet implements Cloneable {
     }
 
     public void forEach(IntConsumer consumer) {
+        if (binaryEncodedNumbers == 0) {
+            return;
+        }
+
         for (int number = 0; number < 32; number++) {
             if (contains(number)) {
                 consumer.accept(number);
