@@ -8,58 +8,64 @@ import java.util.List;
 
 public class Solver {
 
-    public void solve(Board board) {
-        if (!board.hasEmptyCells()) {
-            return;
-        }
+    public BoardSolution solve(Board board) {
         if (!board.isValid()) {
             throw new BoardInvalidException();
         }
-        board.eliminateImpossibleCandidates();
-        if (board.isNotSolvable()) {
-            throw new NoSolutionException("found no solution");
+        if (!board.hasEmptyCells()) {
+            return new BoardSolution(board);
         }
-        board.setSingleCandidates();
-        if (!board.isValid()) {
+        Board solvedBoard = board.copy();
+        try {
+            solvedBoard.eliminateImpossibleCandidates();
+            if (solvedBoard.isNotSolvable()) {
+                return BoardSolution.NONE;
+            }
+        } catch (NoSolutionException e) {
+            return BoardSolution.NONE;
+        }
+        solvedBoard.setSingleCandidates();
+        if (!solvedBoard.isValid()) {
             throw new BoardInvalidException();
         }
 //        int singleCandidateCount = solverBoard.getSingleCandidates().size();
 //        long emptyCellCount = board.streamEmptyCells().count();
 //        log.debug("single candidates: " + singleCandidateCount + "  remaining empty cells: " + emptyCellCount);
-        if (board.hasEmptyCells()) {
-            solveBruteForce(board);
+        if (solvedBoard.hasEmptyCells()) {
+            return solveBruteForce(board);
         }
+        return new BoardSolution(solvedBoard);
     }
 
-    private void solveBruteForce(Board board) {
-        Board boardToSetARandomNumberTo = clone(board);
+    private BoardSolution solveBruteForce(Board board) {
+        Board boardToSetARandomNumberTo = board.copy();
         List<Board> solutions = new ArrayList<>();
         Cell cell = boardToSetARandomNumberTo.getAnyEmptyCell();
-        cell.getCandidates().forEach(numberToTry -> {
-            cell.setNumber(numberToTry);
-            if (boardToSetARandomNumberTo.isValid()) {
-                Board boardToTryToSolve = clone(boardToSetARandomNumberTo);
-                try {
-//                    log.debug("Try number " + numberToTry);
-                    solve(boardToTryToSolve);
-                    solutions.add(boardToTryToSolve);
-                } catch (NoSolutionException e) {
-                    // if trying this number did not end up with a solution, try the next one
-//                    log.debug("No solution for " + numberToTry + ": " + e.getMessage());
+        for (int numberToTry = 0; numberToTry <= boardToSetARandomNumberTo.getMaxValue(); numberToTry++) {
+            if (cell.getCandidates().contains(numberToTry)) {
+                cell.setNumber(numberToTry);
+                if (boardToSetARandomNumberTo.isValid()) {
+                    Board boardToTryToSolve = boardToSetARandomNumberTo.copy();
+                    System.out.println("Try number " + numberToTry);
+                    BoardSolution solution = solve(boardToTryToSolve);
+                    if (solution.getSolution() == BoardSolution.Solution.ONE) {
+                        solutions.add(boardToTryToSolve);
+                        System.out.println("Found a solution for " + numberToTry);
+                    } else if (solution == BoardSolution.MUTLIPLE) {
+                        return solution;
+                    }
                 }
             }
-        });
+        }
         if (solutions.size() == 0) {
-            throw new NoSolutionException("found no solution (2)");
+            System.out.println("Found no Solution");
+            return BoardSolution.NONE;
         }
         if (solutions.size() > 1) {
-            throw new MultipleSolutionsException("found multiple solutions");
+            System.out.println("Found multiple solutions");
+            return BoardSolution.MUTLIPLE;
         }
-        board.set(solutions.get(0).getBoardString());
-    }
-
-    private Board clone(Board board) {
-        String boardString = board.getBoardString();
-        return new Board(boardString);
+        System.out.println("Found a single solution :)");
+        return new BoardSolution(solutions.get(0));
     }
 }

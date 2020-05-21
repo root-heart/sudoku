@@ -12,13 +12,13 @@ import java.util.stream.IntStream;
 
 public class Board {
     private int size;
+    @Getter
     private int maxValue;
     private Group[] columns;
     private Group[] rows;
     private Group[] blocks;
     private final NumberSet possibleValues = new NumberSet();
     private final Set<Cell> singleCandidates = new HashSet<>();
-    private final List<Cell> fixedCells = new ArrayList<>(100);
     private final List<Cell> emptyCells = new ArrayList<>(100);
 
     public Board() {
@@ -59,7 +59,6 @@ public class Board {
             if (singleCandidates.contains(cell)) {
                 cell.setNumber();
                 it.remove();
-                fixedCells.add(cell);
             }
         }
     }
@@ -83,7 +82,6 @@ public class Board {
                     emptyCells.add(cell);
                 } else {
                     cell.setNumber(number);
-                    fixedCells.add(cell);
                 }
             }
         }
@@ -161,5 +159,9 @@ public class Board {
 
     public boolean hasEmptyCells() {
         return emptyCells.size() > 0;
+    }
+
+    public Board copy() {
+        return new Board(getBoardString());
     }
 }

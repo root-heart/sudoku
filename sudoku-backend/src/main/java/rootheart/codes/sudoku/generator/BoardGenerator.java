@@ -11,22 +11,22 @@ public class BoardGenerator {
         Solver solver = new Solver();
         Board board = new Board();
         while (true) {
+            Board boardTryingToSolve = new Board(board.getBoardString());
             try {
                 int columnIndex = (int) (Math.random() * 9);
                 int rowIndex = (int) (Math.random() * 9);
-                Cell cell = board.cell(columnIndex, rowIndex);
+                Cell cell = boardTryingToSolve.cell(columnIndex, rowIndex);
                 if (cell.isEmpty()) {
-                    cell.getCandidates().forEach(candidate -> {
+/*                    cell.getCandidates().forEach(candidate -> {
                         cell.setNumber(candidate);
-                        solver.solve(board);
-                        break;
-                    });
+                        solver.solve(boardTryingToSolve);
+                        return board;
+                    });*/
                 }
             } catch (NotSolvableException e) {
-
+                return board;
             }
         }
-        return board;
     }
 
 }
