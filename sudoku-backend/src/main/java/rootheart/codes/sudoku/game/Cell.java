@@ -36,8 +36,8 @@ public class Cell {
 
     public void eliminateImpossibleCandidates() {
         revealHiddenSingle();
-        eliminateLockedCandidates();
         eliminateNakedTwins();
+        eliminateLockedCandidates();
         if (candidates.hasOneNumber()) {
             // TODO here some cells will be updated multiple times
             removeThisCandidatesInAll(column);
