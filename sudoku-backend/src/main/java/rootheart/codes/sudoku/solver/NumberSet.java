@@ -44,6 +44,7 @@ public final class NumberSet implements Cloneable {
             if ((n & 1) == 1) {
                 return number;
             }
+            number++;
         }
         return 0;
     }
