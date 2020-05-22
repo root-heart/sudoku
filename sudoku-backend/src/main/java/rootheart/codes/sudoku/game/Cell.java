@@ -6,6 +6,8 @@ import lombok.Setter;
 import rootheart.codes.sudoku.solver.NoSolutionException;
 import rootheart.codes.sudoku.solver.NumberSet;
 
+import java.util.function.IntConsumer;
+
 @Getter
 @RequiredArgsConstructor
 public class Cell {
@@ -25,6 +27,7 @@ public class Cell {
     private final CellsInSameBlockInOtherRows cellsInSameBlockInOtherRows = new CellsInSameBlockInOtherRows();
     private final CellsInSameColumnInOtherBlocks cellsInSameColumnInOtherBlocks = new CellsInSameColumnInOtherBlocks();
     private final CellsInSameRowInOtherBlocks cellsInSameRowInOtherBlocks = new CellsInSameRowInOtherBlocks();
+    private IntConsumer removeCandidateFromCells1 = cellsInSameRowInOtherBlocks::removeCandidateFromCells;
 
     public boolean isEmpty() {
         return number == 0;
@@ -55,17 +58,19 @@ public class Cell {
     }
 
     private abstract class OtherCells {
+        final NumberSet otherCellsCandidates = new NumberSet();
+
         abstract boolean test(Cell cell);
 
         abstract Group getGroup();
 
-        final NumberSet candidates = new NumberSet();
+        abstract void removeCandidateInOtherGroup(int c);
 
         boolean cellIsAnother(Cell cell) {
             return cell != Cell.this && cell.isEmpty() && test(cell);
         }
 
-        void removeCandidate(int c) {
+        void removeCandidateFromCells(int c) {
             for (Cell cell : getGroup().getCells()) {
                 if (cellIsAnother(cell)) {
                     cell.candidates.remove(c);
@@ -74,11 +79,24 @@ public class Cell {
         }
 
         void updateCandidates() {
-            candidates.clear();
+            otherCellsCandidates.clear();
             for (Cell cell : getGroup().getCells()) {
                 if (cellIsAnother(cell)) {
-                    candidates.addAll(cell.getCandidates());
+                    otherCellsCandidates.addAll(cell.getCandidates());
                 }
+            }
+        }
+
+
+        void doit() {
+            candidateClone.set(candidates);
+            for (Cell cell : getGroup().getCells()) {
+                if (cellIsAnother(cell)) {
+                    candidateClone.removeAll(cell.candidates);
+                }
+            }
+            if (!candidateClone.isEmpty()) {
+                candidateClone.forEach(this::removeCandidateInOtherGroup);
             }
         }
     }
@@ -93,6 +111,11 @@ public class Cell {
         Group getGroup() {
             return block;
         }
+
+        @Override
+        void removeCandidateInOtherGroup(int c) {
+            cellsInSameRowInOtherBlocks.removeCandidateFromCells(c);
+        }
     }
 
     private class CellsInSameBlockInOtherColumns extends OtherCells {
@@ -104,6 +127,11 @@ public class Cell {
         @Override
         Group getGroup() {
             return block;
+        }
+
+        @Override
+        void removeCandidateInOtherGroup(int c) {
+            cellsInSameColumnInOtherBlocks.removeCandidateFromCells(c);
         }
     }
 
@@ -117,6 +145,11 @@ public class Cell {
         Group getGroup() {
             return row;
         }
+
+        @Override
+        void removeCandidateInOtherGroup(int c) {
+            cellsInSameBlockInOtherRows.removeCandidateFromCells(c);
+        }
     }
 
     private class CellsInSameColumnInOtherBlocks extends OtherCells {
@@ -129,9 +162,23 @@ public class Cell {
         Group getGroup() {
             return column;
         }
+
+        @Override
+        void removeCandidateInOtherGroup(int c) {
+            cellsInSameBlockInOtherColumns.removeCandidateFromCells(c);
+        }
     }
 
-    void eliminateLockedCandidates() {
+    private final NumberSet candidateClone = new NumberSet();
+
+    void elimLockedV3() {
+        cellsInSameBlockInOtherRows.doit();
+        cellsInSameBlockInOtherColumns.doit();
+        cellsInSameColumnInOtherBlocks.doit();
+        cellsInSameRowInOtherBlocks.doit();
+    }
+
+    void elimLocked() {
         cellsInSameBlockInOtherRows.updateCandidates();
         cellsInSameBlockInOtherColumns.updateCandidates();
         cellsInSameColumnInOtherBlocks.updateCandidates();
@@ -140,32 +187,37 @@ public class Cell {
         // Für jeden Kandidaten schauen, ob er in einer Zelle einer anderen Zeile/Spalte in diesem Block existiert.
         // Falls nein, den Kandidaten für alle Zellen dieser Zeile/Spalte in anderen Blöcken löschen
         candidates.forEach(candidate -> {
-            if (!cellsInSameBlockInOtherRows.candidates.contains(candidate)) {
-                cellsInSameRowInOtherBlocks.removeCandidate(candidate);
+            if (!cellsInSameBlockInOtherRows.otherCellsCandidates.contains(candidate)) {
+                cellsInSameRowInOtherBlocks.removeCandidateFromCells(candidate);
             }
-            if (!cellsInSameRowInOtherBlocks.candidates.contains(candidate)) {
-                cellsInSameBlockInOtherRows.removeCandidate(candidate);
+            if (!cellsInSameRowInOtherBlocks.otherCellsCandidates.contains(candidate)) {
+                cellsInSameBlockInOtherRows.removeCandidateFromCells(candidate);
             }
-            if (!cellsInSameBlockInOtherColumns.candidates.contains(candidate)) {
-                cellsInSameColumnInOtherBlocks.removeCandidate(candidate);
+            if (!cellsInSameBlockInOtherColumns.otherCellsCandidates.contains(candidate)) {
+                cellsInSameColumnInOtherBlocks.removeCandidateFromCells(candidate);
             }
-            if (!cellsInSameColumnInOtherBlocks.candidates.contains(candidate)) {
-                cellsInSameBlockInOtherColumns.removeCandidate(candidate);
+            if (!cellsInSameColumnInOtherBlocks.otherCellsCandidates.contains(candidate)) {
+                cellsInSameBlockInOtherColumns.removeCandidateFromCells(candidate);
             }
         });
+    }
+
+    void eliminateLockedCandidates() {
+        elimLockedV3();
     }
 
     void revealHiddenSingle() {
         updateCandidates(candidatesInColumn, column);
         updateCandidates(candidatesInRow, row);
         updateCandidates(candidatesInBlock, block);
-        NumberSet n = new NumberSet(candidates);
-        n.removeAll(candidatesInColumn);
-        n.removeAll(candidatesInRow);
-        n.removeAll(candidatesInBlock);
-        if (n.hasOneNumber()) {
-            candidates.removeAllAndAdd(n.getFirst());
-        } else if (n.getCount() > 1) {
+        candidateClone.clear();
+        candidateClone.addAll(candidates);
+        candidateClone.removeAll(candidatesInColumn);
+        candidateClone.removeAll(candidatesInRow);
+        candidateClone.removeAll(candidatesInBlock);
+        if (candidateClone.hasOneNumber()) {
+            candidates.removeAllAndAdd(candidateClone.getFirst());
+        } else if (!candidateClone.isEmpty()) {
             throw new NoSolutionException("multiple values can only exist in this cell, this is not possible");
         }
     }
