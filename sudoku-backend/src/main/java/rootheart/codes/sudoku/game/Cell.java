@@ -30,18 +30,6 @@ public class Cell {
         return number == 0;
     }
 
-    public void updateBuddyCells() {
-        removeCandidatesFrom(column);
-        removeCandidatesFrom(row);
-        removeCandidatesFrom(block);
-    }
-
-    private void removeCandidatesFrom(Group group) {
-        for (Cell cell : group.getCells()) {
-            candidates.remove(cell.getNumber());
-        }
-    }
-
     public void setNumber() {
         setNumber(candidates.getFirst());
     }

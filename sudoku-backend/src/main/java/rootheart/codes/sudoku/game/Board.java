@@ -52,8 +52,10 @@ public class Board {
     }
 
     private void updateBuddyCells() {
-        for (Cell cell : emptyCells) {
-            cell.updateBuddyCells();
+        for (int i = 0; i < maxValue; i++) {
+            columns.get(i).removeCellsCandidatesFromBuddyCells();
+            rows.get(i).removeCellsCandidatesFromBuddyCells();
+            blocks.get(i).removeCellsCandidatesFromBuddyCells();
         }
     }
 

@@ -1,7 +1,6 @@
 package rootheart.codes.sudoku.game;
 
 import lombok.Getter;
-import rootheart.codes.sudoku.solver.BoardInvalidException;
 import rootheart.codes.sudoku.solver.NumberSet;
 
 import java.util.ArrayList;
@@ -42,5 +41,15 @@ public class Group {
                     b.set(c.getNumber());
                     return true;
                 });
+    }
+
+    public void removeCellsCandidatesFromBuddyCells() {
+        NumberSet numbers = new NumberSet();
+        for (Cell cell : cells) {
+            numbers.add(cell.getNumber());
+        }
+        for (Cell cell : cells) {
+            cell.getCandidates().removeAll(numbers);
+        }
     }
 }
