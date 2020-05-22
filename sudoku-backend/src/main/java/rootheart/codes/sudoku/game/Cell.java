@@ -160,9 +160,6 @@ public class Cell {
         cellsInSameBlockInOtherColumns.updateCandidates();
         cellsInSameColumnInOtherBlocks.updateCandidates();
         cellsInSameRowInOtherBlocks.updateCandidates();
-
-        // Für jeden Kandidaten schauen, ob er in einer Zelle einer anderen Zeile/Spalte in diesem Block existiert.
-        // Falls nein, den Kandidaten für alle Zellen dieser Zeile/Spalte in anderen Blöcken löschen
         candidates.forEach(candidate -> {
             if (!cellsInSameBlockInOtherRows.otherCellsCandidates.contains(candidate)) {
                 cellsInSameBlockInOtherRows.removeCandidateInOtherGroup(candidate);
