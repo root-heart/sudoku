@@ -77,6 +77,14 @@ public final class NumberSet implements Cloneable {
         binaryEncodedNumbers &= ~other.binaryEncodedNumbers;
     }
 
+    public void retainAll(NumberSet other) {
+        binaryEncodedNumbers &= other.binaryEncodedNumbers;
+    }
+
+    public void set(NumberSet other) {
+        binaryEncodedNumbers = other.binaryEncodedNumbers;
+    }
+
     public int getCount() {
         int count = 0;
         int n = binaryEncodedNumbers;
