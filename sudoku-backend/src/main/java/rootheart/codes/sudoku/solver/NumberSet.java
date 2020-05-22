@@ -124,4 +124,15 @@ public final class NumberSet implements Cloneable {
     public void clear() {
         binaryEncodedNumbers = 0;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        for (int number = 0; number < 32; number++) {
+            if (contains(number)) {
+                sb.append(number).append(" ");
+            }
+        }
+        return sb.toString();
+    }
 }
