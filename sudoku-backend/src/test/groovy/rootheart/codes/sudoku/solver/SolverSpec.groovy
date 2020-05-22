@@ -29,10 +29,10 @@ class SolverSpec extends Specification {
         def board = new Board("1234" + "3412" + "2143" + "4320")
 
         when:
-        new Solver().solve(board)
+        def solution = new Solver().solve(board)
 
         then:
-        board.toString() == "1234\n" + "3412\n" + "2143\n" + "4321\n"
+        solution.solvedBoard.toString() == "1234\n" + "3412\n" + "2143\n" + "4321\n"
     }
 
     def 'Test one very simple Sudoku'() {
@@ -40,10 +40,10 @@ class SolverSpec extends Specification {
         def board = new Board("1234" + "3412" + "2143" + "0000")
 
         when:
-        new Solver().solve(board)
+        def solution = new Solver().solve(board)
 
         then:
-        board.toString() == "1234\n" + "3412\n" + "2143\n" + "4321\n"
+        solution.solvedBoard.toString() == "1234\n" + "3412\n" + "2143\n" + "4321\n"
     }
 
     def 'Test one very simple but ambiguous Sudoku'() {
@@ -51,10 +51,10 @@ class SolverSpec extends Specification {
         def board = new Board("1234" + "3412" + "0001" + "0000")
 
         when:
-        new Solver().solve(board)
+        def solution = new Solver().solve(board)
 
         then:
-        thrown(MultipleSolutionsException)
+        solution == BoardSolution.MULTIPLE
     }
 
 
@@ -64,11 +64,11 @@ class SolverSpec extends Specification {
 
         when:
         def board = new Board(mediumSudoku)
-        solver.solve(board)
+        def solution = solver.solve(board)
 
         then:
         noExceptionThrown()
-        board.toString() == "975842136\n" +
+        solution.solvedBoard.toString() == "975842136\n" +
                 "482631957\n" +
                 "136597842\n" +
                 "257186493\n" +
@@ -115,12 +115,10 @@ class SolverSpec extends Specification {
                 "300009200")
 
         when:
-        new Solver().solve(board)
+        def solution = new Solver().solve(board)
 
         then:
-        noExceptionThrown()
-
-        board.boardString == "762495318" +
+        solution.solvedBoard.boardString == "762495318" +
                 "185673942" +
                 "934812756" +
                 "241387569" +
@@ -161,20 +159,20 @@ class SolverSpec extends Specification {
                 "090050730")
 
         when:
-        new Solver().solve(board)
+        def solution = new Solver().solve(board)
 
         then:
-        thrown NoSolutionException
+        solution == BoardSolution.NONE
     }
 
-    def 'Test that trying to solve an empty board results in an exception'() {
+    def 'Test that trying to solve an empty board results the appropriate return type'() {
         given:
         def board = new Board("0" * 81)
 
         when:
-        new Solver().solve(board)
+        def solution = new Solver().solve(board)
 
         then:
-        thrown MultipleSolutionsException
+        solution == BoardSolution.MULTIPLE
     }
 }

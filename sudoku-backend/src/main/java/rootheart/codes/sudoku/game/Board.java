@@ -1,31 +1,35 @@
 package rootheart.codes.sudoku.game;
 
 import lombok.Getter;
+import rootheart.codes.sudoku.solver.NoSolutionException;
 import rootheart.codes.sudoku.solver.NumberSet;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.IntStream;
 
 public class Board {
     private int size;
+    @Getter
     private int maxValue;
-    private Group[] columns;
-    private Group[] rows;
-    private Group[] blocks;
+    private final List<Group> columns = new ArrayList<>(10);
+    private final List<Group> rows = new ArrayList<>(10);
+    private final List<Group> blocks = new ArrayList<>(10);
     private final NumberSet possibleValues = new NumberSet();
-    private final Set<Cell> singleCandidates = new HashSet<>();
-    private final List<Cell> fixedCells = new ArrayList<>(100);
+    private final List<Cell> singleCandidates = new ArrayList<>(100);
+    @Getter
     private final List<Cell> emptyCells = new ArrayList<>(100);
 
-    public Board() {
-        this("0".repeat(81));
+    private Board() {
+
+    }
+
+    public static Board of(String board) {
+        return new Board(board);
     }
 
     public Board(String board) {
+        this();
         set(board);
     }
 
@@ -38,29 +42,45 @@ public class Board {
             throw new IllegalArgumentException(board);
         }
         maxValue = size * size;
-        columns = new Group[maxValue];
-        rows = new Group[maxValue];
-        blocks = new Group[maxValue];
-        for (int i = 0; i < maxValue; i++) {
-            columns[i] = new Group(maxValue);
-            rows[i] = new Group(maxValue);
-            blocks[i] = new Group(maxValue);
-        }
 
         possibleValues.clear();
         IntStream.rangeClosed(1, maxValue).forEach(possibleValues::add);
 
-        createCells(board);
+        createCells();
+        initFromString(board);
+        updateBuddyCells();
     }
 
-    public void setSingleCandidates() {
-        for (var it = emptyCells.iterator(); it.hasNext(); ) {
-            Cell cell = it.next();
-            if (singleCandidates.contains(cell)) {
-                cell.setNumber();
-                it.remove();
-                fixedCells.add(cell);
+    private void updateBuddyCells() {
+        for (Cell cell : emptyCells) {
+            cell.updateBuddyCells();
+        }
+    }
+
+    private void initFromString(String board) {
+        for (int rowIndex = 0; rowIndex < maxValue; rowIndex++) {
+            for (int columnIndex = 0; columnIndex < maxValue; columnIndex++) {
+                int number = Character.getNumericValue(board.charAt(columnIndex + rowIndex * maxValue));
+                setCellNumber(columnIndex, rowIndex, number);
             }
+        }
+    }
+
+    private void setCellNumber(int columnIndex, int rowIndex, int number) {
+        Cell cell = cell(columnIndex, rowIndex);
+        if (number == 0) {
+            cell.getCandidates().addAll(possibleValues);
+            emptyCells.add(cell);
+        } else {
+            cell.setNumber(number);
+        }
+    }
+
+    private void setSingleCandidates() {
+        for (var it = singleCandidates.iterator(); it.hasNext(); ) {
+            Cell cell = it.next();
+            cell.setNumber();
+            it.remove();
         }
     }
 
@@ -68,44 +88,40 @@ public class Board {
         return emptyCells.get(0);
     }
 
-    private void createCells(String board) {
+    private void createCells() {
+        for (int i = 0; i < maxValue; i++) {
+            columns.add(new Group(maxValue));
+            rows.add(new Group(maxValue));
+            blocks.add(new Group(maxValue));
+        }
         for (int rowIndex = 0; rowIndex < maxValue; rowIndex++) {
             for (int columnIndex = 0; columnIndex < maxValue; columnIndex++) {
                 int blockIndex = (rowIndex / size) * size + (columnIndex / size);
-                Cell cell = new Cell(columns[columnIndex], rows[rowIndex], blocks[blockIndex]);
-                columns[columnIndex].add(cell);
-                rows[rowIndex].add(cell);
-                blocks[blockIndex].add(cell);
-
-                int number = Character.getNumericValue(board.charAt(columnIndex + rowIndex * maxValue));
-                if (number == 0) {
-                    cell.getCandidates().addAll(possibleValues);
-                    emptyCells.add(cell);
-                } else {
-                    cell.setNumber(number);
-                    fixedCells.add(cell);
-                }
+                Group column = columns.get(columnIndex);
+                Group row = rows.get(rowIndex);
+                Group block = blocks.get(blockIndex);
+                Cell cell = new Cell(column, row, block);
+                column.add(cell);
+                row.add(cell);
+                block.add(cell);
             }
-        }
-        for (Cell cell : emptyCells) {
-            cell.updateBuddyCells();
         }
     }
 
     public Group getColumn(int columnIndex) {
-        return columns[columnIndex];
+        return columns.get(columnIndex);
     }
 
     public Group getRow(int rowIndex) {
-        return rows[rowIndex];
+        return rows.get(rowIndex);
     }
 
     public Group getBlock(int blockIndex) {
-        return blocks[blockIndex];
+        return blocks.get(blockIndex);
     }
 
     public Cell cell(int column, int row) {
-        return columns[column].getCell(row);
+        return columns.get(column).getCell(row);
     }
 
     @Override
@@ -113,7 +129,7 @@ public class Board {
         StringBuilder sb = new StringBuilder();
         for (int rowIndex = 0; rowIndex < maxValue; rowIndex++) {
             for (int columnIndex = 0; columnIndex < maxValue; columnIndex++) {
-                sb.append(columns[columnIndex].getCell(rowIndex).getNumber());
+                sb.append(columns.get(columnIndex).getCell(rowIndex).getNumber());
             }
             sb.append("\n");
         }
@@ -131,19 +147,22 @@ public class Board {
     }
 
     public boolean isValid() {
-        return Arrays.stream(columns).allMatch(Group::isValid)
-                && Arrays.stream(rows).allMatch(Group::isValid)
-                && Arrays.stream(blocks).allMatch(Group::isValid);
+        return columns.stream().allMatch(Group::isValid)
+                && rows.stream().allMatch(Group::isValid)
+                && blocks.stream().allMatch(Group::isValid);
     }
 
-    public void eliminateImpossibleCandidates() {
+    private void eliminateImpossibleCandidates() {
         for (int countBefore = singleCandidates.size(); ; ) {
-            for (Cell cell : emptyCells) {
-                if (!singleCandidates.contains(cell)) {
-                    cell.eliminateImpossibleCandidates();
-                    if (cell.getCandidates().hasOneNumber()) {
-                        singleCandidates.add(cell);
-                    }
+            for (var it = emptyCells.iterator(); it.hasNext(); ) {
+                Cell cell = it.next();
+                if (cell.getCandidates().isEmpty()) {
+                    throw new NoSolutionException("found an empty cell with no candidates, board is not solvable");
+                }
+                cell.eliminateImpossibleCandidates();
+                if (cell.getCandidates().hasOneNumber()) {
+                    singleCandidates.add(cell);
+                    it.remove();
                 }
             }
             int countAfter = singleCandidates.size();
@@ -154,12 +173,28 @@ public class Board {
         }
     }
 
-    public boolean isNotSolvable() {
-        return emptyCells.stream()
-                .anyMatch(entry -> entry.getCandidates().getCount() == 0);
-    }
-
     public boolean hasEmptyCells() {
         return emptyCells.size() > 0;
+    }
+
+    public Board copy() {
+        Board copiedBoard = new Board();
+        copiedBoard.size = size;
+        copiedBoard.maxValue = maxValue;
+        copiedBoard.possibleValues.addAll(possibleValues);
+        copiedBoard.createCells();
+        for (int rowIndex = 0; rowIndex < maxValue; rowIndex++) {
+            for (int columnIndex = 0; columnIndex < maxValue; columnIndex++) {
+                Cell cell = cell(columnIndex, rowIndex);
+                copiedBoard.setCellNumber(columnIndex, rowIndex, cell.getNumber());
+            }
+        }
+        copiedBoard.updateBuddyCells();
+        return copiedBoard;
+    }
+
+    public void setValuesInCellsThatOnlyContainsOneCandidate() {
+        eliminateImpossibleCandidates();
+        setSingleCandidates();
     }
 }

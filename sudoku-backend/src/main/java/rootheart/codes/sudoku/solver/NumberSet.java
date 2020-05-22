@@ -6,7 +6,7 @@ import java.util.Objects;
 import java.util.function.IntConsumer;
 
 @NoArgsConstructor
-public class NumberSet implements Cloneable {
+public final class NumberSet implements Cloneable {
     private int binaryEncodedNumbers;
 
     public NumberSet(NumberSet other) {
@@ -63,6 +63,10 @@ public class NumberSet implements Cloneable {
             }
         }
         return true;
+    }
+
+    public boolean isEmpty() {
+        return binaryEncodedNumbers == 0;
     }
 
     public void removeAllAndAdd(int number) {
