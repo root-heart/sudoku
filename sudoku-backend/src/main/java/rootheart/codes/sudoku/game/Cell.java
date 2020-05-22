@@ -163,7 +163,7 @@ public class Cell {
         n.removeAll(candidatesInColumn);
         n.removeAll(candidatesInRow);
         n.removeAll(candidatesInBlock);
-        if (n.getCount() == 1) {
+        if (n.hasOneNumber()) {
             candidates.removeAllAndAdd(n.getFirst());
         } else if (n.getCount() > 1) {
             throw new NoSolutionException("multiple values can only exist in this cell, this is not possible");
