@@ -40,9 +40,9 @@ public final class NumberSet implements Cloneable {
             return 0;
         }
 
-        for (int numberToCheck = 1; numberToCheck < 32; numberToCheck++) {
-            if (contains(numberToCheck)) {
-                return numberToCheck;
+        for (int n = binaryEncodedNumbers, number = 0; n != 0; n >>>= 1) {
+            if ((n & 1) == 1) {
+                return number;
             }
         }
         return 0;
