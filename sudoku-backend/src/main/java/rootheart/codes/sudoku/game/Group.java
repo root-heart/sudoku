@@ -1,13 +1,32 @@
 package rootheart.codes.sudoku.game;
 
 import lombok.Getter;
+import rootheart.codes.sudoku.solver.BoardInvalidException;
+import rootheart.codes.sudoku.solver.NumberSet;
 
+import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.List;
 
 @Getter
-public class Group extends CellList {
+public class Group {
+    private final List<Cell> cells;
+    private final NumberSet values = new NumberSet();
+
     public Group(int cellCount) {
-        super(cellCount);
+        cells = new ArrayList<>(cellCount);
+    }
+
+    public void add(Cell cell) {
+        if (cell.getNumber() != 0 && values.contains(cell.getNumber())) {
+            throw new BoardInvalidException();
+        }
+        cells.add(cell);
+        values.add(cell.getNumber());
+    }
+
+    public Cell getCell(int index) {
+        return cells.get(index);
     }
 
     @Override

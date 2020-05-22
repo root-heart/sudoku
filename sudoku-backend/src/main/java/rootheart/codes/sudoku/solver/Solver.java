@@ -9,9 +9,6 @@ import java.util.List;
 public class Solver {
 
     public BoardSolution solve(Board board) {
-        if (!board.isValid()) {
-            return BoardSolution.INVALID;
-        }
         if (!board.hasEmptyCells()) {
             return new BoardSolution(board);
         }
@@ -20,9 +17,6 @@ public class Solver {
             solvedBoard.setValuesInCellsThatOnlyContainsOneCandidate();
         } catch (NoSolutionException e) {
             return BoardSolution.NONE;
-        }
-        if (!solvedBoard.isValid()) {
-            return BoardSolution.INVALID;
         }
 //        int singleCandidateCount = solverBoard.getSingleCandidates().size();
 //        long emptyCellCount = board.streamEmptyCells().count();
@@ -40,16 +34,14 @@ public class Solver {
         for (int numberToTry = 0; numberToTry <= boardToSetARandomNumberTo.getMaxValue(); numberToTry++) {
             if (cell.getCandidates().contains(numberToTry)) {
                 cell.setNumber(numberToTry);
-                if (boardToSetARandomNumberTo.isValid()) {
-                    Board boardToTryToSolve = boardToSetARandomNumberTo.copy();
-                    System.out.println("Try number " + numberToTry);
-                    BoardSolution solution = solve(boardToTryToSolve);
-                    if (solution.getSolution() == BoardSolution.Solution.ONE) {
-                        solutions.add(boardToTryToSolve);
-                        System.out.println("Found a solution for " + numberToTry);
-                    } else if (solution == BoardSolution.MULTIPLE) {
-                        return solution;
-                    }
+                Board boardToTryToSolve = boardToSetARandomNumberTo.copy();
+                System.out.println("Try number " + numberToTry);
+                BoardSolution solution = solve(boardToTryToSolve);
+                if (solution.getSolution() == BoardSolution.Solution.ONE) {
+                    solutions.add(boardToTryToSolve);
+                    System.out.println("Found a solution for " + numberToTry);
+                } else if (solution == BoardSolution.MULTIPLE) {
+                    return solution;
                 }
             }
         }
