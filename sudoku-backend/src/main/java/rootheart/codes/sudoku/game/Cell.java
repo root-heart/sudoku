@@ -131,9 +131,7 @@ public class Cell {
         }
     }
 
-    // slowest 8-10µs
     void eliminateLockedCandidates() {
-        // 4-7µs
         cellsInSameBlockInOtherRows.updateCandidates();
         cellsInSameBlockInOtherColumns.updateCandidates();
         cellsInSameColumnInOtherBlocks.updateCandidates();
@@ -157,7 +155,6 @@ public class Cell {
         });
     }
 
-    // medium 1-4µs
     void revealHiddenSingle() {
         updateCandidates(candidatesInColumn, column);
         updateCandidates(candidatesInRow, row);
@@ -182,7 +179,6 @@ public class Cell {
         }
     }
 
-    // fastest <2µs
     void eliminateNakedTwins() {
         if (candidates.getCount() == 2) {
             removeTwinFromOthers(column);
