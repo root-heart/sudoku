@@ -71,7 +71,6 @@ public class Cell {
 
         abstract Group getGroup();
 
-        @Getter
         final NumberSet candidates = new NumberSet();
 
         boolean cellIsAnother(Cell cell) {
@@ -155,16 +154,16 @@ public class Cell {
         // Für jeden Kandidaten schauen, ob er in einer Zelle einer anderen Zeile/Spalte in diesem Block existiert.
         // Falls nein, den Kandidaten für alle Zellen dieser Zeile/Spalte in anderen Blöcken löschen
         candidates.forEach(candidate -> {
-            if (!cellsInSameBlockInOtherRows.getCandidates().contains(candidate)) {
+            if (!cellsInSameBlockInOtherRows.candidates.contains(candidate)) {
                 cellsInSameRowInOtherBlocks.removeCandidate(candidate);
             }
-            if (!cellsInSameRowInOtherBlocks.getCandidates().contains(candidate)) {
+            if (!cellsInSameRowInOtherBlocks.candidates.contains(candidate)) {
                 cellsInSameBlockInOtherRows.removeCandidate(candidate);
             }
-            if (!cellsInSameBlockInOtherColumns.getCandidates().contains(candidate)) {
+            if (!cellsInSameBlockInOtherColumns.candidates.contains(candidate)) {
                 cellsInSameColumnInOtherBlocks.removeCandidate(candidate);
             }
-            if (!cellsInSameColumnInOtherBlocks.getCandidates().contains(candidate)) {
+            if (!cellsInSameColumnInOtherBlocks.candidates.contains(candidate)) {
                 cellsInSameBlockInOtherColumns.removeCandidate(candidate);
             }
         });
