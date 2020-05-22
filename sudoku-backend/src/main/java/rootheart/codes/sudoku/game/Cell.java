@@ -6,8 +6,6 @@ import lombok.Setter;
 import rootheart.codes.sudoku.solver.NoSolutionException;
 import rootheart.codes.sudoku.solver.NumberSet;
 
-import java.util.function.IntConsumer;
-
 @Getter
 @RequiredArgsConstructor
 public class Cell {
@@ -27,7 +25,6 @@ public class Cell {
     private final CellsInSameBlockInOtherRows cellsInSameBlockInOtherRows = new CellsInSameBlockInOtherRows();
     private final CellsInSameColumnInOtherBlocks cellsInSameColumnInOtherBlocks = new CellsInSameColumnInOtherBlocks();
     private final CellsInSameRowInOtherBlocks cellsInSameRowInOtherBlocks = new CellsInSameRowInOtherBlocks();
-    private IntConsumer removeCandidateFromCells1 = cellsInSameRowInOtherBlocks::removeCandidateFromCells;
 
     public boolean isEmpty() {
         return number == 0;
@@ -84,19 +81,6 @@ public class Cell {
                 if (cellIsAnother(cell)) {
                     otherCellsCandidates.addAll(cell.getCandidates());
                 }
-            }
-        }
-
-
-        void doit() {
-            candidateClone.set(candidates);
-            for (Cell cell : getGroup().getCells()) {
-                if (cellIsAnother(cell)) {
-                    candidateClone.removeAll(cell.candidates);
-                }
-            }
-            if (!candidateClone.isEmpty()) {
-                candidateClone.forEach(this::removeCandidateInOtherGroup);
             }
         }
     }
@@ -171,14 +155,7 @@ public class Cell {
 
     private final NumberSet candidateClone = new NumberSet();
 
-    void elimLockedV3() {
-        cellsInSameBlockInOtherRows.doit();
-        cellsInSameBlockInOtherColumns.doit();
-        cellsInSameColumnInOtherBlocks.doit();
-        cellsInSameRowInOtherBlocks.doit();
-    }
-
-    void elimLocked() {
+    void eliminateLockedCandidates() {
         cellsInSameBlockInOtherRows.updateCandidates();
         cellsInSameBlockInOtherColumns.updateCandidates();
         cellsInSameColumnInOtherBlocks.updateCandidates();
@@ -188,30 +165,25 @@ public class Cell {
         // Falls nein, den Kandidaten für alle Zellen dieser Zeile/Spalte in anderen Blöcken löschen
         candidates.forEach(candidate -> {
             if (!cellsInSameBlockInOtherRows.otherCellsCandidates.contains(candidate)) {
-                cellsInSameRowInOtherBlocks.removeCandidateFromCells(candidate);
+                cellsInSameBlockInOtherRows.removeCandidateInOtherGroup(candidate);
             }
             if (!cellsInSameRowInOtherBlocks.otherCellsCandidates.contains(candidate)) {
-                cellsInSameBlockInOtherRows.removeCandidateFromCells(candidate);
+                cellsInSameRowInOtherBlocks.removeCandidateInOtherGroup(candidate);
             }
             if (!cellsInSameBlockInOtherColumns.otherCellsCandidates.contains(candidate)) {
-                cellsInSameColumnInOtherBlocks.removeCandidateFromCells(candidate);
+                cellsInSameBlockInOtherColumns.removeCandidateInOtherGroup(candidate);
             }
             if (!cellsInSameColumnInOtherBlocks.otherCellsCandidates.contains(candidate)) {
-                cellsInSameBlockInOtherColumns.removeCandidateFromCells(candidate);
+                cellsInSameColumnInOtherBlocks.removeCandidateInOtherGroup(candidate);
             }
         });
-    }
-
-    void eliminateLockedCandidates() {
-        elimLockedV3();
     }
 
     void revealHiddenSingle() {
         updateCandidates(candidatesInColumn, column);
         updateCandidates(candidatesInRow, row);
         updateCandidates(candidatesInBlock, block);
-        candidateClone.clear();
-        candidateClone.addAll(candidates);
+        candidateClone.set(candidates);
         candidateClone.removeAll(candidatesInColumn);
         candidateClone.removeAll(candidatesInRow);
         candidateClone.removeAll(candidatesInBlock);
