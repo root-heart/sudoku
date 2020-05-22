@@ -15,42 +15,36 @@ public class Cell {
     @Setter
     private int number;
 
-    private final GroupCells cellsInColumn = new ColumnCells();
-    private final GroupCells cellsInRow = new RowCells();
-    private final GroupCells cellsInBlock = new BlockCells();
+    private final NumberSet candidatesInColumn = new NumberSet();
+    private final NumberSet candidatesInRow = new NumberSet();
+    private final NumberSet candidatesInBlock = new NumberSet();
+
     @Getter
     private final NumberSet candidates = new NumberSet();
-    private final CellList cellsInSameBlockInOtherRows = new CellList(10);
-    private final CellList cellsInSameRowInOtherBlocks = new CellList(10);
-    private final CellList cellsInSameBlockInOtherColumns = new CellList(10);
-    private final CellList cellsInSameColumnInOtherBlocks = new CellList(10);
+    private final CellsInSameBlockInOtherColumns cellsInSameBlockInOtherColumns = new CellsInSameBlockInOtherColumns();
+    private final CellsInSameBlockInOtherRows cellsInSameBlockInOtherRows = new CellsInSameBlockInOtherRows();
+    private final CellsInSameColumnInOtherBlocks cellsInSameColumnInOtherBlocks = new CellsInSameColumnInOtherBlocks();
+    private final CellsInSameRowInOtherBlocks cellsInSameRowInOtherBlocks = new CellsInSameRowInOtherBlocks();
 
     public boolean isEmpty() {
         return number == 0;
     }
 
     public void updateBuddyCells() {
-        addCellsFromGroup(cellsInColumn);
-        addCellsFromGroup(cellsInRow);
-        addCellsFromGroup(cellsInBlock);
+        removeCandidatesFrom(column);
+        removeCandidatesFrom(row);
+        removeCandidatesFrom(block);
+    }
+
+    private void removeCandidatesFrom(Group group) {
+        for (Cell cell : group.getCells()) {
+            candidates.remove(cell.getNumber());
+        }
     }
 
     public void setNumber() {
         setNumber(candidates.getFirst());
     }
-
-    private void addCellsFromGroup(GroupCells groupCells) {
-        for (Cell groupCell : groupCells.getGroup().getCells()) {
-            if (groupCell != this) {
-                if (groupCell.isEmpty()) {
-                    groupCells.add(groupCell);
-                } else {
-                    candidates.remove(groupCell.getNumber());
-                }
-            }
-        }
-    }
-
 
     public void eliminateImpossibleCandidates() {
         revealHiddenSingle();
@@ -58,9 +52,95 @@ public class Cell {
         eliminateNakedTwins();
         if (candidates.hasOneNumber()) {
             // TODO here some cells will be updated multiple times
-            cellsInColumn.getCells().forEach(c -> c.candidates.removeAll(candidates));
-            cellsInRow.getCells().forEach(c -> c.candidates.removeAll(candidates));
-            cellsInBlock.getCells().forEach(c -> c.candidates.removeAll(candidates));
+            removeThisCandidatesInAll(column);
+            removeThisCandidatesInAll(row);
+            removeThisCandidatesInAll(block);
+        }
+    }
+
+    private void removeThisCandidatesInAll(Group group) {
+        for (Cell cell : group.getCells()) {
+            if (this != cell) {
+                cell.candidates.removeAll(candidates);
+            }
+        }
+    }
+
+    private abstract class OtherCells {
+        abstract boolean test(Cell cell);
+
+        abstract Group getGroup();
+
+        @Getter
+        final NumberSet candidates = new NumberSet();
+
+        boolean cellIsAnother(Cell cell) {
+            return cell != Cell.this && cell.isEmpty() && test(cell);
+        }
+
+        void removeCandidate(int c) {
+            for (Cell cell : getGroup().getCells()) {
+                if (cellIsAnother(cell)) {
+                    cell.candidates.remove(c);
+                }
+            }
+        }
+
+        void updateCandidates() {
+            candidates.clear();
+            for (Cell cell : getGroup().getCells()) {
+                if (cellIsAnother(cell)) {
+                    candidates.addAll(cell.getCandidates());
+                }
+            }
+        }
+    }
+
+    private class CellsInSameBlockInOtherRows extends OtherCells {
+        @Override
+        boolean test(Cell cell) {
+            return rowDiffers(cell);
+        }
+
+        @Override
+        Group getGroup() {
+            return block;
+        }
+    }
+
+    private class CellsInSameBlockInOtherColumns extends OtherCells {
+        @Override
+        boolean test(Cell cell) {
+            return columnDiffers(cell);
+        }
+
+        @Override
+        Group getGroup() {
+            return block;
+        }
+    }
+
+    private class CellsInSameRowInOtherBlocks extends OtherCells {
+        @Override
+        boolean test(Cell cell) {
+            return blockDiffers(cell);
+        }
+
+        @Override
+        Group getGroup() {
+            return row;
+        }
+    }
+
+    private class CellsInSameColumnInOtherBlocks extends OtherCells {
+        @Override
+        boolean test(Cell cell) {
+            return blockDiffers(cell);
+        }
+
+        @Override
+        Group getGroup() {
+            return column;
         }
     }
 
@@ -92,13 +172,13 @@ public class Cell {
 
     // medium 1-4µs
     void revealHiddenSingle() {
-        cellsInColumn.updateCandidates();
-        cellsInRow.updateCandidates();
-        cellsInBlock.updateCandidates();
+        updateCandidates(candidatesInColumn, column);
+        updateCandidates(candidatesInRow, row);
+        updateCandidates(candidatesInBlock, block);
         NumberSet n = new NumberSet(candidates);
-        n.removeAll(cellsInColumn.getCandidates());
-        n.removeAll(cellsInRow.getCandidates());
-        n.removeAll(cellsInBlock.getCandidates());
+        n.removeAll(candidatesInColumn);
+        n.removeAll(candidatesInRow);
+        n.removeAll(candidatesInBlock);
         if (n.getCount() == 1) {
             candidates.removeAllAndAdd(n.getFirst());
         } else if (n.getCount() > 1) {
@@ -106,21 +186,38 @@ public class Cell {
         }
     }
 
-    // fastest <2µs
-    void eliminateNakedTwins() {
-        if (candidates.getCount() == 2) {
-            removeCandidatesFromAllCellsIfATwinExists(cellsInColumn);
-            removeCandidatesFromAllCellsIfATwinExists(cellsInRow);
-            removeCandidatesFromAllCellsIfATwinExists(cellsInBlock);
+    private void updateCandidates(NumberSet candidates, Group group) {
+        candidates.clear();
+        for (Cell cell : group.getCells()) {
+            if (this != cell) {
+                candidates.addAll(cell.candidates);
+            }
         }
     }
 
-    private void removeCandidatesFromAllCellsIfATwinExists(CellList cells) {
-        Cell twin = cells.findExactlyOneCellWithCandidates(candidates);
+    // fastest <2µs
+    void eliminateNakedTwins() {
+        if (candidates.getCount() == 2) {
+            removeTwinFromOthers(column);
+            removeTwinFromOthers(row);
+            removeTwinFromOthers(block);
+        }
+    }
+
+    private void removeTwinFromOthers(Group group) {
+        Cell twin = null;
+        for (Cell cell : group.getCells()) {
+            if (cell != this && cell.getCandidates().equals(candidates)) {
+                if (twin != null) {
+                    throw new NoSolutionException("more than two cells only allow the same two numbers, this is not possible");
+                }
+                twin = cell;
+            }
+        }
         if (twin != null) {
-            for (Cell otherCell : cells.getCells()) {
-                if (otherCell != twin) {
-                    otherCell.candidates.removeAll(candidates);
+            for (Cell cell : group.getCells()) {
+                if (cell != this && cell != twin) {
+                    cell.candidates.removeAll(candidates);
                 }
             }
         }
@@ -136,62 +233,5 @@ public class Cell {
 
     private boolean blockDiffers(Cell otherCell) {
         return getBlock() != otherCell.getBlock();
-    }
-
-    private abstract static class GroupCells extends CellList {
-        public GroupCells() {
-            super(10);
-        }
-
-        public abstract Group getGroup();
-    }
-
-    private class ColumnCells extends GroupCells {
-        @Override
-        public Group getGroup() {
-            return column;
-        }
-
-        @Override
-        public void add(Cell cell) {
-            super.add(cell);
-            if (blockDiffers(cell)) {
-                cellsInSameColumnInOtherBlocks.add(cell);
-            }
-        }
-    }
-
-    private class RowCells extends GroupCells {
-        @Override
-        public Group getGroup() {
-            return row;
-        }
-
-        @Override
-        public void add(Cell cell) {
-            super.add(cell);
-            if (blockDiffers(cell)) {
-                cellsInSameRowInOtherBlocks.add(cell);
-            }
-        }
-    }
-
-
-    private class BlockCells extends GroupCells {
-        @Override
-        public Group getGroup() {
-            return block;
-        }
-
-        @Override
-        public void add(Cell cell) {
-            super.add(cell);
-            if (rowDiffers(cell)) {
-                cellsInSameBlockInOtherRows.add(cell);
-            }
-            if (columnDiffers(cell)) {
-                cellsInSameBlockInOtherColumns.add(cell);
-            }
-        }
     }
 }

@@ -16,32 +16,8 @@ class CellList {
         cells = new ArrayList<>(size);
     }
 
-    public void removeCandidate(int candidate) {
-        cells.forEach(cell -> cell.getCandidates().remove(candidate));
-    }
-
     public void add(Cell cell) {
         cells.add(cell);
-    }
-
-    public void updateCandidates() {
-        candidates.clear();
-        for (Cell cell : cells) {
-            candidates.addAll(cell.getCandidates());
-        }
-    }
-
-    public Cell findExactlyOneCellWithCandidates(NumberSet candidates) {
-        Cell twin = null;
-        for (Cell cell : cells) {
-            if (cell.getCandidates().equals(candidates)) {
-                if (twin != null) {
-                    throw new NoSolutionException("more than two cells only allow the same two numbers, this is not possible");
-                }
-                twin = cell;
-            }
-        }
-        return twin;
     }
 
     public Cell getCell(int index) {
