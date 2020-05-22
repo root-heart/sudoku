@@ -11,18 +11,13 @@ import java.util.List;
 @Getter
 public class Group {
     private final List<Cell> cells;
-    private final NumberSet values = new NumberSet();
 
     public Group(int cellCount) {
         cells = new ArrayList<>(cellCount);
     }
 
     public void add(Cell cell) {
-        if (cell.getNumber() != 0 && values.contains(cell.getNumber())) {
-            throw new BoardInvalidException();
-        }
         cells.add(cell);
-        values.add(cell.getNumber());
     }
 
     public Cell getCell(int index) {
