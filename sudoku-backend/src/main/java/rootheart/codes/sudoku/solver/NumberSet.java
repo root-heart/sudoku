@@ -90,7 +90,7 @@ public final class NumberSet implements Cloneable {
         int n = binaryEncodedNumbers;
         while (n > 0) {
             count += n & 1;
-            n >>= 1;
+            n >>>= 1;
         }
         return count;
     }
@@ -100,10 +100,11 @@ public final class NumberSet implements Cloneable {
             return;
         }
 
-        for (int number = 0; number < 32; number++) {
-            if (contains(number)) {
+        for (int n = binaryEncodedNumbers, number = 0; n != 0; n >>>= 1) {
+            if ((n & 1) == 1) {
                 consumer.accept(number);
             }
+            number++;
         }
     }
 
