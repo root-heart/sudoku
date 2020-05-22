@@ -32,7 +32,7 @@ public final class NumberSet implements Cloneable {
     }
 
     public boolean hasOneNumber() {
-        return (binaryEncodedNumbers & (binaryEncodedNumbers - 1)) == 0;
+        return binaryEncodedNumbers > 0 && (binaryEncodedNumbers & (binaryEncodedNumbers - 1)) == 0;
     }
 
     public int getFirst() {
