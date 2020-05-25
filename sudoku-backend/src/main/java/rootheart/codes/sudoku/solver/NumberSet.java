@@ -1,13 +1,29 @@
 package rootheart.codes.sudoku.solver;
 
 import lombok.NoArgsConstructor;
+import org.eclipse.collections.api.map.primitive.MutableIntIntMap;
+import org.eclipse.collections.impl.factory.primitive.IntIntMaps;
 
 import java.util.Objects;
 import java.util.function.IntConsumer;
 
 @NoArgsConstructor
 public final class NumberSet implements Cloneable {
-    private int binaryEncodedNumbers;
+    static int[] bitCount = new int[1 << 9];
+
+    static {
+        for (int i = 0; i < 1 << 9; i++) {
+            int count = 0;
+            int n = i;
+            while (n > 0) {
+                count += n & 1;
+                n >>>= 1;
+            }
+            bitCount[i] = count;
+        }
+    }
+
+    public int binaryEncodedNumbers;
 
     public NumberSet(NumberSet other) {
         binaryEncodedNumbers = other.binaryEncodedNumbers;
@@ -24,7 +40,7 @@ public final class NumberSet implements Cloneable {
     }
 
     public void add(int number) {
-        binaryEncodedNumbers |= 1 << number;
+        binaryEncodedNumbers |= 1 << (number -1 );
     }
 
     public void addAll(NumberSet otherSet) {
@@ -32,7 +48,7 @@ public final class NumberSet implements Cloneable {
     }
 
     public boolean hasOneNumber() {
-        return binaryEncodedNumbers > 0 && (binaryEncodedNumbers & (binaryEncodedNumbers - 1)) == 0;
+        return bitCount[binaryEncodedNumbers] == 1;
     }
 
     public int getFirst() {
@@ -42,7 +58,7 @@ public final class NumberSet implements Cloneable {
 
         for (int n = binaryEncodedNumbers, number = 0; n != 0; n >>>= 1) {
             if ((n & 1) == 1) {
-                return number;
+                return number + 1;
             }
             number++;
         }
@@ -50,11 +66,11 @@ public final class NumberSet implements Cloneable {
     }
 
     public void remove(int number) {
-        binaryEncodedNumbers &= ~(1 << number);
+        binaryEncodedNumbers &= ~(1 << ( number - 1));
     }
 
     public boolean contains(int number) {
-        return (binaryEncodedNumbers & 1 << number) > 0;
+        return (binaryEncodedNumbers & 1 << (number - 1)) > 0;
     }
 
     public boolean containsAll(int... numbers) {
@@ -71,7 +87,7 @@ public final class NumberSet implements Cloneable {
     }
 
     public void removeAllAndAdd(int number) {
-        binaryEncodedNumbers = 1 << number;
+        binaryEncodedNumbers = 1 << (number - 1);
     }
 
     public void removeAll(NumberSet other) {
@@ -87,13 +103,14 @@ public final class NumberSet implements Cloneable {
     }
 
     public int getCount() {
-        int count = 0;
-        int n = binaryEncodedNumbers;
-        while (n > 0) {
-            count += n & 1;
-            n >>>= 1;
-        }
-        return count;
+        return bitCount[binaryEncodedNumbers];
+//        int count = 0;
+//        int n = binaryEncodedNumbers;
+//        while (n > 0) {
+//            count += n & 1;
+//            n >>>= 1;
+//        }
+//        return count;
     }
 
     public void forEach(IntConsumer consumer) {
@@ -103,7 +120,7 @@ public final class NumberSet implements Cloneable {
 
         for (int n = binaryEncodedNumbers, number = 0; n != 0; n >>>= 1) {
             if ((n & 1) == 1) {
-                consumer.accept(number);
+                consumer.accept(number + 1);
             }
             number++;
         }

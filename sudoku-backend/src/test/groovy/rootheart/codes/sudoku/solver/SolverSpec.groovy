@@ -95,11 +95,11 @@ class SolverSpec extends Specification {
                         "000000000" +
                         "000000602" +
                         "090050730")
-        solver.solve(board)
+        def solution = solver.solve(board)
 
         then:
-        noExceptionThrown()
-        println board
+        solution.solution == BoardSolution.Solution.ONE
+        println solution.solvedBoard
     }
 
     def 'Test extreme difficult Sudoku'() {
@@ -136,11 +136,11 @@ class SolverSpec extends Specification {
         def board = new Board(extremeDifficultSudoku)
 
         when:
-        new Solver().solve(board)
+        def solution = new Solver().solve(board)
 
         then:
-        noExceptionThrown()
-        println board
+        solution.solution == BoardSolution.Solution.ONE
+        println solution.solvedBoard
     }
 
 
