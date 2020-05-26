@@ -4,13 +4,13 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.IntConsumer;
 
 public class JavaScriptTranslatedSolver {
     static final int[] SET_BITS_COUNT = new int[512];
-    static final int[] FIRST_EMPTY_BIT = new int[512];
     static final int[] FIRST_SET_BIT = new int[512];
     static final int[] BIT_NUMBER = new int[512];
 
@@ -23,13 +23,25 @@ public class JavaScriptTranslatedSolver {
                 n >>>= 1;
             }
             SET_BITS_COUNT[i] = count;
-            FIRST_EMPTY_BIT[i] = ~i & -~i;
             FIRST_SET_BIT[i] = i & -i;
+            BIT_NUMBER[i] = -1;
         }
 
-        for (int x = 0; x < 9; x++) {
-            BIT_NUMBER[1 << x] = x;
+        for (int i = 0; i < 9; i++) {
+            BIT_NUMBER[1 << i] = i;
         }
+    }
+
+    private static int getSetBitsCount(int number) {
+        return SET_BITS_COUNT[number];
+    }
+
+    private static int getFirstSetBit(int number) {
+        return FIRST_SET_BIT[number];
+    }
+
+    private static int getNumberOfSingleSetBit(int number) {
+        return BIT_NUMBER[number];
     }
 
     public static void main(String[] args) throws IOException {
@@ -72,6 +84,17 @@ public class JavaScriptTranslatedSolver {
         }
         long e = System.nanoTime();
         System.out.println((e - s) / 1000 + " microseconds, guessed " + guessCount + " times, " + failedGuessCount + " failed");
+
+        Arrays.stream(rootheart.codes.sudoku.solver.binaryoptimized.Board.class.getDeclaredFields())
+                .filter(f -> f.getName().startsWith("count_"))
+                .forEach(f -> {
+                    try {
+                        f.setAccessible(true);
+                        System.out.println(f.getName() + " -> " + f.get(null));
+                    } catch (IllegalAccessException e2) {
+                        e2.printStackTrace();
+                    }
+                });
     }
 
     private boolean play(Board board, PrimitiveStack stack, int columnIndex, int rowIndex, int number) {
@@ -85,27 +108,21 @@ public class JavaScriptTranslatedSolver {
             return false;
         }
 
-        var blockIndex = Board.BLOCK_INDEX[cellIndex];
-        if (board.numberIsInvalidForCell(columnIndex, rowIndex, blockIndex, number)) {
+        if (board.numberIsInvalidForCell(cellIndex, number)) {
             undoAllMovesOnStack(board, stack);
             return false;
         }
         board.setZeroBasedNumberToCell(cellIndex, number);
-        stack.push(columnIndex << 8 | rowIndex << 4 | number);
+        stack.push(cellIndex);
 
         return true;
     }
 
     private void undoAllMovesOnStack(Board board, PrimitiveStack stack) {
-        stack.forEach(stackElement -> {
-            int columnIndex = stackElement >> 8;
-            int rowIndex = stackElement >> 4 & 15;
-            int cellIndex = rowIndex * 9 + columnIndex;
-            board.clearCell(cellIndex);
-        });
+        stack.forEach(board::clearCell);
     }
 
-    private static class Best {
+    private static class CellWithTheLowestNumberOfCandidates {
         int cellIndex;
         int candidateCount = 9;
         int binaryEncodedCandidates;
@@ -114,6 +131,10 @@ public class JavaScriptTranslatedSolver {
     static class PrimitiveStack {
         int[] stack = new int[81];
         int currentIndex = -1;
+
+        void clear() {
+            currentIndex = -1;
+        }
 
         void push(int number) {
             stack[++currentIndex] = number;
@@ -134,19 +155,48 @@ public class JavaScriptTranslatedSolver {
         }
     }
 
+    static int[] columnIndexForBlockAndCellIndex = new int[81];
+    static int[] rowIndexForBlockAndCellIndex = new int[81];
+
+    static {
+        for (int blockIndex = 0; blockIndex < 9; blockIndex++) {
+            for (int cellIndexInBlock = 0; cellIndexInBlock < 9; cellIndexInBlock++) {
+                columnIndexForBlockAndCellIndex[blockIndex * 9 + cellIndexInBlock] = (blockIndex % 3) * 3 + (cellIndexInBlock % 3);
+                rowIndexForBlockAndCellIndex[blockIndex * 9 + cellIndexInBlock] = (blockIndex / 3) * 3 + (cellIndexInBlock / 3);
+            }
+        }
+    }
+
     private boolean search(Board board) {
         if (board.emptyCellCount == 0) {
             return true;
         }
 
-        Best best = null;
+        PrimitiveStack stack = new PrimitiveStack();
+        for (int cellIndex = 0; cellIndex < 81; cellIndex++) {
+            if (board.cellIsEmpty(cellIndex)) {
+                int binaryEncodedCandidates = board.getBinaryEncodedCandidates(cellIndex);
+                if (getSetBitsCount(binaryEncodedCandidates) == 1) {
+                    if (!play(board, stack, cellIndex % 9, cellIndex / 9, getNumberOfSingleSetBit(binaryEncodedCandidates))) {
+                        return false;
+                    }
+                }
+            }
+        }
+
+        // if we've played at least one forced move, do a recursive call right away
+        if (stack.size() > 0) {
+            if (search(board)) {
+                return true;
+            }
+            undoAllMovesOnStack(board, stack);
+            return false;
+        }
+
+        CellWithTheLowestNumberOfCandidates cellWithTheLowestNumberOfCandidates = null;
         int[] hiddenSinglesInColumn = new int[81];
         int[] hiddenSinglesInRow = new int[81];
         int[] hiddenSinglesInBlock = new int[81];
-
-        // scan the grid:
-        // - keeping track of where each digit can go on a given column, row or block
-        // - looking for a cell with the fewest number of legal moves
         for (int cellIndex, rowIndex = cellIndex = 0; rowIndex < 9; rowIndex++) {
             for (int columnIndex = 0; columnIndex < 9; columnIndex++, cellIndex++) {
                 if (board.cellIsEmpty(cellIndex)) {
@@ -155,23 +205,22 @@ public class JavaScriptTranslatedSolver {
                     int binaryEncodedCandidatesCopy = binaryEncodedCandidates;
                     while (binaryEncodedCandidates != 0) {
                         int binaryEncodedSmallestCandidate = binaryEncodedCandidates & -binaryEncodedCandidates; // find the rightmost set bit
-                        int smallestCandidate = BIT_NUMBER[binaryEncodedSmallestCandidate];
+                        int smallestCandidate = getNumberOfSingleSetBit(binaryEncodedSmallestCandidate);
                         hiddenSinglesInColumn[columnIndex * 9 + smallestCandidate] |= 1 << rowIndex;
                         hiddenSinglesInRow[rowIndex * 9 + smallestCandidate] |= 1 << columnIndex;
                         hiddenSinglesInBlock[blockIndex * 9 + smallestCandidate] |= 1 << Board.CELL_INDEX_IN_BLOCK[cellIndex];
                         binaryEncodedCandidates ^= binaryEncodedSmallestCandidate;
                     }
 
-                    // update the cell with the fewest number of moves
-                    if (best == null) {
-                        best = new Best();
+                    if (cellWithTheLowestNumberOfCandidates == null) {
+                        cellWithTheLowestNumberOfCandidates = new CellWithTheLowestNumberOfCandidates();
                     }
 
-                    int candidateCount = SET_BITS_COUNT[binaryEncodedCandidatesCopy];
-                    if (candidateCount < best.candidateCount) {
-                        best.cellIndex = cellIndex;
-                        best.binaryEncodedCandidates = binaryEncodedCandidatesCopy;
-                        best.candidateCount = candidateCount;
+                    int candidateCount = getSetBitsCount(binaryEncodedCandidatesCopy);
+                    if (candidateCount < cellWithTheLowestNumberOfCandidates.candidateCount) {
+                        cellWithTheLowestNumberOfCandidates.cellIndex = cellIndex;
+                        cellWithTheLowestNumberOfCandidates.binaryEncodedCandidates = binaryEncodedCandidatesCopy;
+                        cellWithTheLowestNumberOfCandidates.candidateCount = candidateCount;
                     }
                 }
             }
@@ -179,31 +228,33 @@ public class JavaScriptTranslatedSolver {
 
         // play all forced moves (unique candidates on a given column, row or block)
         // and make sure that it doesn't lead to any inconsistency
-        PrimitiveStack stack = new PrimitiveStack();
-        for (int k = 0; k < 9; k++) {
+        stack.clear();
+        for (int groupIndex = 0; groupIndex < 9; groupIndex++) {
             for (int candidateToTest = 0; candidateToTest < 9; candidateToTest++) {
-                int index = k * 9 + candidateToTest;
-                int binaryEncodedPossibleRowsForCandidateInColumnK = hiddenSinglesInColumn[index];
-                if (SET_BITS_COUNT[binaryEncodedPossibleRowsForCandidateInColumnK] == 1) {
-                    int possibleRow = BIT_NUMBER[binaryEncodedPossibleRowsForCandidateInColumnK];
-                    if (!play(board, stack, k, possibleRow, candidateToTest)) {
+                int groupCandidateIndex = groupIndex * 9 + candidateToTest;
+                int binaryEncodedPossibleRowsForCandidateInColumnK = hiddenSinglesInColumn[groupCandidateIndex];
+                int possibleRow = getNumberOfSingleSetBit(binaryEncodedPossibleRowsForCandidateInColumnK);
+                if (possibleRow != -1) {
+                    if (!play(board, stack, groupIndex, possibleRow, candidateToTest)) {
                         return false;
                     }
                 }
 
-                int binaryEncodedPossibleColumnsForCandidateInRowK = hiddenSinglesInRow[index];
-                if (SET_BITS_COUNT[binaryEncodedPossibleColumnsForCandidateInRowK] == 1) {
-                    int possibleColumn = BIT_NUMBER[binaryEncodedPossibleColumnsForCandidateInRowK];
-                    if (!play(board, stack, possibleColumn, k, candidateToTest)) {
+                int binaryEncodedPossibleColumnsForCandidateInRowK = hiddenSinglesInRow[groupCandidateIndex];
+                int possibleColumn = getNumberOfSingleSetBit(binaryEncodedPossibleColumnsForCandidateInRowK);
+                if (possibleColumn != -1) {
+                    if (!play(board, stack, possibleColumn, groupIndex, candidateToTest)) {
                         return false;
                     }
                 }
 
-                // ?
-                int binaryEncodedPossibleBlockForCandidateInBlockK = hiddenSinglesInBlock[index];
-                if (SET_BITS_COUNT[binaryEncodedPossibleBlockForCandidateInBlockK] == 1) {
-                    int i = BIT_NUMBER[binaryEncodedPossibleBlockForCandidateInBlockK];
-                    if (!play(board, stack, (k % 3) * 3 + i % 3, (k / 3) * 3 + (i / 3), candidateToTest)) {
+                int binaryEncodedPossibleBlockForCandidateInBlockK = hiddenSinglesInBlock[groupCandidateIndex];
+                int possibleBlockCellIndex = getNumberOfSingleSetBit(binaryEncodedPossibleBlockForCandidateInBlockK);
+                if (possibleBlockCellIndex != -1) {
+                    if (!play(board, stack,
+                            (groupIndex % 3) * 3 + possibleBlockCellIndex % 3,
+                            (groupIndex / 3) * 3 + (possibleBlockCellIndex / 3),
+                            candidateToTest)) {
                         return false;
                     }
                 }
@@ -220,19 +271,19 @@ public class JavaScriptTranslatedSolver {
         }
 
         // otherwise, try all moves on the cell with the fewest number of moves
-        if (best != null) {
+        if (cellWithTheLowestNumberOfCandidates != null) {
             guessCount++;
             int bit;
-            while ((bit = FIRST_SET_BIT[best.binaryEncodedCandidates]) > 0) {
-                int numberToTry = BIT_NUMBER[bit];
-                board.setZeroBasedNumberToCell(best.cellIndex, numberToTry);
+            while ((bit = getFirstSetBit(cellWithTheLowestNumberOfCandidates.binaryEncodedCandidates)) > 0) {
+                int numberToTry = getNumberOfSingleSetBit(bit);
+                board.setZeroBasedNumberToCell(cellWithTheLowestNumberOfCandidates.cellIndex, numberToTry);
 
                 if (search(board)) {
                     return true;
                 }
 
-                board.clearCell(best.cellIndex);
-                best.binaryEncodedCandidates ^= bit;
+                board.clearCell(cellWithTheLowestNumberOfCandidates.cellIndex);
+                cellWithTheLowestNumberOfCandidates.binaryEncodedCandidates ^= bit;
             }
         }
 
