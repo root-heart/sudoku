@@ -1,18 +1,19 @@
 package rootheart.codes.sudoku.solver
 
 import rootheart.codes.sudoku.game.Board
+import rootheart.codes.sudoku.solver.binaryoptimized.JavaScriptTranslatedSolver
 import spock.lang.Specification
 
 class SolverSpec extends Specification {
-    private String mediumSudoku = "975002130" +
-            "000600000" +
-            "030500000" +
-            "000006090" +
-            "009000010" +
-            "000005078" +
-            "740200069" +
-            "000003000" +
-            "020760084"
+    private String mediumSudoku =   "975002130" +
+                                    "000600000" +
+                                    "030500000" +
+                                    "000006090" +
+                                    "009000010" +
+                                    "000005078" +
+                                    "740200069" +
+                                    "000003000" +
+                                    "020760084"
 
     private String extremeDifficultSudoku = "900000000" +
             "000700016" +
@@ -174,5 +175,35 @@ class SolverSpec extends Specification {
 
         then:
         solution == BoardSolution.MULTIPLE
+    }
+
+    def 'test binary optimized solver'() {
+        given:
+        def s = new JavaScriptTranslatedSolver()
+
+        when:
+        def solution = s.solve(mediumSudoku)
+
+        Arrays.stream(rootheart.codes.sudoku.solver.binaryoptimized.Board.class.getDeclaredFields())
+                .filter(f -> f.getName().startsWith("count_"))
+                .forEach(f -> {
+                    try {
+                        f.setAccessible(true);
+                        System.out.println(f.getName() + " -> " + f.get(null));
+                    } catch (IllegalAccessException e) {
+                        e.printStackTrace();
+                    }
+                });
+
+        then:
+        solution == "975842136" +
+                "482631957" +
+                "136597842" +
+                "257186493" +
+                "869374215" +
+                "314925678" +
+                "743218569" +
+                "698453721" +
+                "521769384"
     }
 }
