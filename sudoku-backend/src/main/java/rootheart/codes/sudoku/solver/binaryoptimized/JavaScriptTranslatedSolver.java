@@ -11,13 +11,8 @@ import java.util.function.IntConsumer;
 public class JavaScriptTranslatedSolver {
     static final int[] SET_BITS_COUNT = new int[512];
     static final int[] FIRST_EMPTY_BIT = new int[512];
+    static final int[] FIRST_SET_BIT = new int[512];
     static final int[] BIT_NUMBER = new int[512];
-
-    private static class BitHelper {
-        int bits;
-        int countSetBits;
-        int firstEmptyBit;
-    }
 
     static {
         for (int i = 0; i < 1 << 9; i++) {
@@ -29,15 +24,13 @@ public class JavaScriptTranslatedSolver {
             }
             SET_BITS_COUNT[i] = count;
             FIRST_EMPTY_BIT[i] = ~i & -~i;
+            FIRST_SET_BIT[i] = i & -i;
         }
 
         for (int x = 0; x < 9; x++) {
             BIT_NUMBER[1 << x] = x;
         }
-
-
     }
-
 
     public static void main(String[] args) throws IOException {
         JavaScriptTranslatedSolver solver = new JavaScriptTranslatedSolver();
@@ -114,8 +107,8 @@ public class JavaScriptTranslatedSolver {
 
     private static class Best {
         int cellIndex;
-        int binaryEncodedNumbersAlreadySetInBuddyCells;
-        int excludedCandidateCount;
+        int candidateCount = 9;
+        int binaryEncodedCandidates;
     }
 
     static class PrimitiveStack {
@@ -158,9 +151,8 @@ public class JavaScriptTranslatedSolver {
             for (int columnIndex = 0; columnIndex < 9; columnIndex++, cellIndex++) {
                 if (board.cellIsEmpty(cellIndex)) {
                     int blockIndex = Board.BLOCK_INDEX[cellIndex];
-                    int binaryEncodedSetNumbers = board.getBinaryEncodedBuddyCellsNumbers(columnIndex, rowIndex, blockIndex);
-                    int setNumbersCount = SET_BITS_COUNT[binaryEncodedSetNumbers];
-                    int binaryEncodedCandidates = binaryEncodedSetNumbers ^ 0x1FF;
+                    int binaryEncodedCandidates = board.getBinaryEncodedCandidates(cellIndex);
+                    int binaryEncodedCandidatesCopy = binaryEncodedCandidates;
                     while (binaryEncodedCandidates != 0) {
                         int binaryEncodedSmallestCandidate = binaryEncodedCandidates & -binaryEncodedCandidates; // find the rightmost set bit
                         int smallestCandidate = BIT_NUMBER[binaryEncodedSmallestCandidate];
@@ -175,10 +167,11 @@ public class JavaScriptTranslatedSolver {
                         best = new Best();
                     }
 
-                    if (setNumbersCount > best.excludedCandidateCount) {
+                    int candidateCount = SET_BITS_COUNT[binaryEncodedCandidatesCopy];
+                    if (candidateCount < best.candidateCount) {
                         best.cellIndex = cellIndex;
-                        best.binaryEncodedNumbersAlreadySetInBuddyCells = binaryEncodedSetNumbers;
-                        best.excludedCandidateCount = setNumbersCount;
+                        best.binaryEncodedCandidates = binaryEncodedCandidatesCopy;
+                        best.candidateCount = candidateCount;
                     }
                 }
             }
@@ -230,7 +223,7 @@ public class JavaScriptTranslatedSolver {
         if (best != null) {
             guessCount++;
             int bit;
-            while ((bit = FIRST_EMPTY_BIT[best.binaryEncodedNumbersAlreadySetInBuddyCells]) < 0x200) {
+            while ((bit = FIRST_SET_BIT[best.binaryEncodedCandidates]) > 0) {
                 int numberToTry = BIT_NUMBER[bit];
                 board.setZeroBasedNumberToCell(best.cellIndex, numberToTry);
 
@@ -239,8 +232,7 @@ public class JavaScriptTranslatedSolver {
                 }
 
                 board.clearCell(best.cellIndex);
-
-                best.binaryEncodedNumbersAlreadySetInBuddyCells ^= bit;
+                best.binaryEncodedCandidates ^= bit;
             }
         }
 

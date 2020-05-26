@@ -4,8 +4,10 @@ import java.util.Arrays;
 import java.util.stream.Collectors;
 
 class Board {
-     static final int[] BLOCK_INDEX = new int[81];
-     static final int[] CELL_INDEX_IN_BLOCK = new int[81];
+    static final int[] BLOCK_INDEX = new int[81];
+    static final int[] CELL_INDEX_IN_BLOCK = new int[81];
+
+    static final int[] indexMap = new int[81];
 
     static {
         for (int cellIndex, rowIndex = cellIndex = 0; rowIndex < 9; rowIndex++) {
@@ -14,20 +16,31 @@ class Board {
                 CELL_INDEX_IN_BLOCK[cellIndex] = (rowIndex % 3) * 3 + columnIndex % 3;
             }
         }
-    }
 
-    static class PositiveIntegerSet {
-//        int binaryEncoded = 0;
-
-        static void addZeroBased(int binaryEncoded, int number) {
-            binaryEncoded |= 1 << number;
-        }
-
-        static void removeZeroBased(int binaryEncoded, int number) {
-            binaryEncoded = binaryEncoded & ~(1 << number);
+        for (int i = 0; i < 81; i++) {
+            int columnIndex = i % 9;
+            int rowIndex = i / 9;
+            int blockIndex = (rowIndex / 3) * 3 + (columnIndex / 3);
+            int blockCellIndex = (rowIndex % 3) * 3 + columnIndex % 3;
+            indexMap[i] = columnIndex | rowIndex << 4 | blockIndex << 8 | blockCellIndex << 12;
         }
     }
 
+    private static int getColumnIndex(int cellIndex) {
+        return indexMap[cellIndex] & 0xF;
+    }
+
+    private static int getRowIndex(int cellIndex) {
+        return indexMap[cellIndex] >> 4 & 0xF;
+    }
+
+    private static int getBlockIndex(int cellIndex) {
+        return indexMap[cellIndex] >> 8 & 0xF;
+    }
+
+    private static int getBlockCellIndex(int cellIndex) {
+        return indexMap[cellIndex] >> 12 & 0xF;
+    }
 
     private final int[] cells = new int[81];
     private final int[] rows = new int[9];
@@ -36,14 +49,12 @@ class Board {
     int emptyCellCount = 81;
 
     public Board(String puzzle) {
-        for (int i = 0; i < 9; i++) {
-            columns[i] = new PositiveIntegerSet();
-            rows[i] = new PositiveIntegerSet();
-            blocks[i] = new PositiveIntegerSet();
-        }
+        clear();
         for (int cellIndex = 0; cellIndex < 81; cellIndex++) {
             int number = Character.getNumericValue(puzzle.charAt(cellIndex));
-            setZeroBasedNumberToCell(cellIndex, number - 1);
+            if (number > 0) {
+                setZeroBasedNumberToCell(cellIndex, number - 1);
+            }
         }
     }
 
@@ -52,9 +63,9 @@ class Board {
             cells[i] = -1;
         }
         for (int i = 0; i < 9; i++) {
-            columns[i] = 0; //new PositiveIntegerSet();
-            rows[i] = 0; //new PositiveIntegerSet();
-            blocks[i] = 0; //new PositiveIntegerSet();
+            columns[i] = 0;
+            rows[i] = 0;
+            blocks[i] = 0;
         }
         emptyCellCount = 81;
     }
@@ -63,9 +74,9 @@ class Board {
         cells[cellIndex] = number;
         if (number != -1) {
             int binaryEncodedNumber = 1 << number;
-            columns[cellIndex % 9] |= binaryEncodedNumber;
-            rows[cellIndex / 9] |= binaryEncodedNumber;
-            blocks[BLOCK_INDEX[cellIndex]] |= binaryEncodedNumber;
+            columns[getColumnIndex(cellIndex)] |= binaryEncodedNumber;
+            rows[getRowIndex(cellIndex)] |= binaryEncodedNumber;
+            blocks[getBlockIndex(cellIndex)] |= binaryEncodedNumber;
             emptyCellCount--;
         }
     }
@@ -75,9 +86,9 @@ class Board {
         int number = cells[cellIndex];
         int bit = 1 << number;
         cells[cellIndex] = -1;
-        columns[cellIndex % 9] &= ~bit;
-        rows[cellIndex / 9] &= ~bit;
-        blocks[BLOCK_INDEX[cellIndex]] &= ~bit;
+        columns[getColumnIndex(cellIndex)] &= ~bit;
+        rows[getRowIndex(cellIndex)] &= ~bit;
+        blocks[getBlockIndex(cellIndex)] &= ~bit;
     }
 
     public boolean cellIsEmpty(int cellIndex) {
@@ -98,5 +109,13 @@ class Board {
 
     public String asString() {
         return Arrays.stream(cells).mapToObj(n -> String.valueOf(n + 1)).collect(Collectors.joining());
+    }
+
+    public int getBinaryEncodedCandidates(int cellIndex) {
+        int columnIndex = getColumnIndex(cellIndex);
+        int rowIndex = getRowIndex(cellIndex);
+        int blockIndex = getBlockIndex(cellIndex);
+        int binaryEncodedSetNumbers = columns[columnIndex] | rows[rowIndex] | blocks[blockIndex];
+        return binaryEncodedSetNumbers ^ 0x1FF;
     }
 }
