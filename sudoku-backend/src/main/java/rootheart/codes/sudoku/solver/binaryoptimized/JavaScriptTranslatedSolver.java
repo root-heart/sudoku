@@ -99,7 +99,10 @@ public class JavaScriptTranslatedSolver {
 
     private boolean play(Board board, PrimitiveStack stack, int columnIndex, int rowIndex, int number) {
         var cellIndex = rowIndex * 9 + columnIndex;
+        return play(board, stack, cellIndex, number);
+    }
 
+    private boolean play(Board board, PrimitiveStack stack, int cellIndex, int number) {
         if (!board.cellIsEmpty(cellIndex)) {
             if (board.cellIs(cellIndex, number)) {
                 return true;
@@ -172,27 +175,35 @@ public class JavaScriptTranslatedSolver {
             return true;
         }
 
-        PrimitiveStack stack = new PrimitiveStack();
+        PrimitiveStack indexesOfUpdatedCells = new PrimitiveStack();
+        // FULL HOUSES doesn't work because I don't know the index of any given empty cell inside a group
+
+
+        // NAKED SINGLES
+        indexesOfUpdatedCells.clear();
         for (int cellIndex = 0; cellIndex < 81; cellIndex++) {
             if (board.cellIsEmpty(cellIndex)) {
                 int binaryEncodedCandidates = board.getBinaryEncodedCandidates(cellIndex);
-                if (getSetBitsCount(binaryEncodedCandidates) == 1) {
-                    if (!play(board, stack, cellIndex % 9, cellIndex / 9, getNumberOfSingleSetBit(binaryEncodedCandidates))) {
+                int number = getNumberOfSingleSetBit(binaryEncodedCandidates);
+                if (number != -1) {
+                    if (!play(board, indexesOfUpdatedCells, cellIndex, number)) {
                         return false;
                     }
                 }
             }
         }
 
-        // if we've played at least one forced move, do a recursive call right away
-        if (stack.size() > 0) {
+        if (indexesOfUpdatedCells.size() > 0) {
+            // At least one naked single was set. Directly keep searching for new easy candidates
             if (search(board)) {
                 return true;
             }
-            undoAllMovesOnStack(board, stack);
+            undoAllMovesOnStack(board, indexesOfUpdatedCells);
             return false;
         }
 
+
+        // HIDDEN SINGLES
         CellWithTheLowestNumberOfCandidates cellWithTheLowestNumberOfCandidates = null;
         int[] hiddenSinglesInColumn = new int[81];
         int[] hiddenSinglesInRow = new int[81];
@@ -226,16 +237,14 @@ public class JavaScriptTranslatedSolver {
             }
         }
 
-        // play all forced moves (unique candidates on a given column, row or block)
-        // and make sure that it doesn't lead to any inconsistency
-        stack.clear();
+        indexesOfUpdatedCells.clear();
         for (int groupIndex = 0; groupIndex < 9; groupIndex++) {
             for (int candidateToTest = 0; candidateToTest < 9; candidateToTest++) {
                 int groupCandidateIndex = groupIndex * 9 + candidateToTest;
                 int binaryEncodedPossibleRowsForCandidateInColumnK = hiddenSinglesInColumn[groupCandidateIndex];
                 int possibleRow = getNumberOfSingleSetBit(binaryEncodedPossibleRowsForCandidateInColumnK);
                 if (possibleRow != -1) {
-                    if (!play(board, stack, groupIndex, possibleRow, candidateToTest)) {
+                    if (!play(board, indexesOfUpdatedCells, groupIndex, possibleRow, candidateToTest)) {
                         return false;
                     }
                 }
@@ -243,7 +252,7 @@ public class JavaScriptTranslatedSolver {
                 int binaryEncodedPossibleColumnsForCandidateInRowK = hiddenSinglesInRow[groupCandidateIndex];
                 int possibleColumn = getNumberOfSingleSetBit(binaryEncodedPossibleColumnsForCandidateInRowK);
                 if (possibleColumn != -1) {
-                    if (!play(board, stack, possibleColumn, groupIndex, candidateToTest)) {
+                    if (!play(board, indexesOfUpdatedCells, possibleColumn, groupIndex, candidateToTest)) {
                         return false;
                     }
                 }
@@ -251,7 +260,7 @@ public class JavaScriptTranslatedSolver {
                 int binaryEncodedPossibleBlockForCandidateInBlockK = hiddenSinglesInBlock[groupCandidateIndex];
                 int possibleBlockCellIndex = getNumberOfSingleSetBit(binaryEncodedPossibleBlockForCandidateInBlockK);
                 if (possibleBlockCellIndex != -1) {
-                    if (!play(board, stack,
+                    if (!play(board, indexesOfUpdatedCells,
                             (groupIndex % 3) * 3 + possibleBlockCellIndex % 3,
                             (groupIndex / 3) * 3 + (possibleBlockCellIndex / 3),
                             candidateToTest)) {
@@ -262,11 +271,11 @@ public class JavaScriptTranslatedSolver {
         }
 
         // if we've played at least one forced move, do a recursive call right away
-        if (stack.size() > 0) {
+        if (indexesOfUpdatedCells.size() > 0) {
             if (search(board)) {
                 return true;
             }
-            undoAllMovesOnStack(board, stack);
+            undoAllMovesOnStack(board, indexesOfUpdatedCells);
             return false;
         }
 
