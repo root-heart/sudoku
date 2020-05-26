@@ -12,6 +12,18 @@ repositories {
     jcenter()
 }
 
+sourceSets {
+    jmh {
+        compileClasspath += sourceSets.test.runtimeClasspath
+        runtimeClasspath += sourceSets.test.runtimeClasspath
+    }
+}
+
+task jmh(type: JavaExec, description: 'Executing JMH benchmarks') {
+    classpath = sourceSets.jmh.runtimeClasspath
+    main = 'org.openjdk.jmh.Main'
+}
+
 dependencies {
     annotationProcessor 'org.projectlombok:lombok:1.18.12'
     compile 'org.projectlombok:lombok:1.18.12'
@@ -40,6 +52,11 @@ dependencies {
 
     testCompile 'org.codehaus.groovy.modules.http-builder:http-builder:0.7'
     testCompile 'org.apache.httpcomponents:httpclient:4.5.12'
+
+    jmhCompile project
+    jmhCompile 'org.openjdk.jmh:jmh-core:1.23'
+    jmhAnnotationProcessor 'org.openjdk.jmh:jmh-generator-annprocess:1.23'
+
 }
 
 test {
