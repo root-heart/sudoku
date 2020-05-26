@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
+import java.util.function.IntConsumer;
 import java.util.stream.Collectors;
 
 public class JavaScriptTranslatedSolver {
@@ -63,6 +64,7 @@ public class JavaScriptTranslatedSolver {
             if (count % 2000 == 0) {
                 System.out.println(count + " sudokus solved");
             }
+//            if (count == 200) break;
             count++;
             String line = r.readLine();
             if (line.length() == 81) {
@@ -79,14 +81,14 @@ public class JavaScriptTranslatedSolver {
             }
         }
         long e = System.nanoTime();
-        System.out.println((e - s) / 1000 + " microseconds");
+        System.out.println((e - s) / 1000 + " microseconds, guessed " + guessCount + " times, " + failedGuessCount + " failed");
     }
 
-    private boolean play(Board board, Stack<Integer> stack, int columnIndex, int rowIndex, int number) {
+    private boolean play(Board board, PrimitiveStack stack, int columnIndex, int rowIndex, int number) {
         var cellIndex = rowIndex * 9 + columnIndex;
 
         if (!board.cellIsEmpty(cellIndex)) {
-            if (board.cells[cellIndex] == number) {
+            if (board.cellIs(cellIndex, number)) {
                 return true;
             }
             undoAllMovesOnStack(board, stack);
@@ -94,43 +96,52 @@ public class JavaScriptTranslatedSolver {
         }
 
         var blockIndex = Board.BLOCK_INDEX[cellIndex];
-        if (board.numberIsInvalidForCell( cellIndex, number)) {
+        if (board.numberIsInvalidForCell(columnIndex, rowIndex, blockIndex, number)) {
             undoAllMovesOnStack(board, stack);
             return false;
         }
-        board.emptyCellCount--;
-        board.columns[columnIndex].addZeroBased(number);
-        board.rows[rowIndex].addZeroBased(number);
-        board.blocks[blockIndex].addZeroBased(number);
-        board.cells[cellIndex] = number;
+        board.setZeroBasedNumberToCell(cellIndex, number);
         stack.push(columnIndex << 8 | rowIndex << 4 | number);
 
         return true;
     }
 
-    private void undoAllMovesOnStack(Board board, Stack<Integer> stack) {
+    private void undoAllMovesOnStack(Board board, PrimitiveStack stack) {
         stack.forEach(stackElement -> {
             int columnIndex = stackElement >> 8;
             int rowIndex = stackElement >> 4 & 15;
-            int blockIndex = rowIndex * 9 + columnIndex;
-            int blockCellIndex = Board.BLOCK_INDEX[blockIndex];
-
-            stackElement = 1 << (stackElement & 15);
-
-            board.emptyCellCount++;
-            board.columns[columnIndex].binaryEncoded ^= stackElement;
-            board.rows[rowIndex].binaryEncoded ^= stackElement;
-            board.blocks[blockCellIndex].binaryEncoded ^= stackElement;
-            board.cells[blockIndex] = -1;
+            int cellIndex = rowIndex * 9 + columnIndex;
+            board.clearCell(cellIndex);
         });
     }
 
     private static class Best {
-        int columnIndex;
-        int rowIndex;
         int cellIndex;
         int binaryEncodedNumbersAlreadySetInBuddyCells;
         int excludedCandidateCount;
+    }
+
+    static class PrimitiveStack {
+        int[] stack = new int[81];
+        int currentIndex = -1;
+
+        void push(int number) {
+            stack[++currentIndex] = number;
+        }
+
+        int pop() {
+            return stack[currentIndex--];
+        }
+
+        int size() {
+            return currentIndex + 1;
+        }
+
+        void forEach(IntConsumer consumer) {
+            for (int i = 0; i <= currentIndex; i++) {
+                consumer.accept(stack[i]);
+            }
+        }
     }
 
     private boolean search(Board board) {
@@ -138,32 +149,27 @@ public class JavaScriptTranslatedSolver {
             return true;
         }
 
-        int cellIndex, columnIndex, rowIndex;
-        int setNumbersCount;
         Best best = null;
-        int[] dCol = new int[81];
-        int[] dRow = new int[81];
-        int[] dBlk = new int[81];
+        int[] hiddenSinglesInColumn = new int[81];
+        int[] hiddenSinglesInRow = new int[81];
+        int[] hiddenSinglesInBlock = new int[81];
 
         // scan the grid:
         // - keeping track of where each digit can go on a given column, row or block
         // - looking for a cell with the fewest number of legal moves
-        for (cellIndex = rowIndex = 0; rowIndex < 9; rowIndex++) {
-            for (columnIndex = 0; columnIndex < 9; columnIndex++, cellIndex++) {
+        for (int cellIndex, rowIndex = cellIndex = 0; rowIndex < 9; rowIndex++) {
+            for (int columnIndex = 0; columnIndex < 9; columnIndex++, cellIndex++) {
                 if (board.cellIsEmpty(cellIndex)) {
-                    int binaryEncodedSetNumbers = board.getBinaryEncodedBuddyCellsNumbers(cellIndex);
-                    setNumbersCount = SET_BITS_COUNT[binaryEncodedSetNumbers];
-//                    if (setNumbersCount == 9) {
-//                        return false;
-//                    }
-
+                    int blockIndex = Board.BLOCK_INDEX[cellIndex];
+                    int binaryEncodedSetNumbers = board.getBinaryEncodedBuddyCellsNumbers(columnIndex, rowIndex, blockIndex);
+                    int setNumbersCount = SET_BITS_COUNT[binaryEncodedSetNumbers];
                     int binaryEncodedCandidates = binaryEncodedSetNumbers ^ 0x1FF;
                     while (binaryEncodedCandidates != 0) {
                         int binaryEncodedSmallestCandidate = binaryEncodedCandidates & -binaryEncodedCandidates; // find the rightmost set bit
                         int smallestCandidate = BIT_NUMBER[binaryEncodedSmallestCandidate];
-                        dCol[columnIndex * 9 + smallestCandidate] |= 1 << rowIndex;
-                        dRow[rowIndex * 9 + smallestCandidate] |= 1 << columnIndex;
-                        dBlk[Board.BLOCK_INDEX[cellIndex] * 9 + smallestCandidate] |= 1 << Board.CELL_INDEX_IN_BLOCK[cellIndex];
+                        hiddenSinglesInColumn[columnIndex * 9 + smallestCandidate] |= 1 << rowIndex;
+                        hiddenSinglesInRow[rowIndex * 9 + smallestCandidate] |= 1 << columnIndex;
+                        hiddenSinglesInBlock[blockIndex * 9 + smallestCandidate] |= 1 << Board.CELL_INDEX_IN_BLOCK[cellIndex];
                         binaryEncodedCandidates ^= binaryEncodedSmallestCandidate;
                     }
 
@@ -173,8 +179,6 @@ public class JavaScriptTranslatedSolver {
                     }
 
                     if (setNumbersCount > best.excludedCandidateCount) {
-                        best.columnIndex = columnIndex;
-                        best.rowIndex = rowIndex;
                         best.cellIndex = cellIndex;
                         best.binaryEncodedNumbersAlreadySetInBuddyCells = binaryEncodedSetNumbers;
                         best.excludedCandidateCount = setNumbersCount;
@@ -185,10 +189,11 @@ public class JavaScriptTranslatedSolver {
 
         // play all forced moves (unique candidates on a given column, row or block)
         // and make sure that it doesn't lead to any inconsistency
-        Stack<Integer> stack = new Stack<>();
+        PrimitiveStack stack = new PrimitiveStack();
         for (int k = 0; k < 9; k++) {
             for (int candidateToTest = 0; candidateToTest < 9; candidateToTest++) {
-                int binaryEncodedPossibleRowsForCandidateInColumnK = dCol[k * 9 + candidateToTest];
+                int index = k * 9 + candidateToTest;
+                int binaryEncodedPossibleRowsForCandidateInColumnK = hiddenSinglesInColumn[index];
                 if (SET_BITS_COUNT[binaryEncodedPossibleRowsForCandidateInColumnK] == 1) {
                     int possibleRow = BIT_NUMBER[binaryEncodedPossibleRowsForCandidateInColumnK];
                     if (!play(board, stack, k, possibleRow, candidateToTest)) {
@@ -196,7 +201,7 @@ public class JavaScriptTranslatedSolver {
                     }
                 }
 
-                int binaryEncodedPossibleColumnsForCandidateInRowK = dRow[k * 9 + candidateToTest];
+                int binaryEncodedPossibleColumnsForCandidateInRowK = hiddenSinglesInRow[index];
                 if (SET_BITS_COUNT[binaryEncodedPossibleColumnsForCandidateInRowK] == 1) {
                     int possibleColumn = BIT_NUMBER[binaryEncodedPossibleColumnsForCandidateInRowK];
                     if (!play(board, stack, possibleColumn, k, candidateToTest)) {
@@ -205,7 +210,7 @@ public class JavaScriptTranslatedSolver {
                 }
 
                 // ?
-                int binaryEncodedPossibleBlockForCandidateInBlockK = dBlk[k * 9 + candidateToTest];
+                int binaryEncodedPossibleBlockForCandidateInBlockK = hiddenSinglesInBlock[index];
                 if (SET_BITS_COUNT[binaryEncodedPossibleBlockForCandidateInBlockK] == 1) {
                     int i = BIT_NUMBER[binaryEncodedPossibleBlockForCandidateInBlockK];
                     if (!play(board, stack, (k % 3) * 3 + i % 3, (k / 3) * 3 + (i / 3), candidateToTest)) {
@@ -226,35 +231,32 @@ public class JavaScriptTranslatedSolver {
 
         // otherwise, try all moves on the cell with the fewest number of moves
         if (best != null) {
+            guessCount++;
             int bit;
             while ((bit = FIRST_EMPTY_BIT[best.binaryEncodedNumbersAlreadySetInBuddyCells]) < 0x200) {
                 int numberToTry = BIT_NUMBER[bit];
-                board.columns[best.columnIndex].addZeroBased(numberToTry);
-                board.rows[best.rowIndex].addZeroBased(numberToTry);
-                board.blocks[Board.BLOCK_INDEX[best.cellIndex]].addZeroBased(numberToTry);
-                board.cells[best.cellIndex] = numberToTry;
-                board.emptyCellCount--;
+                board.setZeroBasedNumberToCell(best.cellIndex, numberToTry);
 
                 if (search(board)) {
                     return true;
                 }
 
-                board.emptyCellCount++;
-                board.cells[best.cellIndex] = -1;
-                board.columns[best.columnIndex].removeZeroBased(numberToTry);
-                board.rows[best.rowIndex].removeZeroBased(numberToTry);
-                board.blocks[Board.BLOCK_INDEX[best.cellIndex]].removeZeroBased(numberToTry);
+                board.clearCell(best.cellIndex);
 
                 best.binaryEncodedNumbersAlreadySetInBuddyCells ^= bit;
             }
         }
 
+        failedGuessCount++;
         return false;
     }
+
+    public static int guessCount = 0;
+    public static int failedGuessCount = 0;
 
     public String solve(String puzzle) {
         Board board = new Board(puzzle);
         boolean isSolvable = search(board);
-        return isSolvable ? Arrays.stream(board.cells).mapToObj(n -> String.valueOf(n + 1)).collect(Collectors.joining()) : "";
+        return isSolvable ? board.asString() : "";
     }
 }

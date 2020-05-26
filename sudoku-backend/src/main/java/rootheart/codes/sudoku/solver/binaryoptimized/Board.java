@@ -1,8 +1,11 @@
 package rootheart.codes.sudoku.solver.binaryoptimized;
 
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
 class Board {
-    static final int[] BLOCK_INDEX = new int[81];
-    static final int[] CELL_INDEX_IN_BLOCK = new int[81];
+     static final int[] BLOCK_INDEX = new int[81];
+     static final int[] CELL_INDEX_IN_BLOCK = new int[81];
 
     static {
         for (int cellIndex, rowIndex = cellIndex = 0; rowIndex < 9; rowIndex++) {
@@ -14,26 +17,22 @@ class Board {
     }
 
     static class PositiveIntegerSet {
-        int binaryEncoded = 0;
+//        int binaryEncoded = 0;
 
-        void addOneBased(int number) {
-            binaryEncoded |= 1 << (number - 1);
-        }
-
-        void addZeroBased(int number) {
+        static void addZeroBased(int binaryEncoded, int number) {
             binaryEncoded |= 1 << number;
         }
 
-        void removeZeroBased(int number) {
+        static void removeZeroBased(int binaryEncoded, int number) {
             binaryEncoded = binaryEncoded & ~(1 << number);
         }
     }
 
 
-    final int[] cells = new int[81];
-    final PositiveIntegerSet[] rows = new PositiveIntegerSet[9];
-    final PositiveIntegerSet[] columns = new PositiveIntegerSet[9];
-    final PositiveIntegerSet[] blocks = new PositiveIntegerSet[9];
+    private final int[] cells = new int[81];
+    private final int[] rows = new int[9];
+    private final int[] columns = new int[9];
+    private final int[] blocks = new int[9];
     int emptyCellCount = 81;
 
     public Board(String puzzle) {
@@ -44,7 +43,7 @@ class Board {
         }
         for (int cellIndex = 0; cellIndex < 81; cellIndex++) {
             int number = Character.getNumericValue(puzzle.charAt(cellIndex));
-            setNumberToCell(cellIndex, number);
+            setZeroBasedNumberToCell(cellIndex, number - 1);
         }
     }
 
@@ -53,37 +52,51 @@ class Board {
             cells[i] = -1;
         }
         for (int i = 0; i < 9; i++) {
-            columns[i] = new PositiveIntegerSet();
-            rows[i] = new PositiveIntegerSet();
-            blocks[i] = new PositiveIntegerSet();
+            columns[i] = 0; //new PositiveIntegerSet();
+            rows[i] = 0; //new PositiveIntegerSet();
+            blocks[i] = 0; //new PositiveIntegerSet();
         }
         emptyCellCount = 81;
     }
 
-    public void setNumberToCell(int cellIndex, int number) {
-        cells[cellIndex] = number - 1;
-        if (number != 0) {
-            int columnIndex = cellIndex % 9;
-            int rowIndex = cellIndex / 9;
-            int binaryEncodedNumber = 1 << (number - 1);
-            columns[columnIndex].binaryEncoded |= binaryEncodedNumber;
-            rows[rowIndex].binaryEncoded |= binaryEncodedNumber;
-            blocks[BLOCK_INDEX[cellIndex]].binaryEncoded |= binaryEncodedNumber;
+    public void setZeroBasedNumberToCell(int cellIndex, int number) {
+        cells[cellIndex] = number;
+        if (number != -1) {
+            int binaryEncodedNumber = 1 << number;
+            columns[cellIndex % 9] |= binaryEncodedNumber;
+            rows[cellIndex / 9] |= binaryEncodedNumber;
+            blocks[BLOCK_INDEX[cellIndex]] |= binaryEncodedNumber;
             emptyCellCount--;
         }
+    }
+
+    public void clearCell(int cellIndex) {
+        emptyCellCount++;
+        int number = cells[cellIndex];
+        int bit = 1 << number;
+        cells[cellIndex] = -1;
+        columns[cellIndex % 9] &= ~bit;
+        rows[cellIndex / 9] &= ~bit;
+        blocks[BLOCK_INDEX[cellIndex]] &= ~bit;
     }
 
     public boolean cellIsEmpty(int cellIndex) {
         return cells[cellIndex] == -1;
     }
 
-    public int getBinaryEncodedBuddyCellsNumbers(int cellIndex) {
-        return columns[cellIndex % 9].binaryEncoded
-                | rows[cellIndex / 9].binaryEncoded
-                | blocks[BLOCK_INDEX[cellIndex]].binaryEncoded;
+    public boolean cellIs(int cellIndex, int number) {
+        return cells[cellIndex] == number;
     }
 
-    public boolean numberIsInvalidForCell(int cellIndex, int zeroBasedNumber) {
-        return (getBinaryEncodedBuddyCellsNumbers(cellIndex) & 1 << zeroBasedNumber) != 0;
+    public int getBinaryEncodedBuddyCellsNumbers(int columnIndex, int rowIndex, int blockIndex) {
+        return columns[columnIndex] | rows[rowIndex] | blocks[blockIndex];
+    }
+
+    public boolean numberIsInvalidForCell(int columnIndex, int rowIndex, int blockIndex, int zeroBasedNumber) {
+        return (getBinaryEncodedBuddyCellsNumbers(columnIndex, rowIndex, blockIndex) & 1 << zeroBasedNumber) != 0;
+    }
+
+    public String asString() {
+        return Arrays.stream(cells).mapToObj(n -> String.valueOf(n + 1)).collect(Collectors.joining());
     }
 }
