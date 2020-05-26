@@ -28,31 +28,19 @@ public class Board {
         }
     }
 
-    static long count_getColumnIndex = 0;
-
     private static int getColumnIndex(int cellIndex) {
-        count_getColumnIndex++;
         return columnIndexMap[cellIndex];
     }
 
-    static long count_getRowIndex = 0;
-
     private static int getRowIndex(int cellIndex) {
-        count_getRowIndex++;
         return rowIndexMap[cellIndex];
     }
 
-    static long count_getBlockIndex = 0;
-
     private static int getBlockIndex(int cellIndex) {
-        count_getBlockIndex++;
         return BLOCK_INDEX[cellIndex];
     }
 
-    static long count_getBlockCellIndex = 0;
-
     private static int getBlockCellIndex(int cellIndex) {
-        count_getBlockCellIndex++;
         return CELL_INDEX_IN_BLOCK[cellIndex];
     }
 
@@ -84,10 +72,7 @@ public class Board {
         emptyCellCount = 81;
     }
 
-    static long count_setZeroBasedNumberToCell = 0;
-
     public void setZeroBasedNumberToCell(int cellIndex, int number) {
-        count_setZeroBasedNumberToCell++;
         cells[cellIndex] = number;
         int columnIndex = getColumnIndex(cellIndex);
         int rowIndex = getRowIndex(cellIndex);
@@ -101,10 +86,7 @@ public class Board {
         }
     }
 
-    static long count_clearCell = 0;
-
     public void clearCell(int cellIndex) {
-        count_clearCell++;
         emptyCellCount++;
         int number = cells[cellIndex];
         int bit = 1 << number;
@@ -125,10 +107,7 @@ public class Board {
         return cells[cellIndex] == number;
     }
 
-    static long count_numberIsInvalidForCell = 0;
-
     public boolean numberIsInvalidForCell(int cellIndex, int zeroBasedNumber) {
-        count_numberIsInvalidForCell++;
         int numbersSetInBuddyCells = getBinaryEncodedSetNumbersInBuddyCells(cellIndex);
         return (numbersSetInBuddyCells & 1 << zeroBasedNumber) != 0;
     }
@@ -137,18 +116,12 @@ public class Board {
         return Arrays.stream(cells).mapToObj(n -> String.valueOf(n + 1)).collect(Collectors.joining());
     }
 
-    static long count_getBinaryEncodedCandidates = 0;
-
     public int getBinaryEncodedCandidates(int cellIndex) {
-        count_getBinaryEncodedCandidates++;
         return getBinaryEncodedSetNumbersInBuddyCells(cellIndex) ^ 0x1FF;
     }
 
-    static long count_getBinaryEncodedSetNumbersInBuddyCells = 0;
-    static long count_getBinaryEncodedSetNumbersInBuddyCells_cacheHit = 0;
 
     private int getBinaryEncodedSetNumbersInBuddyCells(int cellIndex) {
-        count_getBinaryEncodedSetNumbersInBuddyCells++;
         return columns[getColumnIndex(cellIndex)] | rows[getRowIndex(cellIndex)] | blocks[getBlockIndex(cellIndex)];
     }
 }
