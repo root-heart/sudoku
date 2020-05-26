@@ -74,14 +74,11 @@ public class Board {
 
     public void setZeroBasedNumberToCell(int cellIndex, int number) {
         cells[cellIndex] = number;
-        int columnIndex = getColumnIndex(cellIndex);
-        int rowIndex = getRowIndex(cellIndex);
-        int blockIndex = getBlockIndex(cellIndex);
         if (number != -1) {
             int binaryEncodedNumber = 1 << number;
-            columns[columnIndex] |= binaryEncodedNumber;
-            rows[rowIndex] |= binaryEncodedNumber;
-            blocks[blockIndex] |= binaryEncodedNumber;
+            columns[getColumnIndex(cellIndex)] |= binaryEncodedNumber;
+            rows[getRowIndex(cellIndex)] |= binaryEncodedNumber;
+            blocks[getBlockIndex(cellIndex)] |= binaryEncodedNumber;
             emptyCellCount--;
         }
     }
@@ -91,12 +88,9 @@ public class Board {
         int number = cells[cellIndex];
         int bit = 1 << number;
         cells[cellIndex] = -1;
-        int columnIndex = getColumnIndex(cellIndex);
-        int rowIndex = getRowIndex(cellIndex);
-        int blockIndex = getBlockIndex(cellIndex);
-        columns[columnIndex] &= ~bit;
-        rows[rowIndex] &= ~bit;
-        blocks[blockIndex] &= ~bit;
+        columns[getColumnIndex(cellIndex)] &= ~bit;
+        rows[getRowIndex(cellIndex)] &= ~bit;
+        blocks[getBlockIndex(cellIndex)] &= ~bit;
     }
 
     public boolean cellIsEmpty(int cellIndex) {
@@ -119,7 +113,6 @@ public class Board {
     public int getBinaryEncodedCandidates(int cellIndex) {
         return getBinaryEncodedSetNumbersInBuddyCells(cellIndex) ^ 0x1FF;
     }
-
 
     private int getBinaryEncodedSetNumbersInBuddyCells(int cellIndex) {
         return columns[getColumnIndex(cellIndex)] | rows[getRowIndex(cellIndex)] | blocks[getBlockIndex(cellIndex)];
