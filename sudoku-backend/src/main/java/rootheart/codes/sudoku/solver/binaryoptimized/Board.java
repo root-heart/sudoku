@@ -51,30 +51,21 @@ public class Board {
     int emptyCellCount = 81;
 
     public Board(String puzzle) {
-        clear();
         for (int cellIndex = 0; cellIndex < 81; cellIndex++) {
             int number = Character.getNumericValue(puzzle.charAt(cellIndex));
             if (number > 0) {
                 setZeroBasedNumberToCell(cellIndex, number - 1);
+            } else {
+                cells[cellIndex] = -1;
             }
         }
     }
 
-    public void clear() {
-        for (int i = 0; i < 81; i++) {
-            cells[i] = -1;
-        }
-        for (int i = 0; i < 9; i++) {
-            columns[i] = 0;
-            rows[i] = 0;
-            blocks[i] = 0;
-        }
-        emptyCellCount = 81;
-    }
-
     public void setZeroBasedNumberToCell(int cellIndex, int number) {
-        cells[cellIndex] = number;
-        if (number != -1) {
+        if (number == -1) {
+            clearCell(cellIndex);
+        } else {
+            cells[cellIndex] = number;
             int binaryEncodedNumber = 1 << number;
             columns[getColumnIndex(cellIndex)] |= binaryEncodedNumber;
             rows[getRowIndex(cellIndex)] |= binaryEncodedNumber;
@@ -84,13 +75,15 @@ public class Board {
     }
 
     public void clearCell(int cellIndex) {
-        emptyCellCount++;
         int number = cells[cellIndex];
-        int bit = 1 << number;
-        cells[cellIndex] = -1;
-        columns[getColumnIndex(cellIndex)] &= ~bit;
-        rows[getRowIndex(cellIndex)] &= ~bit;
-        blocks[getBlockIndex(cellIndex)] &= ~bit;
+        if (number != -1) {
+            emptyCellCount++;
+            int bit = 1 << number;
+            cells[cellIndex] = -1;
+            columns[getColumnIndex(cellIndex)] &= ~bit;
+            rows[getRowIndex(cellIndex)] &= ~bit;
+            blocks[getBlockIndex(cellIndex)] &= ~bit;
+        }
     }
 
     public boolean cellIsEmpty(int cellIndex) {
