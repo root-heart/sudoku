@@ -239,7 +239,9 @@ class SolverSpec extends Specification {
                 });
 
         then:
-        calculatedSolutions == expectedSolutions
+        calculatedSolutions.each { puzzle, calculatedSolution ->
+            assert expectedSolutions[puzzle] == calculatedSolution
+        }
     }
 
 
