@@ -126,23 +126,18 @@ public class JavaScriptTranslatedSolver {
 
         // NAKED SINGLES
         indexesOfUpdatedCells.clear();
-        for (int cellIndex = 0; cellIndex < 81; cellIndex++) {
-            if (board.cellIsEmpty(cellIndex)) {
-                int binaryEncodedCandidates = board.getBinaryEncodedCandidates(cellIndex);
-                int number = getNumberOfSingleSetBit(binaryEncodedCandidates);
-                if (number != -1) {
-                    if (!play(board, indexesOfUpdatedCells, cellIndex, number)) {
-                        return false;
-                    }
-                }
-            }
-        }
+        Boolean x = findAndSetNakedSingles(board, indexesOfUpdatedCells);
+        if (x != null) return x;
 
-        if (board.emptyCellCount == 0) {
-            return true;
-        }
+        x = findAndSetHiddenSingles(board, indexesOfUpdatedCells);
+        if (x != null) return x;
 
 
+        // BRUTE FORCE
+        return solveBruteForce(board);
+    }
+
+    private Boolean findAndSetHiddenSingles(Board board, PrimitiveStack indexesOfUpdatedCells) {
         // HIDDEN SINGLES
         int[] possibleRowsForCandidateInColumn = new int[81];
         int[] possibleColumnsForCandidateInRow = new int[81];
@@ -209,8 +204,34 @@ public class JavaScriptTranslatedSolver {
             undoAllMovesOnStack(board, indexesOfUpdatedCells);
             return false;
         }
+        return null;
+    }
 
-        // BRUTE FORCE
+    private Boolean findAndSetNakedSingles(Board board, PrimitiveStack indexesOfUpdatedCells) {
+        int iterationCount = 0;
+        for (int cellIndex = 0; iterationCount < 81; cellIndex++) {
+            if (cellIndex == 81) {
+                cellIndex = 0;
+            }
+            if (board.cellIsEmpty(cellIndex)) {
+                int binaryEncodedCandidates = board.getBinaryEncodedCandidates(cellIndex);
+                int number = getNumberOfSingleSetBit(binaryEncodedCandidates);
+                if (number != -1) {
+                    if (!play(board, indexesOfUpdatedCells, cellIndex, number)) {
+                        return false;
+                    }
+                    iterationCount = 0;
+                }
+            }
+            iterationCount++;
+        }
+        if (board.emptyCellCount == 0) {
+            return true;
+        }
+        return null;
+    }
+
+    private boolean solveBruteForce(Board board) {
         guessCount++;
 
         CellWithTheLowestNumberOfCandidates cellWithTheLowestNumberOfCandidates = new CellWithTheLowestNumberOfCandidates();

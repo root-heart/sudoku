@@ -53,10 +53,6 @@ public class SolverBenchmark {
             "002008070" +
             "000007100";
 
-    public static void main(String[] args) throws IOException, RunnerException {
-        org.openjdk.jmh.Main.main(args);
-    }
-
     @Benchmark
     public String solveMediumSudoku() {
         return s.solve(mediumSudoku);
