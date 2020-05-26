@@ -1,12 +1,5 @@
 package rootheart.codes.sudoku.solver.binaryoptimized;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.IntConsumer;
 
 public class JavaScriptTranslatedSolver {
@@ -68,12 +61,6 @@ public class JavaScriptTranslatedSolver {
 
     private void undoAllMovesOnStack(Board board, PrimitiveStack stack) {
         stack.forEach(board::clearCell);
-    }
-
-    private static class CellWithTheLowestNumberOfCandidates {
-        int cellIndex;
-        int candidateCount = 9;
-        int binaryEncodedCandidates;
     }
 
     static class PrimitiveStack {
@@ -234,29 +221,32 @@ public class JavaScriptTranslatedSolver {
     private boolean solveBruteForce(Board board) {
         guessCount++;
 
-        CellWithTheLowestNumberOfCandidates cellWithTheLowestNumberOfCandidates = new CellWithTheLowestNumberOfCandidates();
+        int lowestCandidateCount = 9;
+        int lowestCandidateCountCellIndex = 0;
+        int lowestCandidateCountCandidates = 0;
+
         for (int cellIndex = 0; cellIndex < 81; cellIndex++) {
             if (board.cellIsEmpty(cellIndex)) {
                 int binaryEncodedCandidates = board.getBinaryEncodedCandidates(cellIndex);
                 int candidateCount = getSetBitsCount(binaryEncodedCandidates);
-                if (candidateCount < cellWithTheLowestNumberOfCandidates.candidateCount) {
-                    cellWithTheLowestNumberOfCandidates.cellIndex = cellIndex;
-                    cellWithTheLowestNumberOfCandidates.binaryEncodedCandidates = binaryEncodedCandidates;
-                    cellWithTheLowestNumberOfCandidates.candidateCount = candidateCount;
+                if (candidateCount < lowestCandidateCount) {
+                    lowestCandidateCountCellIndex = cellIndex;
+                    lowestCandidateCountCandidates = binaryEncodedCandidates;
+                    lowestCandidateCount = candidateCount;
                 }
             }
         }
         int bit;
-        while ((bit = getFirstSetBit(cellWithTheLowestNumberOfCandidates.binaryEncodedCandidates)) > 0) {
+        while ((bit = getFirstSetBit(lowestCandidateCountCandidates)) > 0) {
             int numberToTry = getNumberOfSingleSetBit(bit);
-            board.setZeroBasedNumberToCell(cellWithTheLowestNumberOfCandidates.cellIndex, numberToTry);
+            board.setZeroBasedNumberToCell(lowestCandidateCountCellIndex, numberToTry);
 
             if (search(board)) {
                 return true;
             }
 
-            board.clearCell(cellWithTheLowestNumberOfCandidates.cellIndex);
-            cellWithTheLowestNumberOfCandidates.binaryEncodedCandidates ^= bit;
+            board.clearCell(lowestCandidateCountCellIndex);
+            lowestCandidateCountCandidates ^= bit;
         }
 
         failedGuessCount++;
