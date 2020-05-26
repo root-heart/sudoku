@@ -11,7 +11,6 @@ import java.util.function.IntConsumer;
 
 public class JavaScriptTranslatedSolver {
     static final int[] SET_BITS_COUNT = new int[512];
-    static final int[] FIRST_SET_BIT = new int[512];
     static final int[] BIT_NUMBER = new int[512];
 
     static {
@@ -23,7 +22,6 @@ public class JavaScriptTranslatedSolver {
                 n >>>= 1;
             }
             SET_BITS_COUNT[i] = count;
-            FIRST_SET_BIT[i] = i & -i;
             BIT_NUMBER[i] = -1;
         }
 
@@ -37,7 +35,7 @@ public class JavaScriptTranslatedSolver {
     }
 
     private static int getFirstSetBit(int number) {
-        return FIRST_SET_BIT[number];
+        return number & -number;
     }
 
     private static int getNumberOfSingleSetBit(int number) {
@@ -205,34 +203,34 @@ public class JavaScriptTranslatedSolver {
 
         // HIDDEN SINGLES
         CellWithTheLowestNumberOfCandidates cellWithTheLowestNumberOfCandidates = null;
-        int[] hiddenSinglesInColumn = new int[81];
-        int[] hiddenSinglesInRow = new int[81];
-        int[] hiddenSinglesInBlock = new int[81];
-        for (int cellIndex, rowIndex = cellIndex = 0; rowIndex < 9; rowIndex++) {
-            for (int columnIndex = 0; columnIndex < 9; columnIndex++, cellIndex++) {
-                if (board.cellIsEmpty(cellIndex)) {
-                    int blockIndex = Board.BLOCK_INDEX[cellIndex];
-                    int binaryEncodedCandidates = board.getBinaryEncodedCandidates(cellIndex);
-                    int binaryEncodedCandidatesCopy = binaryEncodedCandidates;
-                    while (binaryEncodedCandidates != 0) {
-                        int binaryEncodedSmallestCandidate = binaryEncodedCandidates & -binaryEncodedCandidates; // find the rightmost set bit
-                        int smallestCandidate = getNumberOfSingleSetBit(binaryEncodedSmallestCandidate);
-                        hiddenSinglesInColumn[columnIndex * 9 + smallestCandidate] |= 1 << rowIndex;
-                        hiddenSinglesInRow[rowIndex * 9 + smallestCandidate] |= 1 << columnIndex;
-                        hiddenSinglesInBlock[blockIndex * 9 + smallestCandidate] |= 1 << Board.CELL_INDEX_IN_BLOCK[cellIndex];
-                        binaryEncodedCandidates ^= binaryEncodedSmallestCandidate;
-                    }
+        int[] possibleRowsForCandidateInColumn = new int[81];
+        int[] possibleColumnsForCandidateInRow = new int[81];
+        int[] possibleCellIndexForCandidateInBlock = new int[81];
+        for (int cellIndex = 0; cellIndex < 81; cellIndex++) {
+            if (board.cellIsEmpty(cellIndex)) {
+                int blockIndex = Board.BLOCK_INDEX[cellIndex];
+                int binaryEncodedCandidates = board.getBinaryEncodedCandidates(cellIndex);
+                int binaryEncodedCandidatesCopy = binaryEncodedCandidates;
+                while (binaryEncodedCandidates != 0) {
+                    int binaryEncodedSmallestCandidate = getFirstSetBit(binaryEncodedCandidates);
+                    int smallestCandidate = getNumberOfSingleSetBit(binaryEncodedSmallestCandidate);
+                    int columnIndex = cellIndex % 9;
+                    int rowIndex = cellIndex / 9;
+                    possibleRowsForCandidateInColumn[columnIndex * 9 + smallestCandidate] |= 1 << rowIndex;
+                    possibleColumnsForCandidateInRow[rowIndex * 9 + smallestCandidate] |= 1 << columnIndex;
+                    possibleCellIndexForCandidateInBlock[blockIndex * 9 + smallestCandidate] |= 1 << Board.CELL_INDEX_IN_BLOCK[cellIndex];
+                    binaryEncodedCandidates ^= binaryEncodedSmallestCandidate;
+                }
 
-                    if (cellWithTheLowestNumberOfCandidates == null) {
-                        cellWithTheLowestNumberOfCandidates = new CellWithTheLowestNumberOfCandidates();
-                    }
+                if (cellWithTheLowestNumberOfCandidates == null) {
+                    cellWithTheLowestNumberOfCandidates = new CellWithTheLowestNumberOfCandidates();
+                }
 
-                    int candidateCount = getSetBitsCount(binaryEncodedCandidatesCopy);
-                    if (candidateCount < cellWithTheLowestNumberOfCandidates.candidateCount) {
-                        cellWithTheLowestNumberOfCandidates.cellIndex = cellIndex;
-                        cellWithTheLowestNumberOfCandidates.binaryEncodedCandidates = binaryEncodedCandidatesCopy;
-                        cellWithTheLowestNumberOfCandidates.candidateCount = candidateCount;
-                    }
+                int candidateCount = getSetBitsCount(binaryEncodedCandidatesCopy);
+                if (candidateCount < cellWithTheLowestNumberOfCandidates.candidateCount) {
+                    cellWithTheLowestNumberOfCandidates.cellIndex = cellIndex;
+                    cellWithTheLowestNumberOfCandidates.binaryEncodedCandidates = binaryEncodedCandidatesCopy;
+                    cellWithTheLowestNumberOfCandidates.candidateCount = candidateCount;
                 }
             }
         }
@@ -241,7 +239,7 @@ public class JavaScriptTranslatedSolver {
         for (int groupIndex = 0; groupIndex < 9; groupIndex++) {
             for (int candidateToTest = 0; candidateToTest < 9; candidateToTest++) {
                 int groupCandidateIndex = groupIndex * 9 + candidateToTest;
-                int binaryEncodedPossibleRowsForCandidateInColumnK = hiddenSinglesInColumn[groupCandidateIndex];
+                int binaryEncodedPossibleRowsForCandidateInColumnK = possibleRowsForCandidateInColumn[groupCandidateIndex];
                 int possibleRow = getNumberOfSingleSetBit(binaryEncodedPossibleRowsForCandidateInColumnK);
                 if (possibleRow != -1) {
                     if (!play(board, indexesOfUpdatedCells, groupIndex, possibleRow, candidateToTest)) {
@@ -249,7 +247,7 @@ public class JavaScriptTranslatedSolver {
                     }
                 }
 
-                int binaryEncodedPossibleColumnsForCandidateInRowK = hiddenSinglesInRow[groupCandidateIndex];
+                int binaryEncodedPossibleColumnsForCandidateInRowK = possibleColumnsForCandidateInRow[groupCandidateIndex];
                 int possibleColumn = getNumberOfSingleSetBit(binaryEncodedPossibleColumnsForCandidateInRowK);
                 if (possibleColumn != -1) {
                     if (!play(board, indexesOfUpdatedCells, possibleColumn, groupIndex, candidateToTest)) {
@@ -257,7 +255,7 @@ public class JavaScriptTranslatedSolver {
                     }
                 }
 
-                int binaryEncodedPossibleBlockForCandidateInBlockK = hiddenSinglesInBlock[groupCandidateIndex];
+                int binaryEncodedPossibleBlockForCandidateInBlockK = possibleCellIndexForCandidateInBlock[groupCandidateIndex];
                 int possibleBlockCellIndex = getNumberOfSingleSetBit(binaryEncodedPossibleBlockForCandidateInBlockK);
                 if (possibleBlockCellIndex != -1) {
                     if (!play(board, indexesOfUpdatedCells,
