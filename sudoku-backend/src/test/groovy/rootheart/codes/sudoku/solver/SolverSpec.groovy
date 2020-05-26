@@ -5,15 +5,15 @@ import rootheart.codes.sudoku.solver.binaryoptimized.JavaScriptTranslatedSolver
 import spock.lang.Specification
 
 class SolverSpec extends Specification {
-    private String mediumSudoku =   "975002130" +
-                                    "000600000" +
-                                    "030500000" +
-                                    "000006090" +
-                                    "009000010" +
-                                    "000005078" +
-                                    "740200069" +
-                                    "000003000" +
-                                    "020760084"
+    private String mediumSudoku = "975002130" +
+            "000600000" +
+            "030500000" +
+            "000006090" +
+            "009000010" +
+            "000005078" +
+            "740200069" +
+            "000003000" +
+            "020760084"
 
     private String extremeDifficultSudoku = "900000000" +
             "000700016" +
@@ -206,4 +206,41 @@ class SolverSpec extends Specification {
                 "698453721" +
                 "521769384"
     }
+
+
+    def 'Test some thousand 17-clue-sudokus'() throws IOException {
+        given:
+        def solver = new JavaScriptTranslatedSolver()
+        def expectedSolutions = new HashMap<String, String>()
+        new File("C:\\Users\\kai\\IdeaProjects\\sudoku\\sudoku.log").eachLine { line ->
+            String[] strings = line.split(",");
+            if (strings.length == 2) {
+                expectedSolutions[strings[0]] = strings[1]
+            }
+        }
+
+        when:
+        long s = System.nanoTime()
+        def calculatedSolutions = expectedSolutions.keySet().collectEntries { [(it): solver.solve(it)] }
+        long e = System.nanoTime()
+
+        System.out.println((e - s) / 1000 + " microseconds, " +
+                "guessed " + JavaScriptTranslatedSolver.guessCount + " times, "
+                + JavaScriptTranslatedSolver.failedGuessCount + " failed");
+        Arrays.stream(rootheart.codes.sudoku.solver.binaryoptimized.Board.class.getDeclaredFields())
+                .filter(f -> f.getName().startsWith("count_"))
+                .forEach(f -> {
+                    try {
+                        f.setAccessible(true);
+                        System.out.println(f.getName() + " -> " + f.get(null));
+                    } catch (IllegalAccessException e2) {
+                        e2.printStackTrace();
+                    }
+                });
+
+        then:
+        calculatedSolutions == expectedSolutions
+    }
+
+
 }

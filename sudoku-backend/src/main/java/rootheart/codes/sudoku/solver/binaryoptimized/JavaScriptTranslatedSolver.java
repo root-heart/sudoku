@@ -42,59 +42,6 @@ public class JavaScriptTranslatedSolver {
         return BIT_NUMBER[number];
     }
 
-    public static void main(String[] args) throws IOException {
-        JavaScriptTranslatedSolver solver = new JavaScriptTranslatedSolver();
-
-        File solutionFile = new File("C:\\Users\\kai\\IdeaProjects\\sudoku\\sudoku.log");
-        BufferedReader r = new BufferedReader(new FileReader(solutionFile));
-        StringBuilder output = new StringBuilder();
-        Map<String, String> solutions = new HashMap<>();
-        while (r.ready()) {
-            String[] strings = r.readLine().split(",");
-            if (strings.length == 2) {
-                solutions.put(strings[0], strings[1]);
-            }
-        }
-
-        File file = new File("c:\\temp\\all_17_clue_sudokus.txt");
-        r = new BufferedReader(new FileReader(file));
-        int count = 0;
-        long s = System.nanoTime();
-        while (r.ready()) {
-            if (count % 2000 == 0) {
-                System.out.println(count + " sudokus solved");
-            }
-//            if (count == 200) break;
-            count++;
-            String line = r.readLine();
-            if (line.length() == 81) {
-                String solution = solver.solve(line);
-                if (!solutions.containsKey(line)) {
-                    System.out.println("(1)");
-                }
-                if (!solutions.get(line).equals(solution)) {
-                    System.out.println("(2)");
-                }
-                output.append(line).append(',').append(solution).append('\n');
-            } else {
-                output.append(line);
-            }
-        }
-        long e = System.nanoTime();
-        System.out.println((e - s) / 1000 + " microseconds, guessed " + guessCount + " times, " + failedGuessCount + " failed");
-
-        Arrays.stream(rootheart.codes.sudoku.solver.binaryoptimized.Board.class.getDeclaredFields())
-                .filter(f -> f.getName().startsWith("count_"))
-                .forEach(f -> {
-                    try {
-                        f.setAccessible(true);
-                        System.out.println(f.getName() + " -> " + f.get(null));
-                    } catch (IllegalAccessException e2) {
-                        e2.printStackTrace();
-                    }
-                });
-    }
-
     private boolean play(Board board, PrimitiveStack stack, int columnIndex, int rowIndex, int number) {
         var cellIndex = rowIndex * 9 + columnIndex;
         return play(board, stack, cellIndex, number);
@@ -191,18 +138,12 @@ public class JavaScriptTranslatedSolver {
             }
         }
 
-        if (indexesOfUpdatedCells.size() > 0) {
-            // At least one naked single was set. Directly keep searching for new easy candidates
-            if (search(board)) {
-                return true;
-            }
-            undoAllMovesOnStack(board, indexesOfUpdatedCells);
-            return false;
+        if (board.emptyCellCount == 0) {
+            return true;
         }
 
 
         // HIDDEN SINGLES
-        CellWithTheLowestNumberOfCandidates cellWithTheLowestNumberOfCandidates = null;
         int[] possibleRowsForCandidateInColumn = new int[81];
         int[] possibleColumnsForCandidateInRow = new int[81];
         int[] possibleCellIndexForCandidateInBlock = new int[81];
@@ -210,7 +151,6 @@ public class JavaScriptTranslatedSolver {
             if (board.cellIsEmpty(cellIndex)) {
                 int blockIndex = Board.BLOCK_INDEX[cellIndex];
                 int binaryEncodedCandidates = board.getBinaryEncodedCandidates(cellIndex);
-                int binaryEncodedCandidatesCopy = binaryEncodedCandidates;
                 while (binaryEncodedCandidates != 0) {
                     int binaryEncodedSmallestCandidate = getFirstSetBit(binaryEncodedCandidates);
                     int smallestCandidate = getNumberOfSingleSetBit(binaryEncodedSmallestCandidate);
@@ -221,21 +161,10 @@ public class JavaScriptTranslatedSolver {
                     possibleCellIndexForCandidateInBlock[blockIndex * 9 + smallestCandidate] |= 1 << Board.CELL_INDEX_IN_BLOCK[cellIndex];
                     binaryEncodedCandidates ^= binaryEncodedSmallestCandidate;
                 }
-
-                if (cellWithTheLowestNumberOfCandidates == null) {
-                    cellWithTheLowestNumberOfCandidates = new CellWithTheLowestNumberOfCandidates();
-                }
-
-                int candidateCount = getSetBitsCount(binaryEncodedCandidatesCopy);
-                if (candidateCount < cellWithTheLowestNumberOfCandidates.candidateCount) {
-                    cellWithTheLowestNumberOfCandidates.cellIndex = cellIndex;
-                    cellWithTheLowestNumberOfCandidates.binaryEncodedCandidates = binaryEncodedCandidatesCopy;
-                    cellWithTheLowestNumberOfCandidates.candidateCount = candidateCount;
-                }
             }
         }
 
-        indexesOfUpdatedCells.clear();
+
         for (int groupIndex = 0; groupIndex < 9; groupIndex++) {
             for (int candidateToTest = 0; candidateToTest < 9; candidateToTest++) {
                 int groupCandidateIndex = groupIndex * 9 + candidateToTest;
@@ -268,6 +197,10 @@ public class JavaScriptTranslatedSolver {
             }
         }
 
+        if (board.emptyCellCount == 0) {
+            return true;
+        }
+
         // if we've played at least one forced move, do a recursive call right away
         if (indexesOfUpdatedCells.size() > 0) {
             if (search(board)) {
@@ -277,21 +210,32 @@ public class JavaScriptTranslatedSolver {
             return false;
         }
 
-        // otherwise, try all moves on the cell with the fewest number of moves
-        if (cellWithTheLowestNumberOfCandidates != null) {
-            guessCount++;
-            int bit;
-            while ((bit = getFirstSetBit(cellWithTheLowestNumberOfCandidates.binaryEncodedCandidates)) > 0) {
-                int numberToTry = getNumberOfSingleSetBit(bit);
-                board.setZeroBasedNumberToCell(cellWithTheLowestNumberOfCandidates.cellIndex, numberToTry);
+        // BRUTE FORCE
+        guessCount++;
 
-                if (search(board)) {
-                    return true;
+        CellWithTheLowestNumberOfCandidates cellWithTheLowestNumberOfCandidates = new CellWithTheLowestNumberOfCandidates();
+        for (int cellIndex = 0; cellIndex < 81; cellIndex++) {
+            if (board.cellIsEmpty(cellIndex)) {
+                int binaryEncodedCandidates = board.getBinaryEncodedCandidates(cellIndex);
+                int candidateCount = getSetBitsCount(binaryEncodedCandidates);
+                if (candidateCount < cellWithTheLowestNumberOfCandidates.candidateCount) {
+                    cellWithTheLowestNumberOfCandidates.cellIndex = cellIndex;
+                    cellWithTheLowestNumberOfCandidates.binaryEncodedCandidates = binaryEncodedCandidates;
+                    cellWithTheLowestNumberOfCandidates.candidateCount = candidateCount;
                 }
-
-                board.clearCell(cellWithTheLowestNumberOfCandidates.cellIndex);
-                cellWithTheLowestNumberOfCandidates.binaryEncodedCandidates ^= bit;
             }
+        }
+        int bit;
+        while ((bit = getFirstSetBit(cellWithTheLowestNumberOfCandidates.binaryEncodedCandidates)) > 0) {
+            int numberToTry = getNumberOfSingleSetBit(bit);
+            board.setZeroBasedNumberToCell(cellWithTheLowestNumberOfCandidates.cellIndex, numberToTry);
+
+            if (search(board)) {
+                return true;
+            }
+
+            board.clearCell(cellWithTheLowestNumberOfCandidates.cellIndex);
+            cellWithTheLowestNumberOfCandidates.binaryEncodedCandidates ^= bit;
         }
 
         failedGuessCount++;
