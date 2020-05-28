@@ -1,5 +1,9 @@
 package rootheart.codes.sudoku.solver.binaryoptimized;
 
+import java.util.BitSet;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.IntConsumer;
 
 public class JavaScriptTranslatedSolver {
@@ -124,60 +128,158 @@ public class JavaScriptTranslatedSolver {
         return solveBruteForce(board);
     }
 
+    private final Object semaphore = new Object();
+
     private Boolean findAndSetHiddenSingles(Board board, PrimitiveStack indexesOfUpdatedCells) {
+//        int[] columnCandidates = new int[81];
+//        int[] rowCandidates = new int[81];
+//        int[] blockCandidates = new int[81];
+//
+//        for (int cellIndex = 0; cellIndex < 81; cellIndex++) {
+//            if (board.cellIsEmpty(cellIndex)) {
+//                int binaryEncodedCandidates = board.getBinaryEncodedCandidates(cellIndex);
+//                int columnIndex = cellIndex % 9;
+//                int rowIndex = cellIndex / 9;
+//                int blockIndex = Board.BLOCK_INDEX[cellIndex];
+//                int cellIndexInBlock = Board.CELL_INDEX_IN_BLOCK[cellIndex];
+//                columnCandidates[columnIndex * 9 + rowIndex] = binaryEncodedCandidates;
+//                rowCandidates[rowIndex * 9 + columnIndex] = binaryEncodedCandidates;
+//                blockCandidates[blockIndex * 9 + cellIndexInBlock] = binaryEncodedCandidates;
+//            }
+//        }
+//
+//        int[] hiddenSingles = new int[81];
+//        int hiddenSinglesCount = 0;
+//        for (int cellIndex = 0; cellIndex < 81; cellIndex++) {
+//            if (board.cellIsEmpty(cellIndex)) {
+//                int columnIndex = cellIndex % 9;
+//                int rowIndex = cellIndex / 9;
+//                int blockIndex = Board.BLOCK_INDEX[cellIndex];
+//                int cellIndexInBlock = Board.CELL_INDEX_IN_BLOCK[cellIndex];
+//                int candidatesInOtherRowsInThisColumn = 0;
+//                int candidatesInOtherColumnsInThisRow = 0;
+//                int candidatesInOtherCellsOfThisBlock = 0;
+//                for (int i = 0; i < 9; i++) {
+//                    if (i != rowIndex) {
+//                        candidatesInOtherRowsInThisColumn |= columnCandidates[columnIndex * 9 + i];
+//                    }
+//                    if (i != columnIndex) {
+//                        candidatesInOtherColumnsInThisRow |= rowCandidates[rowIndex * 9 + i];
+//                    }
+//                    if (i != cellIndexInBlock) {
+//                        candidatesInOtherCellsOfThisBlock |= blockCandidates[blockIndex * 9 + i];
+//                    }
+//                }
+//                int binaryEncodedCandidates = board.getBinaryEncodedCandidates(cellIndex);
+//
+//                int hiddenCandidate = getNumberOfSingleSetBit(binaryEncodedCandidates & ~candidatesInOtherColumnsInThisRow);
+//                if (hiddenCandidate != -1) {
+//                    hiddenSingles[hiddenSinglesCount++] = hiddenCandidate | (cellIndex << 5);
+//                }
+//                hiddenCandidate = getNumberOfSingleSetBit(binaryEncodedCandidates & ~candidatesInOtherRowsInThisColumn);
+//                if (hiddenCandidate != -1) {
+//                    hiddenSingles[hiddenSinglesCount++] = hiddenCandidate | (cellIndex << 5);
+//                }
+//                hiddenCandidate = getNumberOfSingleSetBit(binaryEncodedCandidates & ~candidatesInOtherCellsOfThisBlock);
+//                if (hiddenCandidate != -1) {
+//                    hiddenSingles[hiddenSinglesCount++] = hiddenCandidate | (cellIndex << 5);
+//                }
+//            }
+//        }
+//
+//        for (int i = 0; i < hiddenSinglesCount; i++) {
+//            int hiddenCandidate = hiddenSingles[i] & 0b11111;
+//            int cellIndex = hiddenSingles[i] >> 5;
+//            if (!play(board, indexesOfUpdatedCells, cellIndex, hiddenCandidate)) {
+//                return Boolean.FALSE;
+//            }
+//        }
+
         // HIDDEN SINGLES
-        int[] possibleRowsForCandidateInColumn = new int[81];
-        int[] possibleColumnsForCandidateInRow = new int[81];
-        int[] possibleCellIndexForCandidateInBlock = new int[81];
+        int[] possibleRowsForCandidatesInColumn = new int[81];
+        int[] possibleColumnsForCandidatesInRow = new int[81];
+        int[] possibleCellIndexForCandidatesInBlock = new int[81];
         for (int cellIndex = 0; cellIndex < 81; cellIndex++) {
             if (board.cellIsEmpty(cellIndex)) {
+                int columnIndex = cellIndex % 9;
+                int rowIndex = cellIndex / 9;
                 int blockIndex = Board.BLOCK_INDEX[cellIndex];
                 int binaryEncodedCandidates = board.getBinaryEncodedCandidates(cellIndex);
                 while (binaryEncodedCandidates != 0) {
                     int binaryEncodedSmallestCandidate = getFirstSetBit(binaryEncodedCandidates);
-                    int smallestCandidate = getNumberOfSingleSetBit(binaryEncodedSmallestCandidate);
-                    int columnIndex = cellIndex % 9;
-                    int rowIndex = cellIndex / 9;
-                    possibleRowsForCandidateInColumn[columnIndex * 9 + smallestCandidate] |= 1 << rowIndex;
-                    possibleColumnsForCandidateInRow[rowIndex * 9 + smallestCandidate] |= 1 << columnIndex;
-                    possibleCellIndexForCandidateInBlock[blockIndex * 9 + smallestCandidate] |= 1 << Board.CELL_INDEX_IN_BLOCK[cellIndex];
+                    int candidate = getNumberOfSingleSetBit(binaryEncodedSmallestCandidate);
+                    possibleRowsForCandidatesInColumn[columnIndex * 9 + candidate] |= 1 << rowIndex;
+                    possibleColumnsForCandidatesInRow[rowIndex * 9 + candidate] |= 1 << columnIndex;
+                    possibleCellIndexForCandidatesInBlock[blockIndex * 9 + candidate] |= 1 << Board.CELL_INDEX_IN_BLOCK[cellIndex];
                     binaryEncodedCandidates ^= binaryEncodedSmallestCandidate;
                 }
             }
         }
 
 
-        for (int groupIndex = 0; groupIndex < 9; groupIndex++) {
-            for (int candidateToTest = 0; candidateToTest < 9; candidateToTest++) {
-                int groupCandidateIndex = groupIndex * 9 + candidateToTest;
-                int binaryEncodedPossibleRowsForCandidateInColumnK = possibleRowsForCandidateInColumn[groupCandidateIndex];
-                int possibleRow = getNumberOfSingleSetBit(binaryEncodedPossibleRowsForCandidateInColumnK);
-                if (possibleRow != -1) {
-                    if (!play(board, indexesOfUpdatedCells, groupIndex, possibleRow, candidateToTest)) {
-                        return false;
-                    }
+        for (int i = 0; i < 81; i++) {
+            int possibleRow = getNumberOfSingleSetBit(possibleRowsForCandidatesInColumn[i]);
+            if (possibleRow != -1) {
+                int groupIndex = i / 9;
+                int candidateToTest = i % 9;
+                if (!play(board, indexesOfUpdatedCells, groupIndex, possibleRow, candidateToTest)) {
+                    return Boolean.FALSE;
                 }
+            }
 
-                int binaryEncodedPossibleColumnsForCandidateInRowK = possibleColumnsForCandidateInRow[groupCandidateIndex];
-                int possibleColumn = getNumberOfSingleSetBit(binaryEncodedPossibleColumnsForCandidateInRowK);
-                if (possibleColumn != -1) {
-                    if (!play(board, indexesOfUpdatedCells, possibleColumn, groupIndex, candidateToTest)) {
-                        return false;
-                    }
+            int possibleColumn = getNumberOfSingleSetBit(possibleColumnsForCandidatesInRow[i]);
+            if (possibleColumn != -1) {
+                int groupIndex = i / 9;
+                int candidateToTest = i % 9;
+                if (!play(board, indexesOfUpdatedCells, possibleColumn, groupIndex, candidateToTest)) {
+                    return Boolean.FALSE;
                 }
+            }
 
-                int binaryEncodedPossibleBlockForCandidateInBlockK = possibleCellIndexForCandidateInBlock[groupCandidateIndex];
-                int possibleBlockCellIndex = getNumberOfSingleSetBit(binaryEncodedPossibleBlockForCandidateInBlockK);
-                if (possibleBlockCellIndex != -1) {
-                    if (!play(board, indexesOfUpdatedCells,
-                            (groupIndex % 3) * 3 + possibleBlockCellIndex % 3,
-                            (groupIndex / 3) * 3 + (possibleBlockCellIndex / 3),
-                            candidateToTest)) {
-                        return false;
-                    }
+            int possibleBlockCellIndex = getNumberOfSingleSetBit(possibleCellIndexForCandidatesInBlock[i]);
+            if (possibleBlockCellIndex != -1) {
+                int groupIndex = i / 9;
+                int candidateToTest = i % 9;
+                int columnIndex = (groupIndex % 3) * 3 + possibleBlockCellIndex % 3;
+                int rowIndex = (groupIndex / 3) * 3 + (possibleBlockCellIndex / 3);
+                if (!play(board, indexesOfUpdatedCells, columnIndex, rowIndex, candidateToTest)) {
+                    return Boolean.FALSE;
                 }
             }
         }
+
+
+//        for (int groupIndex = 0; groupIndex < 9; groupIndex++) {
+//            for (int candidateToTest = 0; candidateToTest < 9; candidateToTest++) {
+//                int groupCandidateIndex = groupIndex * 9 + candidateToTest;
+//                int binaryEncodedPossibleRowsForCandidateInColumn = possibleRowsForCandidatesInColumn[groupCandidateIndex];
+//                int possibleRow = getNumberOfSingleSetBit(binaryEncodedPossibleRowsForCandidateInColumn);
+//                if (possibleRow != -1) {
+//                    if (!play(board, indexesOfUpdatedCells, groupIndex, possibleRow, candidateToTest)) {
+//                        return false;
+//                    }
+//                }
+//
+//                int binaryEncodedPossibleColumnsForCandidateInRow = possibleColumnsForCandidatesInRow[groupCandidateIndex];
+//                int possibleColumn = getNumberOfSingleSetBit(binaryEncodedPossibleColumnsForCandidateInRow);
+//                if (possibleColumn != -1) {
+//                    if (!play(board, indexesOfUpdatedCells, possibleColumn, groupIndex, candidateToTest)) {
+//                        return false;
+//                    }
+//                }
+//
+//                int binaryEncodedPossibleBlockForCandidateInBlock = possibleCellIndexForCandidatesInBlock[groupCandidateIndex];
+//                int possibleBlockCellIndex = getNumberOfSingleSetBit(binaryEncodedPossibleBlockForCandidateInBlock);
+//                if (possibleBlockCellIndex != -1) {
+//                    int columnIndex = (groupIndex % 3) * 3 + possibleBlockCellIndex % 3;
+//                    int rowIndex = (groupIndex / 3) * 3 + (possibleBlockCellIndex / 3);
+//                    if (!play(board, indexesOfUpdatedCells, columnIndex, rowIndex, candidateToTest)) {
+//                        return false;
+//                    }
+//                }
+//            }
+//        }
+
 
         if (board.emptyCellCount == 0) {
             return true;
