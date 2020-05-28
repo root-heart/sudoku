@@ -1,14 +1,15 @@
 package rootheart.codes.sudoku.solver.binaryoptimized;
 
-import java.util.BitSet;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.function.IntConsumer;
-
 public class JavaScriptTranslatedSolver {
+
+    public static int guessCount = 0;
+    public static int failedGuessCount = 0;
+
     static final int[] SET_BITS_COUNT = new int[512];
     static final int[] BIT_NUMBER = new int[512];
+
+    static final int[] columnIndexForBlockAndCellIndex = new int[81];
+    static final int[] rowIndexForBlockAndCellIndex = new int[81];
 
     static {
         for (int i = 0; i < 1 << 9; i++) {
@@ -25,79 +26,7 @@ public class JavaScriptTranslatedSolver {
         for (int i = 0; i < 9; i++) {
             BIT_NUMBER[1 << i] = i;
         }
-    }
 
-    private static int getSetBitsCount(int number) {
-        return SET_BITS_COUNT[number];
-    }
-
-    private static int getFirstSetBit(int number) {
-        return number & -number;
-    }
-
-    private static int getNumberOfSingleSetBit(int number) {
-        return BIT_NUMBER[number];
-    }
-
-    private boolean play(Board board, PrimitiveStack stack, int columnIndex, int rowIndex, int number) {
-        var cellIndex = rowIndex * 9 + columnIndex;
-        return play(board, stack, cellIndex, number);
-    }
-
-    private boolean play(Board board, PrimitiveStack stack, int cellIndex, int number) {
-        if (!board.cellIsEmpty(cellIndex)) {
-            if (board.cellIs(cellIndex, number)) {
-                return true;
-            }
-            undoAllMovesOnStack(board, stack);
-            return false;
-        }
-
-        if (board.numberIsInvalidForCell(cellIndex, number)) {
-            undoAllMovesOnStack(board, stack);
-            return false;
-        }
-        board.setZeroBasedNumberToCell(cellIndex, number);
-        stack.push(cellIndex);
-
-        return true;
-    }
-
-    private void undoAllMovesOnStack(Board board, PrimitiveStack stack) {
-        stack.forEach(board::clearCell);
-    }
-
-    static class PrimitiveStack {
-        int[] stack = new int[81];
-        int currentIndex = -1;
-
-        void clear() {
-            currentIndex = -1;
-        }
-
-        void push(int number) {
-            stack[++currentIndex] = number;
-        }
-
-        int pop() {
-            return stack[currentIndex--];
-        }
-
-        int size() {
-            return currentIndex + 1;
-        }
-
-        void forEach(IntConsumer consumer) {
-            for (int i = 0; i <= currentIndex; i++) {
-                consumer.accept(stack[i]);
-            }
-        }
-    }
-
-    static int[] columnIndexForBlockAndCellIndex = new int[81];
-    static int[] rowIndexForBlockAndCellIndex = new int[81];
-
-    static {
         for (int blockIndex = 0; blockIndex < 9; blockIndex++) {
             for (int cellIndexInBlock = 0; cellIndexInBlock < 9; cellIndexInBlock++) {
                 columnIndexForBlockAndCellIndex[blockIndex * 9 + cellIndexInBlock] = (blockIndex % 3) * 3 + (cellIndexInBlock % 3);
@@ -106,12 +35,18 @@ public class JavaScriptTranslatedSolver {
         }
     }
 
+    public String solve(String puzzle) {
+        Board board = new Board(puzzle);
+        boolean isSolvable = search(board);
+        return isSolvable ? board.asString() : "";
+    }
+
     private boolean search(Board board) {
         if (board.emptyCellCount == 0) {
             return true;
         }
 
-        PrimitiveStack indexesOfUpdatedCells = new PrimitiveStack();
+        IntStack indexesOfUpdatedCells = new IntStack();
         // FULL HOUSES doesn't work because I don't know the index of any given empty cell inside a group
 
 
@@ -128,9 +63,31 @@ public class JavaScriptTranslatedSolver {
         return solveBruteForce(board);
     }
 
-    private final Object semaphore = new Object();
+    private Boolean findAndSetNakedSingles(Board board, IntStack indexesOfUpdatedCells) {
+        int iterationCount = 0;
+        for (int cellIndex = 0; iterationCount < 81; cellIndex++) {
+            if (cellIndex == 81) {
+                cellIndex = 0;
+            }
+            if (board.cellIsEmpty(cellIndex)) {
+                int binaryEncodedCandidates = board.getBinaryEncodedCandidates(cellIndex);
+                int number = getNumberOfSingleSetBit(binaryEncodedCandidates);
+                if (number != -1) {
+                    if (!play(board, indexesOfUpdatedCells, cellIndex, number)) {
+                        return false;
+                    }
+                    iterationCount = 0;
+                }
+            }
+            iterationCount++;
+        }
+        if (board.emptyCellCount == 0) {
+            return true;
+        }
+        return null;
+    }
 
-    private Boolean findAndSetHiddenSingles(Board board, PrimitiveStack indexesOfUpdatedCells) {
+    private Boolean findAndSetHiddenSingles(Board board, IntStack indexesOfUpdatedCells) {
 //        int[] columnCandidates = new int[81];
 //        int[] rowCandidates = new int[81];
 //        int[] blockCandidates = new int[81];
@@ -296,30 +253,6 @@ public class JavaScriptTranslatedSolver {
         return null;
     }
 
-    private Boolean findAndSetNakedSingles(Board board, PrimitiveStack indexesOfUpdatedCells) {
-        int iterationCount = 0;
-        for (int cellIndex = 0; iterationCount < 81; cellIndex++) {
-            if (cellIndex == 81) {
-                cellIndex = 0;
-            }
-            if (board.cellIsEmpty(cellIndex)) {
-                int binaryEncodedCandidates = board.getBinaryEncodedCandidates(cellIndex);
-                int number = getNumberOfSingleSetBit(binaryEncodedCandidates);
-                if (number != -1) {
-                    if (!play(board, indexesOfUpdatedCells, cellIndex, number)) {
-                        return false;
-                    }
-                    iterationCount = 0;
-                }
-            }
-            iterationCount++;
-        }
-        if (board.emptyCellCount == 0) {
-            return true;
-        }
-        return null;
-    }
-
     private boolean solveBruteForce(Board board) {
         guessCount++;
 
@@ -355,12 +288,43 @@ public class JavaScriptTranslatedSolver {
         return false;
     }
 
-    public static int guessCount = 0;
-    public static int failedGuessCount = 0;
+    private boolean play(Board board, IntStack stack, int columnIndex, int rowIndex, int number) {
+        var cellIndex = rowIndex * 9 + columnIndex;
+        return play(board, stack, cellIndex, number);
+    }
 
-    public String solve(String puzzle) {
-        Board board = new Board(puzzle);
-        boolean isSolvable = search(board);
-        return isSolvable ? board.asString() : "";
+    private boolean play(Board board, IntStack stack, int cellIndex, int number) {
+        if (!board.cellIsEmpty(cellIndex)) {
+            if (board.cellIs(cellIndex, number)) {
+                return true;
+            }
+            undoAllMovesOnStack(board, stack);
+            return false;
+        }
+
+        if (board.numberIsInvalidForCell(cellIndex, number)) {
+            undoAllMovesOnStack(board, stack);
+            return false;
+        }
+        board.setZeroBasedNumberToCell(cellIndex, number);
+        stack.push(cellIndex);
+
+        return true;
+    }
+
+    private void undoAllMovesOnStack(Board board, IntStack stack) {
+        stack.forEach(board::clearCell);
+    }
+
+    private static int getSetBitsCount(int number) {
+        return SET_BITS_COUNT[number];
+    }
+
+    private static int getFirstSetBit(int number) {
+        return number & -number;
+    }
+
+    private static int getNumberOfSingleSetBit(int number) {
+        return BIT_NUMBER[number];
     }
 }
