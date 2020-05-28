@@ -197,11 +197,12 @@ class SolverSpec extends Specification {
     }
 
 
-    def 'Test some thousand 17-clue-sudokus'() throws IOException {
+    def 'Test several thousand sudokus'() throws IOException {
         given:
         def solver = new JavaScriptTranslatedSolver()
         def expectedSolutions = new HashMap<String, String>()
-        new File("C:\\Users\\kai\\IdeaProjects\\sudoku\\sudoku.log").eachLine { line ->
+        def url = getClass().getResource("/hard_sudokus_solved.txt")
+        new File(url.toURI()).eachLine { line ->
             String[] strings = line.split(",");
             if (strings.length == 2) {
                 expectedSolutions[strings[0]] = strings[1]
