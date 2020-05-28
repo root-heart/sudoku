@@ -184,17 +184,6 @@ class SolverSpec extends Specification {
         when:
         def solution = s.solve(mediumSudoku)
 
-        Arrays.stream(rootheart.codes.sudoku.solver.binaryoptimized.Board.class.getDeclaredFields())
-                .filter(f -> f.getName().startsWith("count_"))
-                .forEach(f -> {
-                    try {
-                        f.setAccessible(true);
-                        System.out.println(f.getName() + " -> " + f.get(null));
-                    } catch (IllegalAccessException e) {
-                        e.printStackTrace();
-                    }
-                });
-
         then:
         solution == "975842136" +
                 "482631957" +
@@ -219,30 +208,13 @@ class SolverSpec extends Specification {
             }
         }
 
-        when:
-        long s = System.nanoTime()
-        def calculatedSolutions = expectedSolutions.keySet().collectEntries { [(it): solver.solve(it)] }
-        long e = System.nanoTime()
-
-        System.out.println((e - s) / 1000 + " microseconds, " +
-                "guessed " + JavaScriptTranslatedSolver.guessCount + " times, "
-                + JavaScriptTranslatedSolver.failedGuessCount + " failed");
-        Arrays.stream(rootheart.codes.sudoku.solver.binaryoptimized.Board.class.getDeclaredFields())
-                .filter(f -> f.getName().startsWith("count_"))
-                .forEach(f -> {
-                    try {
-                        f.setAccessible(true);
-                        System.out.println(f.getName() + " -> " + f.get(null));
-                    } catch (IllegalAccessException e2) {
-                        e2.printStackTrace();
-                    }
-                });
-
-        then:
-        calculatedSolutions.each { puzzle, calculatedSolution ->
-            assert expectedSolutions[puzzle] == calculatedSolution
+        expect:
+        expectedSolutions.eachWithIndex { puzzle, solution, counter ->
+            if (counter % 5_000 == 0) {
+                println "checked $counter puzzles"
+            }
+            def solved = solver.solve(puzzle)
+            assert solved == solution
         }
     }
-
-
 }
