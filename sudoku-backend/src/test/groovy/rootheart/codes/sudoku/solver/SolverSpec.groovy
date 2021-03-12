@@ -183,6 +183,7 @@ class SolverSpec extends Specification {
 
         when:
         def solution = s.solve(mediumSudoku)
+        println s.maxPlayCallCount
 
         then:
         solution == "975842136" +
@@ -217,5 +218,7 @@ class SolverSpec extends Specification {
             def solved = solver.solve(puzzle)
             assert solved == solution
         }
+        println solver.maxPlayCallCount
+
     }
 }

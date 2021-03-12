@@ -40,7 +40,7 @@ public class Solve17CluesBenchmark {
         puzzles.removeIf(s -> s.length() != 81);
     }
 
-    @Benchmark
+//    @Benchmark
     public void solveBenchmark() {
         for (String puzzle : puzzles) {
             solver.solve(puzzle);

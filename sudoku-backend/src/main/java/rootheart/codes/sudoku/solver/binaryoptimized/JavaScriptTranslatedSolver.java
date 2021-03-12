@@ -88,70 +88,6 @@ public class JavaScriptTranslatedSolver {
     }
 
     private Boolean findAndSetHiddenSingles(Board board, IntStack indexesOfUpdatedCells) {
-//        int[] columnCandidates = new int[81];
-//        int[] rowCandidates = new int[81];
-//        int[] blockCandidates = new int[81];
-//
-//        for (int cellIndex = 0; cellIndex < 81; cellIndex++) {
-//            if (board.cellIsEmpty(cellIndex)) {
-//                int binaryEncodedCandidates = board.getBinaryEncodedCandidates(cellIndex);
-//                int columnIndex = cellIndex % 9;
-//                int rowIndex = cellIndex / 9;
-//                int blockIndex = Board.BLOCK_INDEX[cellIndex];
-//                int cellIndexInBlock = Board.CELL_INDEX_IN_BLOCK[cellIndex];
-//                columnCandidates[columnIndex * 9 + rowIndex] = binaryEncodedCandidates;
-//                rowCandidates[rowIndex * 9 + columnIndex] = binaryEncodedCandidates;
-//                blockCandidates[blockIndex * 9 + cellIndexInBlock] = binaryEncodedCandidates;
-//            }
-//        }
-//
-//        int[] hiddenSingles = new int[81];
-//        int hiddenSinglesCount = 0;
-//        for (int cellIndex = 0; cellIndex < 81; cellIndex++) {
-//            if (board.cellIsEmpty(cellIndex)) {
-//                int columnIndex = cellIndex % 9;
-//                int rowIndex = cellIndex / 9;
-//                int blockIndex = Board.BLOCK_INDEX[cellIndex];
-//                int cellIndexInBlock = Board.CELL_INDEX_IN_BLOCK[cellIndex];
-//                int candidatesInOtherRowsInThisColumn = 0;
-//                int candidatesInOtherColumnsInThisRow = 0;
-//                int candidatesInOtherCellsOfThisBlock = 0;
-//                for (int i = 0; i < 9; i++) {
-//                    if (i != rowIndex) {
-//                        candidatesInOtherRowsInThisColumn |= columnCandidates[columnIndex * 9 + i];
-//                    }
-//                    if (i != columnIndex) {
-//                        candidatesInOtherColumnsInThisRow |= rowCandidates[rowIndex * 9 + i];
-//                    }
-//                    if (i != cellIndexInBlock) {
-//                        candidatesInOtherCellsOfThisBlock |= blockCandidates[blockIndex * 9 + i];
-//                    }
-//                }
-//                int binaryEncodedCandidates = board.getBinaryEncodedCandidates(cellIndex);
-//
-//                int hiddenCandidate = getNumberOfSingleSetBit(binaryEncodedCandidates & ~candidatesInOtherColumnsInThisRow);
-//                if (hiddenCandidate != -1) {
-//                    hiddenSingles[hiddenSinglesCount++] = hiddenCandidate | (cellIndex << 5);
-//                }
-//                hiddenCandidate = getNumberOfSingleSetBit(binaryEncodedCandidates & ~candidatesInOtherRowsInThisColumn);
-//                if (hiddenCandidate != -1) {
-//                    hiddenSingles[hiddenSinglesCount++] = hiddenCandidate | (cellIndex << 5);
-//                }
-//                hiddenCandidate = getNumberOfSingleSetBit(binaryEncodedCandidates & ~candidatesInOtherCellsOfThisBlock);
-//                if (hiddenCandidate != -1) {
-//                    hiddenSingles[hiddenSinglesCount++] = hiddenCandidate | (cellIndex << 5);
-//                }
-//            }
-//        }
-//
-//        for (int i = 0; i < hiddenSinglesCount; i++) {
-//            int hiddenCandidate = hiddenSingles[i] & 0b11111;
-//            int cellIndex = hiddenSingles[i] >> 5;
-//            if (!play(board, indexesOfUpdatedCells, cellIndex, hiddenCandidate)) {
-//                return Boolean.FALSE;
-//            }
-//        }
-
         // HIDDEN SINGLES
         int[] possibleRowsForCandidatesInColumn = new int[81];
         int[] possibleColumnsForCandidatesInRow = new int[81];
@@ -172,7 +108,6 @@ public class JavaScriptTranslatedSolver {
                 }
             }
         }
-
 
         for (int i = 0; i < 81; i++) {
             int possibleRow = getNumberOfSingleSetBit(possibleRowsForCandidatesInColumn[i]);
@@ -204,39 +139,6 @@ public class JavaScriptTranslatedSolver {
                 }
             }
         }
-
-
-//        for (int groupIndex = 0; groupIndex < 9; groupIndex++) {
-//            for (int candidateToTest = 0; candidateToTest < 9; candidateToTest++) {
-//                int groupCandidateIndex = groupIndex * 9 + candidateToTest;
-//                int binaryEncodedPossibleRowsForCandidateInColumn = possibleRowsForCandidatesInColumn[groupCandidateIndex];
-//                int possibleRow = getNumberOfSingleSetBit(binaryEncodedPossibleRowsForCandidateInColumn);
-//                if (possibleRow != -1) {
-//                    if (!play(board, indexesOfUpdatedCells, groupIndex, possibleRow, candidateToTest)) {
-//                        return false;
-//                    }
-//                }
-//
-//                int binaryEncodedPossibleColumnsForCandidateInRow = possibleColumnsForCandidatesInRow[groupCandidateIndex];
-//                int possibleColumn = getNumberOfSingleSetBit(binaryEncodedPossibleColumnsForCandidateInRow);
-//                if (possibleColumn != -1) {
-//                    if (!play(board, indexesOfUpdatedCells, possibleColumn, groupIndex, candidateToTest)) {
-//                        return false;
-//                    }
-//                }
-//
-//                int binaryEncodedPossibleBlockForCandidateInBlock = possibleCellIndexForCandidatesInBlock[groupCandidateIndex];
-//                int possibleBlockCellIndex = getNumberOfSingleSetBit(binaryEncodedPossibleBlockForCandidateInBlock);
-//                if (possibleBlockCellIndex != -1) {
-//                    int columnIndex = (groupIndex % 3) * 3 + possibleBlockCellIndex % 3;
-//                    int rowIndex = (groupIndex / 3) * 3 + (possibleBlockCellIndex / 3);
-//                    if (!play(board, indexesOfUpdatedCells, columnIndex, rowIndex, candidateToTest)) {
-//                        return false;
-//                    }
-//                }
-//            }
-//        }
-
 
         if (board.emptyCellCount == 0) {
             return true;
@@ -289,15 +191,15 @@ public class JavaScriptTranslatedSolver {
     }
 
     private boolean play(Board board, IntStack stack, int columnIndex, int rowIndex, int number) {
-        var cellIndex = rowIndex * 9 + columnIndex;
-        return play(board, stack, cellIndex, number);
+        return play(board, stack, rowIndex * 9 + columnIndex, number);
     }
 
     private boolean play(Board board, IntStack stack, int cellIndex, int number) {
+        if (board.cellIs(cellIndex, number)) {
+            return true;
+        }
+
         if (!board.cellIsEmpty(cellIndex)) {
-            if (board.cellIs(cellIndex, number)) {
-                return true;
-            }
             undoAllMovesOnStack(board, stack);
             return false;
         }

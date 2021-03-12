@@ -58,12 +58,12 @@ public class SolverBenchmark {
         return s.solve(mediumSudoku);
     }
 
-    @Benchmark
+//    @Benchmark
     public String solveHardSudoku() {
         return s.solve(hardSudokuSolvableByLogic);
     }
 
-    @Benchmark
+//    @Benchmark
     public String solveVeryHardSudoku() {
         return s.solve(extremeDifficultSudokuCurrentlyOnlySolvableByBruteForce);
     }

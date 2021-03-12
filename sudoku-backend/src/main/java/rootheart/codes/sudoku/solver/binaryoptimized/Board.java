@@ -4,11 +4,11 @@ import java.util.Arrays;
 import java.util.stream.Collectors;
 
 public class Board {
-    static final int[] BLOCK_INDEX = new int[81];
-    static final int[] CELL_INDEX_IN_BLOCK = new int[81];
+    public static final int[] BLOCK_INDEX = new int[81];
+    public static final int[] CELL_INDEX_IN_BLOCK = new int[81];
 
-    static final int[] columnIndexMap = new int[81];
-    static final int[] rowIndexMap = new int[81];
+    public static final int[] columnIndexMap = new int[81];
+    public static final int[] rowIndexMap = new int[81];
 
     static {
         for (int cellIndex, rowIndex = cellIndex = 0; rowIndex < 9; rowIndex++) {
@@ -105,6 +105,10 @@ public class Board {
 
     public int getBinaryEncodedCandidates(int cellIndex) {
         return getBinaryEncodedSetNumbersInBuddyCells(cellIndex) ^ 0x1FF;
+    }
+
+    public int getBinaryEncodedCandidates(int colIndex, int rowIndex, int cellIndex) {
+        return (columns[colIndex] | rows[rowIndex] | blocks[getBlockIndex(cellIndex)]) ^ 0x1FF;
     }
 
     private int getBinaryEncodedSetNumbersInBuddyCells(int cellIndex) {
